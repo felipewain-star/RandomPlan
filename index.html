@@ -1,3 +1,5 @@
+
+Randomplan · HTML
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -616,28 +618,36 @@ async function loadStats(){
 }
  
 // ── CHAT REALTIME ──
+let lastChatId = 0;
+ 
 function initChat(){
-  addSysMsg('// conectado al chat global · randomplan.cl');
+  addSysMsg('// chat global activo · randomplan.cl');
   loadChatHistory();
-  // suscribir a realtime
-  chatSub = db.channel('chat_global')
-    .on('postgres_changes', { event:'INSERT', schema:'public', table:'chat_mensajes' }, payload => {
-      const m = payload.new;
-      const isMe = currentUser && m.user_id === currentUser.id;
-      addChatMsg(m.username, m.ciudad||'?', m.texto, isMe);
-    })
-    .subscribe();
+  setInterval(pollChat, 3000);
 }
  
 async function loadChatHistory(){
   const { data } = await db.from('chat_mensajes').select('*').order('created_at', { ascending:false }).limit(30);
-  if(!data) return;
+  if(!data || !data.length){ document.getElementById('chat-online-count').textContent = 'chat activo'; return; }
   data.reverse().forEach(m=>{
     const isMe = currentUser && m.user_id === currentUser.id;
     addChatMsg(m.username, m.ciudad||'?', m.texto, isMe);
+    if(m.id > lastChatId) lastChatId = m.id;
   });
   const el = document.getElementById('chat-msgs');
   el.scrollTop = el.scrollHeight;
+  document.getElementById('chat-online-count').textContent = 'chat activo';
+}
+ 
+async function pollChat(){
+  if(lastChatId === 0) return;
+  const { data } = await db.from('chat_mensajes').select('*').gt('id', lastChatId).order('created_at', { ascending:true });
+  if(!data || !data.length) return;
+  data.forEach(m=>{
+    const isMe = currentUser && m.user_id === currentUser.id;
+    addChatMsg(m.username, m.ciudad||'?', m.texto, isMe);
+    if(m.id > lastChatId) lastChatId = m.id;
+  });
 }
  
 function addSysMsg(txt){
@@ -664,24 +674,34 @@ function addChatMsg(username, ciudad, texto, isMe){
 }
  
 async function sendChatMsg(){
-  // re-check session in case state hasn't updated yet
+  // re-check session
   if(!currentUser){
     const { data: { session } } = await db.auth.getSession();
     if(!session){ showModal('login'); return; }
     currentUser = session.user;
-    if(!currentPerfil) await loadPerfil();
+  }
+  // re-check perfil
+  if(!currentPerfil || currentPerfil.username === 'anon'){
+    await loadPerfil();
+  }
+  // si aun no hay perfil, cargarlo directo por id
+  if(!currentPerfil){
+    const { data } = await db.from('perfiles').select('*').eq('id', currentUser.id).single();
+    currentPerfil = data;
   }
   const inp = document.getElementById('chat-inp');
   const texto = inp.value.trim();
   if(!texto) return;
   inp.value = '';
+  const username = currentPerfil?.username || currentUser.email?.split('@')[0] || 'user';
+  const ciudad = currentPerfil?.ciudad || 'Chile';
   const { error } = await db.from('chat_mensajes').insert({
     user_id: currentUser.id,
-    username: currentPerfil?.username || 'anon',
-    ciudad: currentPerfil?.ciudad || 'Chile',
+    username,
+    ciudad,
     texto
   });
-  if(error) toast('error enviando mensaje: '+error.message, true);
+  if(error) toast('error: '+error.message, true);
 }
  
 function chatKey(e){ if(e.key==='Enter') sendChatMsg(); }
