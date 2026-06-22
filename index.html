@@ -528,45 +528,35 @@ function renderComs(cd){
 function renderPost(p){
   var voto=votes[p.id]||0;
   var v=p.votos+voto;
-  var el=document.createElement('div');
-  el.className='card';
-  el.id='post-'+p.id;
-  el.innerHTML=
-    '<div class="vote-col">'+
-      '<button class="vbtn up '+(voto===1?'on':'')+'" onclick="vote('+p.id+',1)">▲</button>'+
-      '<span class="vcount" id="vc-'+p.id+'">'+fmtV(v)+'</span>'+
-      '<button class="vbtn down '+(voto===-1?'on':'')+'" onclick="vote('+p.id+',-1)">▼</button>'+
-    '</div>'+
-    '<div class="cbody">'+
-      '<div class="cmeta">'+
-        '<span class="csub" onclick="filterFeedSub(\'' +p.sub+ '\')">'+p.ic+' '+p.sub+'</span>'+
-        '<span class="dot">::</span>'+
-        '<span class="cuser">u/'+p.user.name+'</span>'+
-        '<span class="dot">::</span>'+
-        '<span>'+p.t+'</span>'+
-        '<span class="flair '+p.fc+'">'+p.flair+'</span>'+
-      '</div>'+
-      '<div class="ctitle" onclick="toggleComs('+p.id+')">'+p.title+'</div>'+
-      (p.prev?'<div class="cprev">'+p.prev+'</div>':'')+
-      '<div class="cactions">'+
-        '<button class="cact" onclick="toggleComs('+p.id+')">// '+p.coms+' comentarios</button>'+
-        '<button class="cact" onclick="toast(\'enlace copiado\')">// compartir</button>'+
-        '<button class="cact" onclick="toast(\'post guardado\')">// guardar</button>'+
-      '</div>'+
-      '<div class="comments-section" id="cs-'+p.id+'">'+
-        '<div class="comment-list" id="clist-'+p.id+'"></div>'+
-        renderComs(p.cd)+
-      '</div>'+
-    '</div>';
-  // Add comment box separately to avoid escaping hell
-  var cs=el.querySelector('#cs-'+p.id);
-  var cbox=document.createElement('div');
-  cbox.className='comment-box';
-  cbox.id='cbox-'+p.id;
-  cbox.textContent='escribe un comentario...';
-  cbox.onclick=function(){openCommentBox(p.id);};
-  cs.insertBefore(cbox,cs.firstChild);
-  return el.outerHTML;
+  var html='<div class="card" id="post-'+p.id+'">';
+  html+='<div class="vote-col">';
+  html+='<button class="vbtn up '+(voto===1?'on':'')+'" onclick="vote('+p.id+',1)">▲</button>';
+  html+='<span class="vcount" id="vc-'+p.id+'">'+fmtV(v)+'</span>';
+  html+='<button class="vbtn down '+(voto===-1?'on':'')+'" onclick="vote('+p.id+',-1)">▼</button>';
+  html+='</div>';
+  html+='<div class="cbody">';
+  html+='<div class="cmeta">';
+  html+='<span class="csub" onclick="filterFeedSub(this.dataset.sub)" data-sub="'+p.sub+'">'+p.ic+' '+p.sub+'</span>';
+  html+='<span class="dot">::</span>';
+  html+='<span class="cuser">u/'+p.user.name+'</span>';
+  html+='<span class="dot">::</span>';
+  html+='<span>'+p.t+'</span>';
+  html+='<span class="flair '+p.fc+'">'+p.flair+'</span>';
+  html+='</div>';
+  html+='<div class="ctitle" onclick="toggleComs('+p.id+')">'+p.title+'</div>';
+  if(p.prev) html+='<div class="cprev">'+p.prev+'</div>';
+  html+='<div class="cactions">';
+  html+='<button class="cact" onclick="toggleComs('+p.id+')">// '+p.coms+' comentarios</button>';
+  html+='<button class="cact" onclick="toast(&quot;enlace copiado&quot;)">// compartir</button>';
+  html+='<button class="cact" onclick="toast(&quot;post guardado&quot;)">// guardar</button>';
+  html+='</div>';
+  html+='<div class="comments-section" id="cs-'+p.id+'">';
+  html+='<div class="comment-box" id="cbox-'+p.id+'" onclick="openCommentBox('+p.id+')">escribe un comentario...</div>';
+  html+='<div id="clist-'+p.id+'"></div>';
+  html+=renderComs(p.cd);
+  html+='</div>';
+  html+='</div></div>';
+  return html;
 }
 
 function renderFeed(filter){
