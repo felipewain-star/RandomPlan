@@ -333,6 +333,16 @@ function toast(msg, err=false){
 }
 
 // ── AUTH ──
+// ── AUTH ──
+async function checkExistingSession(){
+  const { data: { session } } = await db.auth.getSession();
+  if(session?.user){
+    currentUser = session.user;
+    await loadPerfil();
+    updateAuthUI(true);
+  }
+}
+
 db.auth.onAuthStateChange(async (event, session) => {
   if(session?.user){
     currentUser = session.user;
@@ -570,9 +580,12 @@ async function vote(postId, dir, btn){
   await db.from('posts').update({ votos: newV }).eq('id', postId);
   document.getElementById('vc-'+postId).textContent = fmtV(newV);
   btn.classList.add('on');
-  // karma al autor
-  const p = allPosts.find(x=>x.id===postId);
-  if(p?.perfiles) await db.from('perfiles').update({ karma: db.rpc }).eq('username', p.perfiles.username);
+  // karma al autor: sumar 1 por upvote
+  const pKarma = allPosts.find(x=>x.id===postId);
+  if(pKarma?.user_id && dir===1){
+    const { data: ap } = await db.from("perfiles").select("karma").eq("id", pKarma.user_id).single();
+    if(ap) await db.from("perfiles").update({ karma: (ap.karma||0)+1 }).eq("id", pKarma.user_id);
+  }
 }
 
 function filterFeed(comId, el){
@@ -651,17 +664,24 @@ function addChatMsg(username, ciudad, texto, isMe){
 }
 
 async function sendChatMsg(){
-  if(!currentUser){ showModal('login'); return; }
+  // re-check session in case state hasn't updated yet
+  if(!currentUser){
+    const { data: { session } } = await db.auth.getSession();
+    if(!session){ showModal('login'); return; }
+    currentUser = session.user;
+    if(!currentPerfil) await loadPerfil();
+  }
   const inp = document.getElementById('chat-inp');
   const texto = inp.value.trim();
   if(!texto) return;
   inp.value = '';
-  await db.from('chat_mensajes').insert({
+  const { error } = await db.from('chat_mensajes').insert({
     user_id: currentUser.id,
     username: currentPerfil?.username || 'anon',
     ciudad: currentPerfil?.ciudad || 'Chile',
     texto
   });
+  if(error) toast('error enviando mensaje: '+error.message, true);
 }
 
 function chatKey(e){ if(e.key==='Enter') sendChatMsg(); }
@@ -676,6 +696,7 @@ function toggleChat(){
 
 // ── INIT ──
 async function init(){
+  await checkExistingSession();
   await loadComunidades();
   await loadPosts();
   await loadStats();
