@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -25,7 +23,7 @@ body{background:var(--bg0);color:var(--text1);font-family:var(--mono);min-height
 a{text-decoration:none;color:inherit}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--border2)}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.025) 2px,rgba(0,0,0,.025) 4px)}
- 
+
 /* TOPBAR */
 .topbar{position:sticky;top:0;z-index:200;background:var(--bg0);border-bottom:1px solid var(--border);height:48px;display:flex;align-items:center;padding:0 1rem;gap:.9rem}
 .logo{font-size:1rem;font-weight:700;color:var(--text1);letter-spacing:-.02em;white-space:nowrap;display:flex;align-items:center;gap:.3rem;flex-shrink:0}
@@ -51,12 +49,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .chat-toggle{background:none;border:1px solid var(--red);color:var(--red);padding:.28rem .65rem;border-radius:3px;font-size:.73rem;font-family:var(--mono);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:.35rem;font-weight:700}
 .chat-toggle:hover,.chat-toggle.on{background:var(--reddim)}
 .chat-badge{background:var(--red);color:white;font-size:.58rem;font-weight:700;padding:.05rem .3rem;border-radius:2px;min-width:16px;text-align:center}
- 
+
 /* LAYOUT */
 .main-wrap{display:flex;transition:padding-right .25s}
 .main-wrap.chat-open{padding-right:var(--chat-w)}
 .content{flex:1;display:flex;gap:.9rem;max-width:1060px;margin:0 auto;padding:.9rem;width:100%}
- 
+
 /* SIDEBAR L */
 .sidebar-l{width:185px;flex-shrink:0;position:sticky;top:56px;height:fit-content}
 .sf-label{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);padding:.35rem .5rem .2rem;border-left:2px solid var(--border);margin-bottom:.2rem}
@@ -67,7 +65,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .sf-sep{height:1px;background:var(--border);margin:.4rem .5rem}
 .sf-create{display:flex;align-items:center;gap:.4rem;padding:.4rem .5rem;cursor:pointer;font-size:.73rem;color:var(--green);border-left:2px solid transparent;transition:all .12s}
 .sf-create:hover{border-left-color:var(--green);background:var(--greendim)}
- 
+
 /* FEED */
 .feed{flex:1;min-width:0}
 .composer{background:var(--bg1);border:1px solid var(--border);border-radius:3px;padding:.58rem;margin-bottom:.6rem;display:flex;align-items:center;gap:.55rem}
@@ -112,7 +110,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .ccvotes{font-size:.64rem;color:var(--green);font-weight:700}
 .empty{text-align:center;padding:2.5rem;color:var(--text3);font-size:.78rem}
 .loading{text-align:center;padding:2rem;color:var(--text3);font-size:.75rem;font-family:var(--mono)}
- 
+
 /* SIDEBAR R */
 .sidebar-r{width:255px;flex-shrink:0;position:sticky;top:56px;height:fit-content}
 .widget{background:var(--bg1);border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:.6rem}
@@ -138,7 +136,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .stat-card{flex:1;background:var(--bg1);border:1px solid var(--border);border-radius:3px;padding:.42rem .45rem;text-align:center}
 .stat-val{font-size:.95rem;font-weight:700;color:var(--green)}
 .stat-lbl{font-size:.56rem;color:var(--text3);margin-top:.07rem;text-transform:uppercase;letter-spacing:.06em}
- 
+
 /* CHAT */
 .chat-panel{position:fixed;top:48px;right:0;bottom:0;width:var(--chat-w);background:var(--bg0);border-left:2px solid var(--red);display:flex;flex-direction:column;z-index:150;transform:translateX(100%);transition:transform .25s}
 .chat-panel.open{transform:translateX(0)}
@@ -173,7 +171,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .chat-inp::placeholder{color:rgba(255,51,51,.3)}
 .chat-send{background:none;border:1px solid rgba(255,51,51,.4);color:var(--red);cursor:pointer;font-size:.75rem;padding:.2rem .45rem;border-radius:2px;font-family:var(--mono);font-weight:700;transition:all .12s}
 .chat-send:hover{background:var(--reddim)}
- 
+
 /* MODAL */
 .modal-wrap{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.88);align-items:center;justify-content:center}
 .modal-wrap.on{display:flex}
@@ -196,7 +194,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .modal-sw{font-size:.68rem;color:var(--text3);text-align:center;margin-top:.75rem}
 .modal-sw a{color:var(--green);cursor:pointer}
 .modal-err{font-size:.7rem;color:var(--red);margin-top:.4rem;font-family:var(--mono)}
- 
+
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(60px);background:var(--bg2);border:1px solid var(--green);color:var(--green);padding:.42rem .95rem;border-radius:3px;font-size:.73rem;font-family:var(--mono);opacity:0;transition:all .2s;pointer-events:none;z-index:999}
 .toast::before{content:'> '}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -205,7 +203,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 </style>
 </head>
 <body>
- 
+
 <div class="topbar">
   <div class="logo"><span class="logo-rnd">Random</span>Plan<span class="logo-cursor"></span><span class="logo-v">v0.1.0</span></div>
   <div class="search"><input type="text" id="search-inp" placeholder="buscar..." oninput="searchPosts(this.value)"></div>
@@ -222,7 +220,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
     <button class="chat-toggle" id="chat-toggle-btn" onclick="toggleChat()">▮ CHAT <span class="chat-badge" id="chat-badge">0</span></button>
   </div>
 </div>
- 
+
 <div class="main-wrap" id="main-wrap">
   <div class="content">
     <div class="sidebar-l">
@@ -232,7 +230,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
       <div class="sf-sep"></div>
       <div class="sf-create" onclick="showModal('post')">+ nuevo post</div>
     </div>
- 
+
     <div class="feed">
       <div class="composer">
         <span class="comp-prompt" id="comp-prompt">user@randomplan:~$</span>
@@ -245,7 +243,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
       </div>
       <div id="posts-feed"><div class="loading">// cargando posts...</div></div>
     </div>
- 
+
     <div class="sidebar-r">
       <div class="stats-row">
         <div class="stat-card"><div class="stat-val" id="stat-posts">—</div><div class="stat-lbl">posts</div></div>
@@ -267,7 +265,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
     </div>
   </div>
 </div>
- 
+
 <!-- CHAT -->
 <div class="chat-panel" id="chat-panel">
   <div class="chat-head">
@@ -284,7 +282,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
     <button class="chat-send" onclick="sendChatMsg()">SEND</button>
   </div>
 </div>
- 
+
 <!-- MODAL -->
 <div class="modal-wrap" id="modal-wrap" onclick="closeMBg(event)">
   <div class="modal">
@@ -293,14 +291,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
   </div>
 </div>
 <div class="toast" id="toast"></div>
- 
+
 <script>
 // ── SUPABASE INIT ──
 const SUPA_URL = 'https://jquycrzqspdwciwvmuse.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxdXljcnpxc3Bkd2Npd3ZtdXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTA4MDcsImV4cCI6MjA5NzcyNjgwN30.ThqHOnX-bdro7CbGAe3PLDgM3O-RiK8NHhDuDufULs4';
 const { createClient } = supabase;
 const db = createClient(SUPA_URL, SUPA_KEY);
- 
+
 // ── STATE ──
 let currentUser = null;
 let currentPerfil = null;
@@ -312,7 +310,7 @@ let allPosts = [];
 let comunidades = [];
 let chatSub = null;
 let typingTimer = null;
- 
+
 // ── UTILS ──
 function fmtV(n){ return n>=1000?(n/1000).toFixed(1)+'k':n; }
 function fmtTime(iso){
@@ -324,7 +322,7 @@ function fmtTime(iso){
   return Math.floor(diff/86400)+'d';
 }
 function nowTime(){ const d=new Date(); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
- 
+
 let toastT;
 function toast(msg, err=false){
   const el = document.getElementById('toast');
@@ -333,7 +331,7 @@ function toast(msg, err=false){
   clearTimeout(toastT);
   toastT = setTimeout(()=>{ el.classList.remove('on'); }, 2800);
 }
- 
+
 // ── AUTH ──
 // ── AUTH ──
 async function checkExistingSession(){
@@ -344,7 +342,7 @@ async function checkExistingSession(){
     updateAuthUI(true);
   }
 }
- 
+
 db.auth.onAuthStateChange(async (event, session) => {
   if(session?.user){
     currentUser = session.user;
@@ -356,7 +354,7 @@ db.auth.onAuthStateChange(async (event, session) => {
     updateAuthUI(false);
   }
 });
- 
+
 async function loadPerfil(){
   const { data } = await db.from('perfiles').select('*').eq('id', currentUser.id).single();
   currentPerfil = data;
@@ -366,17 +364,17 @@ async function loadPerfil(){
     document.getElementById('comp-prompt').textContent = data.username+'@randomplan:~$';
   }
 }
- 
+
 function updateAuthUI(loggedIn){
   document.getElementById('auth-btns').style.display = loggedIn ? 'none' : 'flex';
   document.getElementById('user-btns').style.display = loggedIn ? 'flex' : 'none';
 }
- 
+
 async function logout(){
   await db.auth.signOut();
   toast('hasta luego');
 }
- 
+
 // ── MODALES ──
 function showModal(tipo){
   let c = '';
@@ -409,10 +407,10 @@ function showModal(tipo){
   document.getElementById('modal-content').innerHTML = c;
   document.getElementById('modal-wrap').classList.add('on');
 }
- 
+
 function closeModal(){ document.getElementById('modal-wrap').classList.remove('on'); }
 function closeMBg(e){ if(e.target===document.getElementById('modal-wrap')) closeModal(); }
- 
+
 async function doLogin(){
   const email = document.getElementById('m-email').value.trim();
   const pass = document.getElementById('m-pass').value;
@@ -423,7 +421,7 @@ async function doLogin(){
   if(error){ err.textContent = '// error: '+error.message; btn.disabled=false; btn.textContent='./login --exec'; }
   else { closeModal(); toast('bienvenido de vuelta'); }
 }
- 
+
 async function doRegister(){
   const username = document.getElementById('m-user').value.trim();
   const email = document.getElementById('m-email').value.trim();
@@ -440,7 +438,7 @@ async function doRegister(){
   closeModal();
   toast('cuenta creada. bienvenido a RandomPlan');
 }
- 
+
 async function doPost(){
   const titulo = document.getElementById('m-titulo').value.trim();
   const contenido = document.getElementById('m-contenido').value.trim();
@@ -449,18 +447,18 @@ async function doPost(){
   const err = document.getElementById('m-err');
   if(!titulo){ err.textContent='// error: el título es requerido'; return; }
   btn.disabled=true; btn.textContent='// publicando...';
-  const { error } = await db.from('Publicaciones').insert({ titulo, contenido, user_id: currentUser.id, comunidad_id, votos: 0 });
+  const { error } = await db.from('posts').insert({ titulo, contenido, user_id: currentUser.id, comunidad_id, votos: 0 });
   if(error){ err.textContent='// error: '+error.message; btn.disabled=false; btn.textContent='./publicar --exec'; }
   else { closeModal(); toast('post publicado'); loadPosts(); }
 }
- 
+
 // ── COMUNIDADES ──
 async function loadComunidades(){
-  const { data } = await db.from('Comunidades').select('*').order('miembros', { ascending: false });
+  const { data } = await db.from('comunidades').select('*').order('miembros', { ascending: false });
   if(!data) return;
   comunidades = data;
   document.getElementById('stat-comms').textContent = data.length;
- 
+
   // sidebar
   document.getElementById('sidebar-comms').innerHTML = data.map(c=>
     `<div class="sf-item" onclick="filterFeed(${c.id},this)">
@@ -469,7 +467,7 @@ async function loadComunidades(){
       <span class="sf-c">${fmtV(c.miembros)}</span>
     </div>`
   ).join('');
- 
+
   // widget
   document.getElementById('widget-comms').innerHTML = data.slice(0,5).map(c=>
     `<div class="comm-item">
@@ -478,22 +476,22 @@ async function loadComunidades(){
     </div>`
   ).join('');
 }
- 
+
 // ── POSTS ──
 async function loadPosts(){
   document.getElementById('posts-feed').innerHTML = '<div class="loading">// cargando posts...</div>';
-  let query = db.from('Publicaciones')
-    .select('*, perfiles(username, ciudad), Comunidades(nombre, icono)')
+  let query = db.from('posts')
+    .select('*, perfiles(username, ciudad), comunidades(nombre, icono)')
     .order(currentTab==='top'?'votos':'created_at', { ascending: false });
   if(currentFilter) query = query.eq('comunidad_id', currentFilter);
- 
+
   const { data, error } = await query.limit(20);
   if(error){ document.getElementById('posts-feed').innerHTML='<div class="empty">// error cargando posts</div>'; return; }
   allPosts = data || [];
   document.getElementById('stat-posts').textContent = fmtV(allPosts.length);
   renderPosts(allPosts);
 }
- 
+
 function renderPosts(posts){
   if(!posts.length){
     document.getElementById('posts-feed').innerHTML = '<div class="empty">// no hay posts aquí todavía<br><br>🌵</div>';
@@ -501,7 +499,7 @@ function renderPosts(posts){
   }
   document.getElementById('posts-feed').innerHTML = posts.map(p => renderPost(p)).join('');
 }
- 
+
 function renderPost(p){
   const user = p.perfiles || { username: 'anon', ciudad: '?' };
   const com = p.comunidades || { nombre: '?', icono: '💬' };
@@ -532,13 +530,13 @@ function renderPost(p){
     </div>
   </div>`;
 }
- 
+
 async function toggleComs(postId){
   const sec = document.getElementById('cs-'+postId);
   const isOpen = sec.classList.contains('open');
   sec.classList.toggle('open', !isOpen);
   if(!isOpen){
-    const { data } = await db.from('Comentarios')
+    const { data } = await db.from('comentarios')
       .select('*, perfiles(username, ciudad)')
       .eq('post_id', postId)
       .order('votos', { ascending: false });
@@ -554,7 +552,7 @@ async function toggleComs(postId){
     ).join('') || '<div style="font-size:.72rem;color:var(--text3);padding:.3rem 0">// sin comentarios aún</div>';
   }
 }
- 
+
 function showCommentBox(postId){
   if(!currentUser){ showModal('login'); return; }
   const box = document.querySelector('#cs-'+postId+' .comment-box');
@@ -562,24 +560,24 @@ function showCommentBox(postId){
     <button onclick="sendComment(${postId})" style="background:none;border:1px solid var(--green);color:var(--green);padding:.15rem .5rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer">SEND</button>`;
   document.getElementById('com-inp-'+postId).focus();
 }
- 
+
 async function sendComment(postId){
   const inp = document.getElementById('com-inp-'+postId);
   const texto = inp.value.trim();
   if(!texto) return;
-  await db.from('Comentarios').insert({ texto, user_id: currentUser.id, post_id: postId, votos: 0 });
+  await db.from('comentarios').insert({ texto, user_id: currentUser.id, post_id: postId, votos: 0 });
   toast('comentario publicado');
   toggleComs(postId); toggleComs(postId);
 }
- 
+
 async function vote(postId, dir, btn){
   if(!currentUser){ showModal('login'); return; }
   const { data: existing } = await db.from('votos').select('*').eq('user_id', currentUser.id).eq('post_id', postId).single();
   if(existing){ toast('ya votaste en este post', true); return; }
   await db.from('votos').insert({ user_id: currentUser.id, post_id: postId, direccion: dir });
-  const { data: post } = await db.from('Publicaciones').select('votos').eq('id', postId).single();
+  const { data: post } = await db.from('posts').select('votos').eq('id', postId).single();
   const newV = (post?.votos||0) + dir;
-  await db.from('Publicaciones').update({ votos: newV }).eq('id', postId);
+  await db.from('posts').update({ votos: newV }).eq('id', postId);
   document.getElementById('vc-'+postId).textContent = fmtV(newV);
   btn.classList.add('on');
   // karma al autor: sumar 1 por upvote
@@ -589,43 +587,43 @@ async function vote(postId, dir, btn){
     if(ap) await db.from("perfiles").update({ karma: (ap.karma||0)+1 }).eq("id", pKarma.user_id);
   }
 }
- 
+
 function filterFeed(comId, el){
   currentFilter = comId;
   document.querySelectorAll('.sf-item').forEach(i=>i.classList.remove('on'));
   if(el) el.classList.add('on');
   loadPosts();
 }
- 
+
 function setTab(btn, tab){
   currentTab = tab;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   btn.classList.add('on');
   loadPosts();
 }
- 
+
 function searchPosts(q){
   if(!q){ renderPosts(allPosts); return; }
   const filtered = allPosts.filter(p=>p.titulo.toLowerCase().includes(q.toLowerCase())||(p.contenido||'').toLowerCase().includes(q.toLowerCase()));
   renderPosts(filtered);
 }
- 
+
 // ── STATS ──
 async function loadStats(){
   const { count: userCount } = await db.from('perfiles').select('*', { count:'exact', head:true });
   document.getElementById('stat-users').textContent = fmtV(userCount||0);
   document.getElementById('online-txt').textContent = fmtV(userCount||0)+' users';
 }
- 
+
 // ── CHAT REALTIME ──
 let lastChatId = 0;
- 
+
 function initChat(){
   addSysMsg('// chat global activo · randomplan.cl');
   loadChatHistory();
   setInterval(pollChat, 3000);
 }
- 
+
 async function loadChatHistory(){
   const { data } = await db.from('chat_mensajes').select('*').order('created_at', { ascending:false }).limit(30);
   if(!data || !data.length){ document.getElementById('chat-online-count').textContent = 'chat activo'; return; }
@@ -638,7 +636,7 @@ async function loadChatHistory(){
   el.scrollTop = el.scrollHeight;
   document.getElementById('chat-online-count').textContent = 'chat activo';
 }
- 
+
 async function pollChat(){
   if(lastChatId === 0) return;
   const { data } = await db.from('chat_mensajes').select('*').gt('id', lastChatId).order('created_at', { ascending:true });
@@ -649,7 +647,7 @@ async function pollChat(){
     if(m.id > lastChatId) lastChatId = m.id;
   });
 }
- 
+
 function addSysMsg(txt){
   const el = document.getElementById('chat-msgs');
   const div = document.createElement('div');
@@ -657,7 +655,7 @@ function addSysMsg(txt){
   div.innerHTML = `<div class="msg-text system">${txt}</div>`;
   el.appendChild(div);
 }
- 
+
 function addChatMsg(username, ciudad, texto, isMe){
   const el = document.getElementById('chat-msgs');
   const div = document.createElement('div');
@@ -672,7 +670,7 @@ function addChatMsg(username, ciudad, texto, isMe){
   el.scrollTop = el.scrollHeight;
   if(!chatOpen){ newMsgCount++; document.getElementById('chat-badge').textContent=newMsgCount; }
 }
- 
+
 async function sendChatMsg(){
   // re-check session
   if(!currentUser){
@@ -703,9 +701,9 @@ async function sendChatMsg(){
   });
   if(error) toast('error: '+error.message, true);
 }
- 
+
 function chatKey(e){ if(e.key==='Enter') sendChatMsg(); }
- 
+
 function toggleChat(){
   chatOpen = !chatOpen;
   document.getElementById('chat-panel').classList.toggle('open', chatOpen);
@@ -713,7 +711,7 @@ function toggleChat(){
   document.getElementById('chat-toggle-btn').classList.toggle('on', chatOpen);
   if(chatOpen){ newMsgCount=0; document.getElementById('chat-badge').textContent='0'; const el=document.getElementById('chat-msgs'); el.scrollTop=el.scrollHeight; }
 }
- 
+
 // ── INIT ──
 async function init(){
   await checkExistingSession();
@@ -722,7 +720,7 @@ async function init(){
   await loadStats();
   initChat();
 }
- 
+
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
 init();
 </script>
