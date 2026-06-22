@@ -590,13 +590,16 @@ function toggleComs(id){openComs[id]=!openComs[id];var el=document.getElementByI
 function filterFeed(sub,el){
   document.querySelectorAll('.sf-item').forEach(function(i){i.classList.remove('on')});
   if(el)el.classList.add('on');
-  renderFeed(sub==='inicio'?null:sub);
+  var f=(!sub||sub==='inicio')?null:sub;
+  renderFeed(f);
+  loadRealPosts(f);
 }
 function filterFeedSub(sub){
   document.querySelectorAll('.sf-item').forEach(function(i){
     i.classList.toggle('on',i.textContent.indexOf(sub)!==-1);
   });
   renderFeed(sub);
+  loadRealPosts(sub);
 }
 function setTab(btn,tab){
   document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on')});btn.classList.add('on');
@@ -782,6 +785,44 @@ function sendMsg(){
       setTimeout(function(){addMsg(bot,replies[Math.floor(Math.random()*replies.length)],false,false)},1200);
     },600+Math.random()*1800);
   }
+}
+
+function openCommentBox(postId){
+  if(!currentUser){showModal('login');return;}
+  var box=document.getElementById('cbox-'+postId);
+  if(!box)return;
+  box.innerHTML='<input type="text" id="cinp-'+postId+'" style="flex:1;background:transparent;border:none;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none;width:100%" placeholder="escribe tu comentario..." onkeydown="if(event.key===\'Enter\')sendComment('+postId+')">'+
+    '<button onclick="sendComment('+postId+')" style="background:none;border:1px solid var(--green);color:var(--green);padding:.15rem .5rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;margin-left:.4rem">SEND</button>';
+  var inp=document.getElementById('cinp-'+postId);
+  if(inp)inp.focus();
+}
+
+async function sendComment(postId){
+  var inp=document.getElementById('cinp-'+postId);
+  if(!inp)return;
+  var texto=inp.value.trim();
+  if(!texto)return;
+  var sess=await db.auth.getSession();
+  if(!sess.data||!sess.data.session){showModal('login');return;}
+  var rp=await db.from('perfiles').select('*').eq('id',sess.data.session.user.id).single();
+  var username=rp.data?rp.data.username:'anon';
+  await db.from('comentarios').insert({
+    texto:texto,
+    user_id:sess.data.session.user.id,
+    post_id:postId,
+    votos:0
+  });
+  // show comment inline
+  var list=document.getElementById('clist-'+postId);
+  if(list){
+    var div=document.createElement('div');
+    div.className='comment';
+    div.innerHTML='<div class="cava">👤</div><div class="ccont"><div class="ccmeta"><span class="u">u/'+username+'</span> · ahora</div><div class="cctext">'+texto+'</div></div>';
+    list.appendChild(div);
+  }
+  var box=document.getElementById('cbox-'+postId);
+  if(box)box.innerHTML='escribe un comentario...';
+  toast('comentario publicado');
 }
 
 async function doPost(){
