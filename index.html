@@ -530,7 +530,7 @@ function renderPost(p){
   return '<div class="card" id="post-'+p.id+'"><div class="vote-col"><button class="vbtn up '+(voto===1?'on':'')+'" onclick="vote('+p.id+',1)">▲</button><span class="vcount" id="vc-'+p.id+'">'+fmtV(v)+'</span><button class="vbtn down '+(voto===-1?'on':'')+'" onclick="vote('+p.id+',-1)">▼</button></div><div class="cbody"><div class="cmeta"><span class="csub" onclick="filterFeedSub(\''+p.sub+'\')">'+p.ic+' '+p.sub+'</span><span class="dot">::</span><span class="cuser">u/'+p.user.name+'</span><span class="dot">::</span><span>'+p.t+'</span><span class="flair '+p.fc+'">'+p.flair+'</span></div><div class="ctitle" onclick="toggleComs('+p.id+')">'+p.title+'</div>'+(p.prev?'<div class="cprev">'+p.prev+'</div>':'')+'<div class="cactions"><button class="cact" onclick="toggleComs('+p.id+')">// '+p.coms+' comentarios</button><button class="cact" onclick="toast(\'enlace copiado\')">// compartir</button><button class="cact" onclick="toast(\'post guardado\')">// guardar</button></div><div class="comments-section" id="cs-'+p.id+'"><div class="comment-box" onclick="showModal(\'post\')">escribe un comentario...</div>'+renderComs(p.cd)+'</div></div></div>';
 }
 function renderFeed(filter){
-  var list=filter&&filter!=='inicio'?POSTS.filter(function(p){return p.sub===filter}):POSTS;
+  var list=filter?POSTS.filter(function(p){return p.sub===filter}):POSTS;
   var html=list.map(renderPost).join('');
   if(!html)html='<div style="text-align:center;padding:2.5rem;color:var(--text3);font-size:.75rem;font-family:var(--mono)">// no hay posts aquí todavía<br><br>🌵</div>';
   document.getElementById('posts-feed').innerHTML=html;
@@ -554,8 +554,17 @@ function vote(id,dir){
   if(c){c.querySelector('.vbtn.up').classList.toggle('on',votes[id]===1);c.querySelector('.vbtn.down').classList.toggle('on',votes[id]===-1)}
 }
 function toggleComs(id){openComs[id]=!openComs[id];var el=document.getElementById('cs-'+id);if(el)el.classList.toggle('open',openComs[id])}
-function filterFeed(sub,el){document.querySelectorAll('.sf-item').forEach(function(i){i.classList.remove('on')});if(el)el.classList.add('on');renderFeed(sub)}
-function filterFeedSub(sub){document.querySelectorAll('.sf-item').forEach(function(i){i.classList.toggle('on',i.textContent.indexOf(sub)!==-1)});renderFeed(sub)}
+function filterFeed(sub,el){
+  document.querySelectorAll('.sf-item').forEach(function(i){i.classList.remove('on')});
+  if(el)el.classList.add('on');
+  renderFeed(sub==='inicio'?null:sub);
+}
+function filterFeedSub(sub){
+  document.querySelectorAll('.sf-item').forEach(function(i){
+    i.classList.toggle('on',i.textContent.indexOf(sub)!==-1);
+  });
+  renderFeed(sub);
+}
 function setTab(btn,tab){
   document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on')});btn.classList.add('on');
   var sorted=POSTS.slice();
@@ -660,7 +669,7 @@ async function doLogin(){
   btn.disabled=true;btn.textContent='// conectando...';
   var r=await db.auth.signInWithPassword({email:email,password:pass});
   if(r.error){err.textContent='// error: '+r.error.message;btn.disabled=false;btn.textContent='./login --exec';}
-  else{closeModal();toast('bienvenido de vuelta');}
+  else{closeModal();toast('bienvenido de vuelta');currentUser=r.data.user;await loadPerfil();}
 }
 
 async function doRegister(){
@@ -675,6 +684,8 @@ async function doRegister(){
   var r=await db.auth.signUp({email:email,password:pass});
   if(r.error){err.textContent='// error: '+r.error.message;btn.disabled=false;btn.textContent='./register --exec';return;}
   await db.from('perfiles').insert({id:r.data.user.id,username:username,ciudad:ciudad||'Chile'});
+  currentUser=r.data.user;
+  await loadPerfil();
   closeModal();
   toast('cuenta creada. bienvenido a RandomPlan');
 }
