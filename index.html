@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RandomPlan — La conversación chilena</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg0:#080b0f;--bg1:#0d1117;--bg2:#141c25;--bg3:#1c2733;
+  --border:#1e2d3d;--border2:#2a3f55;
+  --green:#00ff88;--greendim:rgba(0,255,136,.08);--greenglow:rgba(0,255,136,.18);
+  --red:#ff3333;--reddim:rgba(255,51,51,.1);
+  --text1:#e6edf3;--text2:#8b949e;--text3:#484f58;
+  --amber:#ffa657;--blue:#79c0ff;--purple:#d2a8ff;--cyan:#a5d6ff;
+  --mono:'JetBrains Mono',monospace;--sans:'Space Grotesk',sans-serif;
+  --chat-w:300px;
+}
+html{font-size:14px;background:var(--bg0)}
+body{background:var(--bg0);color:var(--text1);font-family:var(--mono);min-height:100vh;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--border2)}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.025) 2px,rgba(0,0,0,.025) 4px)}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:200;background:var(--bg0);border-bottom:1px solid var(--border);height:48px;display:flex;align-items:center;padding:0 1rem;gap:.9rem}
+.logo{font-size:1rem;font-weight:700;color:var(--text1);letter-spacing:-.02em;white-space:nowrap;display:flex;align-items:center;gap:.3rem;flex-shrink:0}
+.logo-rnd{color:var(--green)}
+.logo-cursor{display:inline-block;width:7px;height:13px;background:var(--green);animation:blink-g 1.1s step-end infinite;margin-left:1px;vertical-align:-2px}
+@keyframes blink-g{0%,100%{opacity:1}50%{opacity:0}}
+.logo-v{font-size:.6rem;color:var(--text3);margin-left:.15rem}
+.search{flex:1;max-width:380px;position:relative}
+.search::before{content:'> ';position:absolute;left:.6rem;top:50%;transform:translateY(-50%);color:var(--green);font-size:.78rem;pointer-events:none}
+.search input{width:100%;background:var(--bg1);border:1px solid var(--border);border-radius:3px;padding:.37rem .8rem .37rem 1.75rem;font-family:var(--mono);font-size:.76rem;color:var(--text1);outline:none;transition:all .15s}
+.search input::placeholder{color:var(--text3)}
+.search input:focus{border-color:var(--green);background:var(--bg2)}
+.topbar-r{margin-left:auto;display:flex;align-items:center;gap:.5rem}
+.ping{font-size:.63rem;color:var(--text3);display:flex;align-items:center;gap:.3rem}
+.ping-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.nav-btn{background:none;border:1px solid var(--border2);color:var(--text2);padding:.28rem .65rem;border-radius:3px;font-size:.73rem;font-family:var(--mono);cursor:pointer;transition:all .15s}
+.nav-btn:hover{border-color:var(--green);color:var(--green)}
+.nav-btn.pri{background:var(--greendim);border-color:var(--green);color:var(--green);font-weight:700}
+.nav-btn.pri:hover{background:var(--greenglow)}
+.user-info{display:flex;align-items:center;gap:.5rem;font-size:.73rem;color:var(--green)}
+.user-karma{color:var(--text3);font-size:.65rem}
+.chat-toggle{background:none;border:1px solid var(--red);color:var(--red);padding:.28rem .65rem;border-radius:3px;font-size:.73rem;font-family:var(--mono);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:.35rem;font-weight:700}
+.chat-toggle:hover,.chat-toggle.on{background:var(--reddim)}
+.chat-badge{background:var(--red);color:white;font-size:.58rem;font-weight:700;padding:.05rem .3rem;border-radius:2px;min-width:16px;text-align:center}
+
+/* LAYOUT */
+.main-wrap{display:flex;transition:padding-right .25s}
+.main-wrap.chat-open{padding-right:var(--chat-w)}
+.content{flex:1;display:flex;gap:.9rem;max-width:1060px;margin:0 auto;padding:.9rem;width:100%}
+
+/* SIDEBAR L */
+.sidebar-l{width:185px;flex-shrink:0;position:sticky;top:56px;height:fit-content}
+.sf-label{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);padding:.35rem .5rem .2rem;border-left:2px solid var(--border);margin-bottom:.2rem}
+.sf-item{display:flex;align-items:center;gap:.5rem;padding:.4rem .5rem;cursor:pointer;font-size:.76rem;color:var(--text2);transition:all .12s;border-left:2px solid transparent;margin-bottom:1px}
+.sf-item:hover{color:var(--text1);border-left-color:var(--border2);background:var(--bg1)}
+.sf-item.on{color:var(--green);border-left-color:var(--green);background:var(--greendim);font-weight:700}
+.sf-ic{width:17px;text-align:center;font-size:.82rem}.sf-n{flex:1}.sf-c{font-size:.6rem;color:var(--text3)}
+.sf-sep{height:1px;background:var(--border);margin:.4rem .5rem}
+.sf-create{display:flex;align-items:center;gap:.4rem;padding:.4rem .5rem;cursor:pointer;font-size:.73rem;color:var(--green);border-left:2px solid transparent;transition:all .12s}
+.sf-create:hover{border-left-color:var(--green);background:var(--greendim)}
+
+/* FEED */
+.feed{flex:1;min-width:0}
+.composer{background:var(--bg1);border:1px solid var(--border);border-radius:3px;padding:.58rem;margin-bottom:.6rem;display:flex;align-items:center;gap:.55rem}
+.comp-prompt{color:var(--green);font-size:.78rem;white-space:nowrap}
+.comp-inp{flex:1;background:transparent;border:none;font-family:var(--mono);font-size:.8rem;color:var(--text2);cursor:pointer;outline:none}
+.comp-inp::placeholder{color:var(--text3)}.comp-inp:focus{color:var(--text1)}
+.tabs{display:flex;gap:0;margin-bottom:.6rem;border-bottom:1px solid var(--border)}
+.tab{padding:.42rem .75rem;border:none;border-bottom:2px solid transparent;background:none;font-family:var(--mono);font-size:.73rem;color:var(--text3);cursor:pointer;transition:all .12s;margin-bottom:-1px}
+.tab:hover{color:var(--text2)}.tab.on{color:var(--green);border-bottom-color:var(--green);font-weight:700}
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:3px;margin-bottom:.42rem;display:flex;overflow:hidden;transition:border-color .12s;position:relative}
+.card:hover{border-color:var(--border2)}
+.card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:0;background:var(--green);transition:width .12s;pointer-events:none}
+.card:hover::before{width:2px}
+.vote-col{width:34px;flex-shrink:0;background:var(--bg0);display:flex;flex-direction:column;align-items:center;padding:.5rem .2rem;gap:.1rem;border-right:1px solid var(--border)}
+.vbtn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:.88rem;line-height:1;padding:.13rem;border-radius:2px;transition:all .1s;font-family:var(--mono)}
+.vbtn.up:hover,.vbtn.up.on{color:var(--green)}.vbtn.down:hover,.vbtn.down.on{color:var(--purple)}
+.vcount{font-size:.68rem;font-weight:700;color:var(--text2)}
+.cbody{flex:1;padding:.6rem .8rem .5rem;min-width:0}
+.cmeta{display:flex;align-items:center;gap:.38rem;flex-wrap:wrap;font-size:.66rem;color:var(--text3);margin-bottom:.28rem}
+.csub{color:var(--blue);cursor:pointer;font-weight:700}.csub:hover{text-decoration:underline}
+.cuser{color:var(--amber);cursor:pointer}.cuser:hover{text-decoration:underline}
+.dot{color:var(--border2)}
+.ctitle{font-family:var(--sans);font-size:.92rem;font-weight:700;color:var(--text1);line-height:1.35;margin-bottom:.32rem;cursor:pointer}
+.ctitle:hover{color:var(--green)}
+.cprev{font-family:var(--sans);font-size:.78rem;color:var(--text2);line-height:1.5;margin-bottom:.42rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cactions{display:flex;align-items:center;gap:.1rem}
+.cact{display:flex;align-items:center;gap:.22rem;padding:.23rem .48rem;border-radius:2px;border:none;background:none;font-family:var(--mono);font-size:.68rem;color:var(--text3);cursor:pointer;transition:all .1s}
+.cact:hover{background:var(--bg2);color:var(--text2)}
+.comments-section{display:none;margin-top:.45rem;padding-top:.45rem;border-top:1px solid var(--border)}
+.comments-section.open{display:block}
+.comment-box{background:var(--bg0);border:1px solid var(--border);border-radius:2px;padding:.38rem .6rem;margin-bottom:.42rem;font-size:.73rem;cursor:text;color:var(--text3);display:flex;align-items:center;gap:.35rem}
+.comment-box::before{content:'> ';color:var(--green)}
+.comment{display:flex;gap:.42rem;margin-bottom:.45rem}
+.cava{font-size:.82rem;flex-shrink:0;width:20px;text-align:center;margin-top:.08rem}
+.ccont{flex:1}
+.ccmeta{font-size:.64rem;color:var(--text3);margin-bottom:.13rem}
+.ccmeta .u{color:var(--amber);font-weight:700}.ccmeta .ci{color:var(--cyan)}
+.cctext{font-family:var(--sans);font-size:.78rem;line-height:1.5;color:var(--text1)}
+.ccacts{display:flex;gap:.18rem;margin-top:.2rem}
+.ccact{background:none;border:none;font-size:.64rem;color:var(--text3);cursor:pointer;padding:.1rem .26rem;border-radius:2px;font-family:var(--mono);transition:all .1s}
+.ccact:hover{background:var(--bg2);color:var(--green)}
+.ccvotes{font-size:.64rem;color:var(--green);font-weight:700}
+.empty{text-align:center;padding:2.5rem;color:var(--text3);font-size:.78rem}
+.loading{text-align:center;padding:2rem;color:var(--text3);font-size:.75rem;font-family:var(--mono)}
+
+/* SIDEBAR R */
+.sidebar-r{width:255px;flex-shrink:0;position:sticky;top:56px;height:fit-content}
+.widget{background:var(--bg1);border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:.6rem}
+.whead{padding:.42rem .75rem;font-family:var(--mono);font-size:.65rem;font-weight:700;color:var(--green);letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg0);display:flex;align-items:center;gap:.35rem}
+.whead::before{content:'//';color:var(--text3);font-weight:400}
+.wbody{padding:.6rem .75rem}
+.wbody p{font-family:var(--sans);font-size:.78rem;color:var(--text2);line-height:1.55;margin-bottom:.55rem}
+.wbtn{display:block;width:100%;padding:.43rem;border-radius:2px;text-align:center;font-size:.73rem;font-weight:700;font-family:var(--mono);cursor:pointer;transition:all .15s;border:none;margin-bottom:.32rem}
+.wbtn.pri{background:var(--greendim);border:1px solid var(--green);color:var(--green)}
+.wbtn.pri:hover{background:var(--greenglow)}
+.wbtn.sec{background:none;border:1px solid var(--border2);color:var(--text3)}
+.wbtn.sec:hover{border-color:var(--text3);color:var(--text2)}
+.comm-item{display:flex;align-items:center;gap:.55rem;padding:.4rem 0;border-bottom:1px solid var(--border)}
+.comm-item:last-child{border-bottom:none}
+.comm-ic{font-size:1rem;width:22px;text-align:center}
+.comm-info{flex:1}
+.comm-name{font-size:.75rem;font-weight:700;color:var(--text1)}
+.comm-mem{font-size:.6rem;color:var(--text3)}
+.btn-join{background:none;border:1px solid var(--border2);color:var(--text3);padding:.18rem .52rem;border-radius:2px;font-size:.65rem;font-weight:700;font-family:var(--mono);cursor:pointer;transition:all .12s}
+.btn-join:hover{border-color:var(--green);color:var(--green)}
+.btn-join.joined{background:var(--greendim);border-color:var(--green);color:var(--green)}
+.stats-row{display:flex;gap:.35rem;margin-bottom:.6rem}
+.stat-card{flex:1;background:var(--bg1);border:1px solid var(--border);border-radius:3px;padding:.42rem .45rem;text-align:center}
+.stat-val{font-size:.95rem;font-weight:700;color:var(--green)}
+.stat-lbl{font-size:.56rem;color:var(--text3);margin-top:.07rem;text-transform:uppercase;letter-spacing:.06em}
+
+/* CHAT */
+.chat-panel{position:fixed;top:48px;right:0;bottom:0;width:var(--chat-w);background:var(--bg0);border-left:2px solid var(--red);display:flex;flex-direction:column;z-index:150;transform:translateX(100%);transition:transform .25s}
+.chat-panel.open{transform:translateX(0)}
+.chat-head{padding:.55rem .85rem;border-bottom:1px solid rgba(255,51,51,.25);background:#0a0000;flex-shrink:0}
+.chat-head-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.25rem}
+.chat-title{font-size:.8rem;font-weight:700;color:var(--red);letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:.5rem}
+.chat-title-cursor{display:inline-block;width:8px;height:.85rem;background:var(--red);animation:blink-r 1s step-end infinite;vertical-align:-.1rem}
+@keyframes blink-r{0%,100%{opacity:1}50%{opacity:0}}
+.chat-online{font-size:.67rem;color:rgba(255,51,51,.6);display:flex;align-items:center;gap:.35rem}
+.chat-online-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse-r 2s infinite}
+@keyframes pulse-r{0%,100%{opacity:1}50%{opacity:.2}}
+.chat-msgs{flex:1;overflow-y:auto;padding:.65rem .8rem;display:flex;flex-direction:column;gap:.55rem}
+.chat-msgs::-webkit-scrollbar{width:3px}
+.chat-msgs::-webkit-scrollbar-thumb{background:rgba(255,51,51,.3)}
+.msg{display:flex;flex-direction:column;gap:.12rem}
+.msg-meta{display:flex;align-items:baseline;gap:.4rem}
+.msg-user{font-size:.75rem;font-weight:700;color:var(--amber)}
+.msg-user.me{color:var(--red)}
+.msg-city{font-size:.63rem;color:var(--text3)}
+.msg-time{font-size:.6rem;color:var(--text3);margin-left:auto}
+.msg-text{font-family:var(--sans);font-size:.88rem;color:var(--text1);line-height:1.5}
+.msg-text.system{font-family:var(--mono);font-size:.7rem;color:rgba(255,51,51,.5);font-style:italic}
+.typing-row{display:flex;align-items:center;gap:.45rem;padding:.3rem .8rem;font-size:.67rem;color:rgba(255,51,51,.5);flex-shrink:0;min-height:24px}
+.typing-dots{display:flex;gap:3px}
+.typing-dots span{width:5px;height:5px;border-radius:50%;background:var(--red);animation:tdot .9s infinite;opacity:.4}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes tdot{0%,60%,100%{opacity:.2}30%{opacity:1}}
+.chat-input-wrap{padding:.6rem .8rem;border-top:1px solid rgba(255,51,51,.25);flex-shrink:0;display:flex;align-items:center;gap:.45rem;background:#0a0000}
+.chat-prompt{color:var(--red);font-size:.8rem;white-space:nowrap;font-weight:700}
+.chat-inp{flex:1;background:transparent;border:none;font-family:var(--mono);font-size:.82rem;color:var(--text1);outline:none;caret-color:var(--red)}
+.chat-inp::placeholder{color:rgba(255,51,51,.3)}
+.chat-send{background:none;border:1px solid rgba(255,51,51,.4);color:var(--red);cursor:pointer;font-size:.75rem;padding:.2rem .45rem;border-radius:2px;font-family:var(--mono);font-weight:700;transition:all .12s}
+.chat-send:hover{background:var(--reddim)}
+
+/* MODAL */
+.modal-wrap{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.88);align-items:center;justify-content:center}
+.modal-wrap.on{display:flex}
+.modal{background:var(--bg1);border:1px solid var(--border2);border-radius:3px;width:100%;max-width:360px;padding:1.5rem;position:relative}
+.modal-bar{background:var(--bg0);border-bottom:1px solid var(--border);margin:-1.5rem -1.5rem 1.1rem;padding:.42rem .75rem;display:flex;align-items:center;font-size:.65rem;color:var(--text3)}
+.modal-x{margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;font-size:.88rem}
+.modal-x:hover{color:var(--red)}
+.modal h2{font-size:.92rem;font-weight:700;color:var(--green);margin-bottom:.15rem}
+.modal p.sub{font-size:.72rem;color:var(--text3);margin-bottom:.9rem}
+.field{margin-bottom:.55rem}
+.field label{display:block;font-size:.62rem;font-weight:700;color:var(--text3);margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.07em}
+.field label::before{content:'# ';color:var(--green)}
+.field input,.field textarea,.field select{width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:2px;padding:.48rem .7rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none;transition:border-color .12s;resize:vertical}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--green)}
+.field input::placeholder,.field textarea::placeholder{color:var(--text3)}
+.field select option{background:var(--bg1)}
+.modal-sub{width:100%;background:var(--greendim);color:var(--green);border:1px solid var(--green);padding:.48rem;border-radius:2px;font-size:.78rem;font-weight:700;font-family:var(--mono);cursor:pointer;transition:all .12s;margin-top:.2rem}
+.modal-sub:hover{background:var(--greenglow)}
+.modal-sub:disabled{opacity:.4;cursor:not-allowed}
+.modal-sw{font-size:.68rem;color:var(--text3);text-align:center;margin-top:.75rem}
+.modal-sw a{color:var(--green);cursor:pointer}
+.modal-err{font-size:.7rem;color:var(--red);margin-top:.4rem;font-family:var(--mono)}
+
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(60px);background:var(--bg2);border:1px solid var(--green);color:var(--green);padding:.42rem .95rem;border-radius:3px;font-size:.73rem;font-family:var(--mono);opacity:0;transition:all .2s;pointer-events:none;z-index:999}
+.toast::before{content:'> '}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{border-color:var(--red);color:var(--red)}
+@media(max-width:800px){.sidebar-l,.sidebar-r{display:none}.content{padding:.65rem}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><span class="logo-rnd">Random</span>Plan<span class="logo-cursor"></span><span class="logo-v">v0.1.0</span></div>
+  <div class="search"><input type="text" id="search-inp" placeholder="buscar..." oninput="searchPosts(this.value)"></div>
+  <div class="topbar-r">
+    <div class="ping"><span class="ping-dot"></span><span id="online-txt">cargando...</span></div>
+    <div id="auth-btns">
+      <button class="nav-btn" onclick="showModal('login')" style="margin-right:.3rem">login</button>
+      <button class="nav-btn pri" onclick="showModal('register')">./registrar</button>
+    </div>
+    <div id="user-btns" style="display:none;align-items:center;gap:.5rem">
+      <div class="user-info"><span id="user-name"></span><span class="user-karma" id="user-karma"></span></div>
+      <button class="nav-btn" onclick="logout()">salir</button>
+    </div>
+    <button class="chat-toggle" id="chat-toggle-btn" onclick="toggleChat()">▮ CHAT <span class="chat-badge" id="chat-badge">0</span></button>
+  </div>
+</div>
+
+<div class="main-wrap" id="main-wrap">
+  <div class="content">
+    <div class="sidebar-l">
+      <div class="sf-label">Comunidades</div>
+      <div class="sf-item on" onclick="filterFeed(null,this)"><span class="sf-ic">~</span><span class="sf-n">inicio</span></div>
+      <div id="sidebar-comms"></div>
+      <div class="sf-sep"></div>
+      <div class="sf-create" onclick="showModal('post')">+ nuevo post</div>
+    </div>
+
+    <div class="feed">
+      <div class="composer">
+        <span class="comp-prompt" id="comp-prompt">user@randomplan:~$</span>
+        <input class="comp-inp" placeholder="¿qué está pasando, Chile?" onclick="showModal('post')" readonly>
+      </div>
+      <div class="tabs">
+        <button class="tab on" onclick="setTab(this,'nuevo')">✨ nuevo</button>
+        <button class="tab" onclick="setTab(this,'top')">📈 top</button>
+        <button class="tab" onclick="setTab(this,'debate')">💬 debate</button>
+      </div>
+      <div id="posts-feed"><div class="loading">// cargando posts...</div></div>
+    </div>
+
+    <div class="sidebar-r">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-val" id="stat-posts">—</div><div class="stat-lbl">posts</div></div>
+        <div class="stat-card"><div class="stat-val" id="stat-users">—</div><div class="stat-lbl">users</div></div>
+        <div class="stat-card"><div class="stat-val" id="stat-comms">—</div><div class="stat-lbl">plazas</div></div>
+      </div>
+      <div class="widget">
+        <div class="whead">comunidades</div>
+        <div class="wbody"><div id="widget-comms"><div class="loading">// cargando...</div></div></div>
+      </div>
+      <div class="widget">
+        <div class="whead">RandomPlan</div>
+        <div class="wbody">
+          <p>La conversación chilena sin filtro. Únete, postea, vota.</p>
+          <button class="wbtn pri" onclick="showModal('register')">./crear_cuenta</button>
+          <button class="wbtn sec" onclick="showModal('login')">login</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div class="chat-panel" id="chat-panel">
+  <div class="chat-head">
+    <div class="chat-head-top">
+      <div class="chat-title">// CHAT GLOBAL <span class="chat-title-cursor"></span></div>
+    </div>
+    <div class="chat-online"><span class="chat-online-dot"></span><span id="chat-online-count">conectando...</span></div>
+  </div>
+  <div class="chat-msgs" id="chat-msgs"></div>
+  <div class="typing-row" id="typing-row" style="opacity:0"></div>
+  <div class="chat-input-wrap">
+    <span class="chat-prompt">$_</span>
+    <input class="chat-inp" id="chat-inp" placeholder="escribe y presiona enter..." onkeydown="chatKey(event)">
+    <button class="chat-send" onclick="sendChatMsg()">SEND</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-wrap" id="modal-wrap" onclick="closeMBg(event)">
+  <div class="modal">
+    <div class="modal-bar">randomplan.cl <button class="modal-x" onclick="closeModal()">✕</button></div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── SUPABASE INIT ──
+const SUPA_URL = 'https://jquycrzqspdwciwvmuse.supabase.co';
+const SUPA_KEY = 'sb_publishable_WAHc7fT6N6OakIjZgXiA0Q_gF40S6cO';
+const { createClient } = supabase;
+const db = createClient(SUPA_URL, SUPA_KEY);
+
+// ── STATE ──
+let currentUser = null;
+let currentPerfil = null;
+let currentFilter = null;
+let currentTab = 'nuevo';
+let chatOpen = false;
+let newMsgCount = 0;
+let allPosts = [];
+let comunidades = [];
+let chatSub = null;
+let typingTimer = null;
+
+// ── UTILS ──
+function fmtV(n){ return n>=1000?(n/1000).toFixed(1)+'k':n; }
+function fmtTime(iso){
+  const d = new Date(iso), now = new Date();
+  const diff = Math.floor((now-d)/1000);
+  if(diff<60) return 'ahora';
+  if(diff<3600) return Math.floor(diff/60)+'min';
+  if(diff<86400) return Math.floor(diff/3600)+'h';
+  return Math.floor(diff/86400)+'d';
+}
+function nowTime(){ const d=new Date(); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+
+let toastT;
+function toast(msg, err=false){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast on' + (err?' err':'');
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>{ el.classList.remove('on'); }, 2800);
+}
+
+// ── AUTH ──
+db.auth.onAuthStateChange(async (event, session) => {
+  if(session?.user){
+    currentUser = session.user;
+    await loadPerfil();
+    updateAuthUI(true);
+  } else {
+    currentUser = null;
+    currentPerfil = null;
+    updateAuthUI(false);
+  }
+});
+
+async function loadPerfil(){
+  const { data } = await db.from('perfiles').select('*').eq('id', currentUser.id).single();
+  currentPerfil = data;
+  if(data){
+    document.getElementById('user-name').textContent = 'u/'+data.username;
+    document.getElementById('user-karma').textContent = '· '+data.karma+' karma';
+    document.getElementById('comp-prompt').textContent = data.username+'@randomplan:~$';
+  }
+}
+
+function updateAuthUI(loggedIn){
+  document.getElementById('auth-btns').style.display = loggedIn ? 'none' : 'flex';
+  document.getElementById('user-btns').style.display = loggedIn ? 'flex' : 'none';
+}
+
+async function logout(){
+  await db.auth.signOut();
+  toast('hasta luego');
+}
+
+// ── MODALES ──
+function showModal(tipo){
+  let c = '';
+  if(tipo==='login'){
+    c = '<h2>$ login</h2><p class="sub">// ingresa a tu cuenta</p>'+
+        '<div class="field"><label>email</label><input type="email" id="m-email" placeholder="tu@email.cl"></div>'+
+        '<div class="field"><label>contraseña</label><input type="password" id="m-pass" placeholder="••••••••"></div>'+
+        '<div class="modal-err" id="m-err"></div>'+
+        '<button class="modal-sub" id="m-sub" onclick="doLogin()">./login --exec</button>'+
+        '<div class="modal-sw">¿no tienes cuenta? <a onclick="showModal(\'register\')">registrar</a></div>';
+  } else if(tipo==='register'){
+    c = '<h2>$ crear_cuenta</h2><p class="sub">// únete a RandomPlan</p>'+
+        '<div class="field"><label>username</label><input type="text" id="m-user" placeholder="condor_veloz_42"></div>'+
+        '<div class="field"><label>email</label><input type="email" id="m-email" placeholder="tu@email.cl"></div>'+
+        '<div class="field"><label>contraseña</label><input type="password" id="m-pass" placeholder="mínimo 6 caracteres"></div>'+
+        '<div class="field"><label>ciudad (opcional)</label><input type="text" id="m-ciudad" placeholder="Santiago, Valparaíso..."></div>'+
+        '<div class="modal-err" id="m-err"></div>'+
+        '<button class="modal-sub" id="m-sub" onclick="doRegister()">./register --exec</button>'+
+        '<div class="modal-sw">¿ya tienes cuenta? <a onclick="showModal(\'login\')">login</a></div>';
+  } else if(tipo==='post'){
+    if(!currentUser){ showModal('login'); return; }
+    const opts = comunidades.map(c=>`<option value="${c.id}">${c.icono} p/${c.nombre}</option>`).join('');
+    c = '<h2>$ nuevo_post</h2><p class="sub">// comparte algo con RandomPlan</p>'+
+        '<div class="field"><label>comunidad</label><select id="m-com">'+opts+'</select></div>'+
+        '<div class="field"><label>título</label><input type="text" id="m-titulo" placeholder="¿de qué trata?"></div>'+
+        '<div class="field"><label>contenido (opcional)</label><textarea id="m-contenido" rows="4" placeholder="más detalles..."></textarea></div>'+
+        '<div class="modal-err" id="m-err"></div>'+
+        '<button class="modal-sub" id="m-sub" onclick="doPost()">./publicar --exec</button>';
+  }
+  document.getElementById('modal-content').innerHTML = c;
+  document.getElementById('modal-wrap').classList.add('on');
+}
+
+function closeModal(){ document.getElementById('modal-wrap').classList.remove('on'); }
+function closeMBg(e){ if(e.target===document.getElementById('modal-wrap')) closeModal(); }
+
+async function doLogin(){
+  const email = document.getElementById('m-email').value.trim();
+  const pass = document.getElementById('m-pass').value;
+  const btn = document.getElementById('m-sub');
+  const err = document.getElementById('m-err');
+  btn.disabled = true; btn.textContent = '// conectando...';
+  const { error } = await db.auth.signInWithPassword({ email, password: pass });
+  if(error){ err.textContent = '// error: '+error.message; btn.disabled=false; btn.textContent='./login --exec'; }
+  else { closeModal(); toast('bienvenido de vuelta'); }
+}
+
+async function doRegister(){
+  const username = document.getElementById('m-user').value.trim();
+  const email = document.getElementById('m-email').value.trim();
+  const pass = document.getElementById('m-pass').value;
+  const ciudad = document.getElementById('m-ciudad').value.trim();
+  const btn = document.getElementById('m-sub');
+  const err = document.getElementById('m-err');
+  if(!username){ err.textContent='// error: username requerido'; return; }
+  btn.disabled=true; btn.textContent='// creando cuenta...';
+  const { data, error } = await db.auth.signUp({ email, password: pass });
+  if(error){ err.textContent='// error: '+error.message; btn.disabled=false; btn.textContent='./register --exec'; return; }
+  // crear perfil
+  await db.from('perfiles').insert({ id: data.user.id, username, ciudad: ciudad||'Chile' });
+  closeModal();
+  toast('cuenta creada. bienvenido a RandomPlan');
+}
+
+async function doPost(){
+  const titulo = document.getElementById('m-titulo').value.trim();
+  const contenido = document.getElementById('m-contenido').value.trim();
+  const comunidad_id = parseInt(document.getElementById('m-com').value);
+  const btn = document.getElementById('m-sub');
+  const err = document.getElementById('m-err');
+  if(!titulo){ err.textContent='// error: el título es requerido'; return; }
+  btn.disabled=true; btn.textContent='// publicando...';
+  const { error } = await db.from('posts').insert({ titulo, contenido, user_id: currentUser.id, comunidad_id, votos: 0 });
+  if(error){ err.textContent='// error: '+error.message; btn.disabled=false; btn.textContent='./publicar --exec'; }
+  else { closeModal(); toast('post publicado'); loadPosts(); }
+}
+
+// ── COMUNIDADES ──
+async function loadComunidades(){
+  const { data } = await db.from('comunidades').select('*').order('miembros', { ascending: false });
+  if(!data) return;
+  comunidades = data;
+  document.getElementById('stat-comms').textContent = data.length;
+
+  // sidebar
+  document.getElementById('sidebar-comms').innerHTML = data.map(c=>
+    `<div class="sf-item" onclick="filterFeed(${c.id},this)">
+      <span class="sf-ic">${c.icono}</span>
+      <span class="sf-n">p/${c.nombre}</span>
+      <span class="sf-c">${fmtV(c.miembros)}</span>
+    </div>`
+  ).join('');
+
+  // widget
+  document.getElementById('widget-comms').innerHTML = data.slice(0,5).map(c=>
+    `<div class="comm-item">
+      <div class="comm-ic">${c.icono}</div>
+      <div class="comm-info"><div class="comm-name">p/${c.nombre}</div><div class="comm-mem">${fmtV(c.miembros)} miembros</div></div>
+    </div>`
+  ).join('');
+}
+
+// ── POSTS ──
+async function loadPosts(){
+  document.getElementById('posts-feed').innerHTML = '<div class="loading">// cargando posts...</div>';
+  let query = db.from('posts')
+    .select('*, perfiles(username, ciudad), comunidades(nombre, icono)')
+    .order(currentTab==='top'?'votos':'created_at', { ascending: false });
+  if(currentFilter) query = query.eq('comunidad_id', currentFilter);
+
+  const { data, error } = await query.limit(20);
+  if(error){ document.getElementById('posts-feed').innerHTML='<div class="empty">// error cargando posts</div>'; return; }
+  allPosts = data || [];
+  document.getElementById('stat-posts').textContent = fmtV(allPosts.length);
+  renderPosts(allPosts);
+}
+
+function renderPosts(posts){
+  if(!posts.length){
+    document.getElementById('posts-feed').innerHTML = '<div class="empty">// no hay posts aquí todavía<br><br>🌵</div>';
+    return;
+  }
+  document.getElementById('posts-feed').innerHTML = posts.map(p => renderPost(p)).join('');
+}
+
+function renderPost(p){
+  const user = p.perfiles || { username: 'anon', ciudad: '?' };
+  const com = p.comunidades || { nombre: '?', icono: '💬' };
+  return `<div class="card" id="post-${p.id}">
+    <div class="vote-col">
+      <button class="vbtn up" onclick="vote(${p.id},1,this)">▲</button>
+      <span class="vcount" id="vc-${p.id}">${fmtV(p.votos)}</span>
+      <button class="vbtn down" onclick="vote(${p.id},-1,this)">▼</button>
+    </div>
+    <div class="cbody">
+      <div class="cmeta">
+        <span class="csub">${com.icono} p/${com.nombre}</span>
+        <span class="dot">::</span>
+        <span class="cuser">u/${user.username}</span>
+        <span class="dot">::</span>
+        <span>${fmtTime(p.created_at)}</span>
+      </div>
+      <div class="ctitle" onclick="toggleComs(${p.id})">${p.titulo}</div>
+      ${p.contenido?`<div class="cprev">${p.contenido}</div>`:''}
+      <div class="cactions">
+        <button class="cact" onclick="toggleComs(${p.id})">// comentarios</button>
+        <button class="cact" onclick="navigator.clipboard.writeText(window.location.href+'#post-${p.id}');toast('enlace copiado')">// compartir</button>
+      </div>
+      <div class="comments-section" id="cs-${p.id}">
+        <div class="comment-box" onclick="showCommentBox(${p.id})">escribe un comentario...</div>
+        <div id="coms-list-${p.id}"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function toggleComs(postId){
+  const sec = document.getElementById('cs-'+postId);
+  const isOpen = sec.classList.contains('open');
+  sec.classList.toggle('open', !isOpen);
+  if(!isOpen){
+    const { data } = await db.from('comentarios')
+      .select('*, perfiles(username, ciudad)')
+      .eq('post_id', postId)
+      .order('votos', { ascending: false });
+    document.getElementById('coms-list-'+postId).innerHTML = (data||[]).map(c=>
+      `<div class="comment">
+        <div class="cava">💬</div>
+        <div class="ccont">
+          <div class="ccmeta"><span class="u">u/${c.perfiles?.username||'anon'}</span> · ${fmtTime(c.created_at)} · <span class="ci">[${c.perfiles?.ciudad||'?'}]</span></div>
+          <div class="cctext">${c.texto}</div>
+          <div class="ccacts"><span class="ccvotes">▲ ${c.votos}</span></div>
+        </div>
+      </div>`
+    ).join('') || '<div style="font-size:.72rem;color:var(--text3);padding:.3rem 0">// sin comentarios aún</div>';
+  }
+}
+
+function showCommentBox(postId){
+  if(!currentUser){ showModal('login'); return; }
+  const box = document.querySelector('#cs-'+postId+' .comment-box');
+  box.innerHTML = `<input type="text" id="com-inp-${postId}" style="flex:1;background:transparent;border:none;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none" placeholder="tu comentario...">
+    <button onclick="sendComment(${postId})" style="background:none;border:1px solid var(--green);color:var(--green);padding:.15rem .5rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer">SEND</button>`;
+  document.getElementById('com-inp-'+postId).focus();
+}
+
+async function sendComment(postId){
+  const inp = document.getElementById('com-inp-'+postId);
+  const texto = inp.value.trim();
+  if(!texto) return;
+  await db.from('comentarios').insert({ texto, user_id: currentUser.id, post_id: postId, votos: 0 });
+  toast('comentario publicado');
+  toggleComs(postId); toggleComs(postId);
+}
+
+async function vote(postId, dir, btn){
+  if(!currentUser){ showModal('login'); return; }
+  const { data: existing } = await db.from('votos').select('*').eq('user_id', currentUser.id).eq('post_id', postId).single();
+  if(existing){ toast('ya votaste en este post', true); return; }
+  await db.from('votos').insert({ user_id: currentUser.id, post_id: postId, direccion: dir });
+  const { data: post } = await db.from('posts').select('votos').eq('id', postId).single();
+  const newV = (post?.votos||0) + dir;
+  await db.from('posts').update({ votos: newV }).eq('id', postId);
+  document.getElementById('vc-'+postId).textContent = fmtV(newV);
+  btn.classList.add('on');
+  // karma al autor
+  const p = allPosts.find(x=>x.id===postId);
+  if(p?.perfiles) await db.from('perfiles').update({ karma: db.rpc }).eq('username', p.perfiles.username);
+}
+
+function filterFeed(comId, el){
+  currentFilter = comId;
+  document.querySelectorAll('.sf-item').forEach(i=>i.classList.remove('on'));
+  if(el) el.classList.add('on');
+  loadPosts();
+}
+
+function setTab(btn, tab){
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  btn.classList.add('on');
+  loadPosts();
+}
+
+function searchPosts(q){
+  if(!q){ renderPosts(allPosts); return; }
+  const filtered = allPosts.filter(p=>p.titulo.toLowerCase().includes(q.toLowerCase())||(p.contenido||'').toLowerCase().includes(q.toLowerCase()));
+  renderPosts(filtered);
+}
+
+// ── STATS ──
+async function loadStats(){
+  const { count: userCount } = await db.from('perfiles').select('*', { count:'exact', head:true });
+  document.getElementById('stat-users').textContent = fmtV(userCount||0);
+  document.getElementById('online-txt').textContent = fmtV(userCount||0)+' users';
+}
+
+// ── CHAT REALTIME ──
+function initChat(){
+  addSysMsg('// conectado al chat global · randomplan.cl');
+  loadChatHistory();
+  // suscribir a realtime
+  chatSub = db.channel('chat_global')
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'chat_mensajes' }, payload => {
+      const m = payload.new;
+      const isMe = currentUser && m.user_id === currentUser.id;
+      addChatMsg(m.username, m.ciudad||'?', m.texto, isMe);
+    })
+    .subscribe();
+}
+
+async function loadChatHistory(){
+  const { data } = await db.from('chat_mensajes').select('*').order('created_at', { ascending:false }).limit(30);
+  if(!data) return;
+  data.reverse().forEach(m=>{
+    const isMe = currentUser && m.user_id === currentUser.id;
+    addChatMsg(m.username, m.ciudad||'?', m.texto, isMe);
+  });
+  const el = document.getElementById('chat-msgs');
+  el.scrollTop = el.scrollHeight;
+}
+
+function addSysMsg(txt){
+  const el = document.getElementById('chat-msgs');
+  const div = document.createElement('div');
+  div.className = 'msg';
+  div.innerHTML = `<div class="msg-text system">${txt}</div>`;
+  el.appendChild(div);
+}
+
+function addChatMsg(username, ciudad, texto, isMe){
+  const el = document.getElementById('chat-msgs');
+  const div = document.createElement('div');
+  div.className = 'msg';
+  div.innerHTML = `<div class="msg-meta">
+    <span class="msg-user${isMe?' me':''}">${username}</span>
+    <span class="msg-city">[${ciudad}]</span>
+    <span class="msg-time">${nowTime()}</span>
+  </div>
+  <div class="msg-text">${texto}</div>`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+  if(!chatOpen){ newMsgCount++; document.getElementById('chat-badge').textContent=newMsgCount; }
+}
+
+async function sendChatMsg(){
+  if(!currentUser){ showModal('login'); return; }
+  const inp = document.getElementById('chat-inp');
+  const texto = inp.value.trim();
+  if(!texto) return;
+  inp.value = '';
+  await db.from('chat_mensajes').insert({
+    user_id: currentUser.id,
+    username: currentPerfil?.username || 'anon',
+    ciudad: currentPerfil?.ciudad || 'Chile',
+    texto
+  });
+}
+
+function chatKey(e){ if(e.key==='Enter') sendChatMsg(); }
+
+function toggleChat(){
+  chatOpen = !chatOpen;
+  document.getElementById('chat-panel').classList.toggle('open', chatOpen);
+  document.getElementById('main-wrap').classList.toggle('chat-open', chatOpen);
+  document.getElementById('chat-toggle-btn').classList.toggle('on', chatOpen);
+  if(chatOpen){ newMsgCount=0; document.getElementById('chat-badge').textContent='0'; const el=document.getElementById('chat-msgs'); el.scrollTop=el.scrollHeight; }
+}
+
+// ── INIT ──
+async function init(){
+  await loadComunidades();
+  await loadPosts();
+  await loadStats();
+  initChat();
+}
+
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+init();
+</script>
+</body>
+</html>
