@@ -449,14 +449,14 @@ async function doPost(){
   const err = document.getElementById('m-err');
   if(!titulo){ err.textContent='// error: el título es requerido'; return; }
   btn.disabled=true; btn.textContent='// publicando...';
-  const { error } = await db.from('posts').insert({ titulo, contenido, user_id: currentUser.id, comunidad_id, votos: 0 });
+  const { error } = await db.from('Publicaciones').insert({ titulo, contenido, user_id: currentUser.id, comunidad_id, votos: 0 });
   if(error){ err.textContent='// error: '+error.message; btn.disabled=false; btn.textContent='./publicar --exec'; }
   else { closeModal(); toast('post publicado'); loadPosts(); }
 }
  
 // ── COMUNIDADES ──
 async function loadComunidades(){
-  const { data } = await db.from('comunidades').select('*').order('miembros', { ascending: false });
+  const { data } = await db.from('Comunidades').select('*').order('miembros', { ascending: false });
   if(!data) return;
   comunidades = data;
   document.getElementById('stat-comms').textContent = data.length;
@@ -482,8 +482,8 @@ async function loadComunidades(){
 // ── POSTS ──
 async function loadPosts(){
   document.getElementById('posts-feed').innerHTML = '<div class="loading">// cargando posts...</div>';
-  let query = db.from('posts')
-    .select('*, perfiles(username, ciudad), comunidades(nombre, icono)')
+  let query = db.from('Publicaciones')
+    .select('*, perfiles(username, ciudad), Comunidades(nombre, icono)')
     .order(currentTab==='top'?'votos':'created_at', { ascending: false });
   if(currentFilter) query = query.eq('comunidad_id', currentFilter);
  
@@ -538,7 +538,7 @@ async function toggleComs(postId){
   const isOpen = sec.classList.contains('open');
   sec.classList.toggle('open', !isOpen);
   if(!isOpen){
-    const { data } = await db.from('comentarios')
+    const { data } = await db.from('Comentarios')
       .select('*, perfiles(username, ciudad)')
       .eq('post_id', postId)
       .order('votos', { ascending: false });
@@ -567,7 +567,7 @@ async function sendComment(postId){
   const inp = document.getElementById('com-inp-'+postId);
   const texto = inp.value.trim();
   if(!texto) return;
-  await db.from('comentarios').insert({ texto, user_id: currentUser.id, post_id: postId, votos: 0 });
+  await db.from('Comentarios').insert({ texto, user_id: currentUser.id, post_id: postId, votos: 0 });
   toast('comentario publicado');
   toggleComs(postId); toggleComs(postId);
 }
@@ -577,9 +577,9 @@ async function vote(postId, dir, btn){
   const { data: existing } = await db.from('votos').select('*').eq('user_id', currentUser.id).eq('post_id', postId).single();
   if(existing){ toast('ya votaste en este post', true); return; }
   await db.from('votos').insert({ user_id: currentUser.id, post_id: postId, direccion: dir });
-  const { data: post } = await db.from('posts').select('votos').eq('id', postId).single();
+  const { data: post } = await db.from('Publicaciones').select('votos').eq('id', postId).single();
   const newV = (post?.votos||0) + dir;
-  await db.from('posts').update({ votos: newV }).eq('id', postId);
+  await db.from('Publicaciones').update({ votos: newV }).eq('id', postId);
   document.getElementById('vc-'+postId).textContent = fmtV(newV);
   btn.classList.add('on');
   // karma al autor: sumar 1 por upvote
@@ -728,4 +728,3 @@ init();
 </script>
 </body>
 </html>
- 
