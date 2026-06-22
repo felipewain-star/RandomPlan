@@ -535,6 +535,39 @@ function renderFeed(filter){
   if(!html)html='<div style="text-align:center;padding:2.5rem;color:var(--text3);font-size:.75rem;font-family:var(--mono)">// no hay posts aquí todavía<br><br>🌵</div>';
   document.getElementById('posts-feed').innerHTML=html;
 }
+
+async function loadRealPosts(filter){
+  var r=await db.from('posts').select('*, perfiles(username,ciudad), comunidades(nombre,icono)').order('created_at',{ascending:false}).limit(20);
+  if(r.error||!r.data||!r.data.length) return;
+  var realPosts=r.data.filter(function(p){return p.perfiles&&p.comunidades;});
+  if(!realPosts.length) return;
+  // convert real posts to same format as bot posts and inject at top of POSTS array
+  var converted=realPosts.map(function(p,i){
+    var com=p.comunidades||{nombre:'chile',icono:'🇨🇱'};
+    var user=p.perfiles||{username:'anon',ciudad:'Chile'};
+    return {
+      id: 9000+i,
+      sub: com.nombre,
+      ic: com.icono,
+      user: {name:user.username, av:'👤', ciudad:user.ciudad||'Chile'},
+      t: 'ahora',
+      flair: com.nombre,
+      fc: 'g',
+      title: p.titulo,
+      prev: p.contenido||null,
+      votos: p.votos||0,
+      coms: 0,
+      cd: []
+    };
+  });
+  // filter if needed
+  var filtered=filter?converted.filter(function(p){return p.sub===filter;}):converted;
+  if(!filtered.length) return;
+  // render and prepend to feed seamlessly
+  var html=filtered.map(renderPost).join('');
+  var feed=document.getElementById('posts-feed');
+  feed.innerHTML=html+feed.innerHTML;
+}
 function renderTrending(){
   document.getElementById('trending-list').innerHTML=TRENDING.map(function(t,i){
     return '<div class="trend-item"><div class="trend-n">0'+(i+1)+'</div><div class="trend-info"><div class="trend-sub">'+t.sub+'</div><div class="trend-ti">'+t.ti+'</div><div class="trend-v">'+t.v+' votos</div></div></div>';
@@ -758,6 +791,12 @@ async function doPost(){
   var btn=document.getElementById('m-sub');
   var err=document.getElementById('m-err');
   if(!titulo){err.textContent='// error: el título es requerido';return;}
+  // force reload session and perfil
+  var sess=await db.auth.getSession();
+  if(!sess.data||!sess.data.session){err.textContent='// error: debes estar logueado';return;}
+  currentUser=sess.data.session.user;
+  var rp=await db.from('perfiles').select('*').eq('id',currentUser.id).single();
+  if(rp.data) currentPerfil=rp.data;
   btn.disabled=true;btn.textContent='// publicando...';
   var r=await db.from('posts').insert({
     titulo:titulo,
@@ -771,7 +810,8 @@ async function doPost(){
     btn.disabled=false;btn.textContent='./publicar --exec';
   } else {
     closeModal();
-    toast('post publicado en RandomPlan');
+    toast('post publicado');
+    setTimeout(function(){loadRealPosts(null);},500);
   }
 }
 
@@ -780,10 +820,11 @@ addMsg(null,'// chat global activo · randomplan.cl',false,true);
 CHAT_INIT.forEach(function(m){addMsg(m.bot,m.txt,false,false)});
 newMsgCount=0;document.getElementById('chat-badge').textContent='0';
 scheduleBot();
-renderFeed('inicio');renderTrending();renderComms();
+renderFeed(null);renderTrending();renderComms();
 setInterval(tickVotes,8000);
 loadChatHistory();
 setInterval(pollChat,3000);
+loadRealPosts(null);
 // check existing session
 db.auth.getSession().then(function(r){
   if(r.data && r.data.session){
