@@ -1,3 +1,12 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RandomPlan — La conversación chilena</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -248,6 +257,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(60px);background:var(--bg2);border:1px solid var(--green);color:var(--green);padding:.42rem .95rem;border-radius:3px;font-size:.73rem;font-family:var(--mono);opacity:0;transition:all .2s;pointer-events:none;z-index:999}
 .toast::before{content:'> '}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.user-info{display:flex;align-items:center;gap:.5rem;font-size:.73rem;color:var(--green)}
+.user-karma{color:var(--text3);font-size:.65rem}
+.toast.err{border-color:var(--red);color:var(--red)}
+.modal-err{font-size:.7rem;color:var(--red);margin-top:.4rem;font-family:var(--mono)}
+.modal-sub:disabled{opacity:.4;cursor:not-allowed}
+.field textarea,.field select{width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:2px;padding:.48rem .7rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none;transition:border-color .12s;resize:vertical}
+.field textarea:focus,.field select:focus{border-color:var(--green)}
+.field select option{background:var(--bg1)}
+
 @media(max-width:800px){.sidebar-l,.sidebar-r{display:none}.content{padding:.65rem}}
 </style>
 
@@ -256,8 +275,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
   <div class="search"><input type="text" placeholder="buscar..."></div>
   <div class="topbar-r">
     <div class="ping"><span class="ping-dot"></span>1.2k online</div>
-    <button class="nav-btn" onclick="showModal('login')">login</button>
-    <button class="nav-btn pri" onclick="showModal('register')">./registrar</button>
+    <div id="auth-btns" style="display:flex;align-items:center;gap:.5rem">
+      <button class="nav-btn" onclick="showModal('login')">login</button>
+      <button class="nav-btn pri" onclick="showModal('register')">./registrar</button>
+    </div>
+    <div id="user-btns" style="display:none;align-items:center;gap:.5rem">
+      <div class="user-info"><span id="user-name"></span><span class="user-karma" id="user-karma"></span></div>
+      <button class="nav-btn" onclick="doLogout()">salir</button>
+    </div>
     <button class="chat-toggle" id="chat-toggle-btn" onclick="toggleChat()">▮ CHAT <span class="chat-badge" id="chat-badge">0</span></button>
   </div>
 </div>
@@ -540,23 +565,183 @@ function setTab(btn,tab){
   document.getElementById('posts-feed').innerHTML=sorted.map(renderPost).join('');
 }
 function joinComm(name,btn){joined[name]=!joined[name];btn.textContent=joined[name]?'✓ joined':'join';btn.classList.toggle('joined',joined[name]);if(joined[name])toast('joined '+name)}
-function showModal(tipo){
-  var c='';
-  if(tipo==='login'){c='<h2>$ login</h2><p class="sub">// ingresa a tu cuenta</p><div class="field"><label>usuario o email</label><input type="text" placeholder="tu_usuario"></div><div class="field"><label>contraseña</label><input type="password" placeholder="••••••••"></div><button class="modal-sub" onclick="closeModal();toast(\'bienvenido de vuelta\')">./login --exec</button><div class="modal-sw">¿no tienes cuenta? <a onclick="showModal(\'register\')">registrar</a></div>';}
-  else{c='<h2>$ crear_cuenta</h2><p class="sub">// únete a RandomPlan</p><div class="field"><label>usuario</label><input type="text" placeholder="condor_veloz_42"></div><div class="field"><label>email</label><input type="email" placeholder="tu@email.cl"></div><div class="field"><label>contraseña</label><input type="password" placeholder="••••••••"></div><button class="modal-sub" onclick="closeModal();toast(\'cuenta creada. bienvenido\')">./register --exec</button><div class="modal-sw">¿ya tienes cuenta? <a onclick="showModal(\'login\')">login</a></div>';}
-  document.getElementById('modal-content').innerHTML=c;document.getElementById('modal-wrap').classList.add('on');
-}
+// showModal replaced by Supabase version below
 function closeModal(){document.getElementById('modal-wrap').classList.remove('on')}
 function closeMBg(e){if(e.target===document.getElementById('modal-wrap'))closeModal()}
 var toastT;
 function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){el.classList.remove('on')},2600)}
 function tickVotes(){POSTS.forEach(function(p){if(Math.random()<.2){p.votos+=Math.floor(Math.random()*3);var el=document.getElementById('vc-'+p.id);if(el)el.textContent=fmtV(p.votos+(votes[p.id]||0))}})}
 
-addMsg(null,'// conectado al chat global · randomplan.cl',false,true);
-CHAT_INIT.forEach(function(m){addMsg(m.bot,m.txt,false)});
+// ── SUPABASE ──
+var SUPA_URL = 'https://jquycrzqspdwciwvmuse.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxdXljcnpxc3Bkd2Npd3ZtdXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTA4MDcsImV4cCI6MjA5NzcyNjgwN30.ThqHOnX-bdro7CbGAe3PLDgM3O-RiK8NHhDuDufULs4';
+var db = supabase.createClient(SUPA_URL, SUPA_KEY);
+var currentUser = null;
+var currentPerfil = null;
+var lastChatId = 0;
+
+// Auth state
+db.auth.onAuthStateChange(function(event, session){
+  if(session && session.user){
+    currentUser = session.user;
+    loadPerfil();
+    document.getElementById('auth-btns').style.display='none';
+    document.getElementById('user-btns').style.display='flex';
+  } else {
+    currentUser = null;
+    currentPerfil = null;
+    document.getElementById('auth-btns').style.display='flex';
+    document.getElementById('user-btns').style.display='none';
+    document.getElementById('user-name').textContent='';
+    document.getElementById('user-karma').textContent='';
+  }
+});
+
+async function loadPerfil(){
+  var r = await db.from('perfiles').select('*').eq('id', currentUser.id).single();
+  if(r.data){
+    currentPerfil = r.data;
+    document.getElementById('user-name').textContent = 'u/'+r.data.username;
+    document.getElementById('user-karma').textContent = '· '+r.data.karma+' karma';
+  }
+}
+
+async function doLogout(){
+  await db.auth.signOut();
+  toast('hasta luego');
+}
+
+// Real modal with Supabase auth
+function showModal(tipo){
+  var c='';
+  if(tipo==='login'){
+    c='<h2>$ login</h2><p class="sub">// ingresa a tu cuenta</p>'+
+      '<div class="field"><label>email</label><input type="email" id="m-email" placeholder="tu@email.cl"></div>'+
+      '<div class="field"><label>contraseña</label><input type="password" id="m-pass" placeholder="••••••••"></div>'+
+      '<div class="modal-err" id="m-err"></div>'+
+      '<button class="modal-sub" id="m-sub" onclick="doLogin()">./login --exec</button>'+
+      '<div class="modal-sw">¿no tienes cuenta? <a onclick="showModal(\'register\')">registrar</a></div>';
+  } else {
+    c='<h2>$ crear_cuenta</h2><p class="sub">// únete a RandomPlan</p>'+
+      '<div class="field"><label>username</label><input type="text" id="m-user" placeholder="condor_veloz_42"></div>'+
+      '<div class="field"><label>email</label><input type="email" id="m-email" placeholder="tu@email.cl"></div>'+
+      '<div class="field"><label>contraseña</label><input type="password" id="m-pass" placeholder="mínimo 6 caracteres"></div>'+
+      '<div class="field"><label>ciudad (opcional)</label><input type="text" id="m-ciudad" placeholder="Santiago, Valparaíso..."></div>'+
+      '<div class="modal-err" id="m-err"></div>'+
+      '<button class="modal-sub" id="m-sub" onclick="doRegister()">./register --exec</button>'+
+      '<div class="modal-sw">¿ya tienes cuenta? <a onclick="showModal(\'login\')">login</a></div>';
+  }
+  document.getElementById('modal-content').innerHTML=c;
+  document.getElementById('modal-wrap').classList.add('on');
+}
+
+async function doLogin(){
+  var email=document.getElementById('m-email').value.trim();
+  var pass=document.getElementById('m-pass').value;
+  var btn=document.getElementById('m-sub');
+  var err=document.getElementById('m-err');
+  btn.disabled=true;btn.textContent='// conectando...';
+  var r=await db.auth.signInWithPassword({email:email,password:pass});
+  if(r.error){err.textContent='// error: '+r.error.message;btn.disabled=false;btn.textContent='./login --exec';}
+  else{closeModal();toast('bienvenido de vuelta');}
+}
+
+async function doRegister(){
+  var username=document.getElementById('m-user').value.trim();
+  var email=document.getElementById('m-email').value.trim();
+  var pass=document.getElementById('m-pass').value;
+  var ciudad=document.getElementById('m-ciudad').value.trim();
+  var btn=document.getElementById('m-sub');
+  var err=document.getElementById('m-err');
+  if(!username){err.textContent='// error: username requerido';return;}
+  btn.disabled=true;btn.textContent='// creando cuenta...';
+  var r=await db.auth.signUp({email:email,password:pass});
+  if(r.error){err.textContent='// error: '+r.error.message;btn.disabled=false;btn.textContent='./register --exec';return;}
+  await db.from('perfiles').insert({id:r.data.user.id,username:username,ciudad:ciudad||'Chile'});
+  closeModal();
+  toast('cuenta creada. bienvenido a RandomPlan');
+}
+
+// Real chat with Supabase + bots mixed
+async function loadChatHistory(){
+  var r=await db.from('chat_mensajes').select('*').order('created_at',{ascending:false}).limit(20);
+  if(r.data && r.data.length){
+    r.data.reverse().forEach(function(m){
+      var isMe=currentUser && m.user_id===currentUser.id;
+      addMsg({name:m.username,ciudad:m.ciudad||'?'},m.texto,isMe,false);
+      if(m.id>lastChatId)lastChatId=m.id;
+    });
+  }
+  document.getElementById('chat-msgs').scrollTop=9999;
+}
+
+async function pollChat(){
+  if(!lastChatId)return;
+  var r=await db.from('chat_mensajes').select('*').gt('id',lastChatId).order('created_at',{ascending:true});
+  if(!r.data||!r.data.length)return;
+  r.data.forEach(function(m){
+    var isMe=currentUser && m.user_id===currentUser.id;
+    addMsg({name:m.username,ciudad:m.ciudad||'?'},m.texto,isMe,false);
+    if(m.id>lastChatId)lastChatId=m.id;
+  });
+}
+
+// Override sendMsg to use Supabase when logged in
+function sendMsg(){
+  var inp=document.getElementById('chat-inp');
+  var txt=inp.value.trim();
+  if(!txt)return;
+  inp.value='';
+  if(currentUser && currentPerfil){
+    // real message
+    db.from('chat_mensajes').insert({
+      user_id:currentUser.id,
+      username:currentPerfil.username,
+      ciudad:currentPerfil.ciudad||'Chile',
+      texto:txt
+    });
+    // show immediately
+    addMsg({name:currentPerfil.username,ciudad:currentPerfil.ciudad||'Chile'},txt,true,false);
+  } else if(currentUser){
+    // logged in but no perfil loaded yet
+    loadPerfil().then(function(){
+      var name=currentPerfil?currentPerfil.username:currentUser.email.split('@')[0];
+      db.from('chat_mensajes').insert({user_id:currentUser.id,username:name,ciudad:'Chile',texto:txt});
+      addMsg({name:name,ciudad:'Chile'},txt,true,false);
+    });
+  } else {
+    // not logged in - show as guest + prompt login
+    addMsg({name:'tú',ciudad:'aquí'},txt,true,false);
+    setTimeout(function(){toast('regístrate para que tu mensaje se guarde')},1000);
+    // bot reply
+    setTimeout(function(){
+      var bot=BOTS[Math.floor(Math.random()*BOTS.length)];
+      var replies=['jajaja exacto','totalmente de acuerdo','buena esa','100% po','verdad eso'];
+      showTyping(bot.name);
+      setTimeout(function(){addMsg(bot,replies[Math.floor(Math.random()*replies.length)],false,false)},1200);
+    },600+Math.random()*1800);
+  }
+}
+
+// Init
+addMsg(null,'// chat global activo · randomplan.cl',false,true);
+CHAT_INIT.forEach(function(m){addMsg(m.bot,m.txt,false,false)});
 newMsgCount=0;document.getElementById('chat-badge').textContent='0';
 scheduleBot();
 renderFeed('inicio');renderTrending();renderComms();
 setInterval(tickVotes,8000);
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()});
+loadChatHistory();
+setInterval(pollChat,3000);
+// check existing session
+db.auth.getSession().then(function(r){
+  if(r.data && r.data.session){
+    currentUser=r.data.session.user;
+    loadPerfil();
+    document.getElementById('auth-btns').style.display='none';
+    document.getElementById('user-btns').style.display='flex';
+  }
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
 </script>
+</body>
+</html>
