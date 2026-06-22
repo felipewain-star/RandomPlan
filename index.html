@@ -299,13 +299,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
       <div class="sf-item" onclick="filterFeed('finanzas',this)"><span class="sf-ic">💰</span><span class="sf-n">p/finanzas</span><span class="sf-c">28k</span></div>
       <div class="sf-item" onclick="filterFeed('tecnologia',this)"><span class="sf-ic">💻</span><span class="sf-n">p/tecnologia</span><span class="sf-c">21k</span></div>
       <div class="sf-sep"></div>
-      <div class="sf-create" onclick="showModal('register')">+ nueva comunidad</div>
+      <div class="sf-create" onclick="showModal('post')">+ nuevo post</div>
     </div>
 
     <div class="feed">
       <div class="composer">
         <span class="comp-prompt">user@randomplan:~$</span>
-        <input class="comp-inp" placeholder="nuevo_post --titulo '...'" onclick="showModal('register')">
+        <input class="comp-inp" placeholder="nuevo_post --titulo '...'" onclick="showModal('post')">
       </div>
       <div class="tabs">
         <button class="tab on" onclick="setTab(this,'hot')">🔥 destacado</button>
@@ -527,7 +527,7 @@ function renderComs(cd){
 }
 function renderPost(p){
   var voto=votes[p.id]||0,v=p.votos+voto;
-  return '<div class="card" id="post-'+p.id+'"><div class="vote-col"><button class="vbtn up '+(voto===1?'on':'')+'" onclick="vote('+p.id+',1)">▲</button><span class="vcount" id="vc-'+p.id+'">'+fmtV(v)+'</span><button class="vbtn down '+(voto===-1?'on':'')+'" onclick="vote('+p.id+',-1)">▼</button></div><div class="cbody"><div class="cmeta"><span class="csub" onclick="filterFeedSub(\''+p.sub+'\')">'+p.ic+' '+p.sub+'</span><span class="dot">::</span><span class="cuser">u/'+p.user.name+'</span><span class="dot">::</span><span>'+p.t+'</span><span class="flair '+p.fc+'">'+p.flair+'</span></div><div class="ctitle" onclick="toggleComs('+p.id+')">'+p.title+'</div>'+(p.prev?'<div class="cprev">'+p.prev+'</div>':'')+'<div class="cactions"><button class="cact" onclick="toggleComs('+p.id+')">// '+p.coms+' comentarios</button><button class="cact" onclick="toast(\'enlace copiado\')">// compartir</button><button class="cact" onclick="toast(\'post guardado\')">// guardar</button></div><div class="comments-section" id="cs-'+p.id+'"><div class="comment-box" onclick="showModal(\'register\')">escribe un comentario...</div>'+renderComs(p.cd)+'</div></div></div>';
+  return '<div class="card" id="post-'+p.id+'"><div class="vote-col"><button class="vbtn up '+(voto===1?'on':'')+'" onclick="vote('+p.id+',1)">▲</button><span class="vcount" id="vc-'+p.id+'">'+fmtV(v)+'</span><button class="vbtn down '+(voto===-1?'on':'')+'" onclick="vote('+p.id+',-1)">▼</button></div><div class="cbody"><div class="cmeta"><span class="csub" onclick="filterFeedSub(\''+p.sub+'\')">'+p.ic+' '+p.sub+'</span><span class="dot">::</span><span class="cuser">u/'+p.user.name+'</span><span class="dot">::</span><span>'+p.t+'</span><span class="flair '+p.fc+'">'+p.flair+'</span></div><div class="ctitle" onclick="toggleComs('+p.id+')">'+p.title+'</div>'+(p.prev?'<div class="cprev">'+p.prev+'</div>':'')+'<div class="cactions"><button class="cact" onclick="toggleComs('+p.id+')">// '+p.coms+' comentarios</button><button class="cact" onclick="toast(\'enlace copiado\')">// compartir</button><button class="cact" onclick="toast(\'post guardado\')">// guardar</button></div><div class="comments-section" id="cs-'+p.id+'"><div class="comment-box" onclick="showModal(\'post\')">escribe un comentario...</div>'+renderComs(p.cd)+'</div></div></div>';
 }
 function renderFeed(filter){
   var list=filter&&filter!=='inicio'?POSTS.filter(function(p){return p.sub===filter}):POSTS;
@@ -621,7 +621,7 @@ function showModal(tipo){
       '<div class="modal-err" id="m-err"></div>'+
       '<button class="modal-sub" id="m-sub" onclick="doLogin()">./login --exec</button>'+
       '<div class="modal-sw">¿no tienes cuenta? <a onclick="showModal(\'register\')">registrar</a></div>';
-  } else {
+  } else if(tipo==='register'){
     c='<h2>$ crear_cuenta</h2><p class="sub">// únete a RandomPlan</p>'+
       '<div class="field"><label>username</label><input type="text" id="m-user" placeholder="condor_veloz_42"></div>'+
       '<div class="field"><label>email</label><input type="email" id="m-email" placeholder="tu@email.cl"></div>'+
@@ -630,6 +630,23 @@ function showModal(tipo){
       '<div class="modal-err" id="m-err"></div>'+
       '<button class="modal-sub" id="m-sub" onclick="doRegister()">./register --exec</button>'+
       '<div class="modal-sw">¿ya tienes cuenta? <a onclick="showModal(\'login\')">login</a></div>';
+  } else if(tipo==='post'){
+    if(!currentUser){showModal('login');return;}
+    var comunidades_list=[
+      {id:1,nombre:'chile',icono:'🇨🇱'},
+      {id:2,nombre:'futbol',icono:'⚽'},
+      {id:3,nombre:'contingencia',icono:'📰'},
+      {id:4,nombre:'memescl',icono:'😂'},
+      {id:5,nombre:'finanzas',icono:'💰'},
+      {id:6,nombre:'tecnologia',icono:'💻'},
+    ];
+    var opts=comunidades_list.map(function(c){return '<option value="'+c.id+'">'+c.icono+' p/'+c.nombre+'</option>';}).join('');
+    c='<h2>$ nuevo_post</h2><p class="sub">// comparte algo con RandomPlan</p>'+
+      '<div class="field"><label>comunidad</label><select id="m-com">'+opts+'</select></div>'+
+      '<div class="field"><label>título</label><input type="text" id="m-titulo" placeholder="¿de qué trata?"></div>'+
+      '<div class="field"><label>contenido (opcional)</label><textarea id="m-contenido" rows="3" placeholder="más detalles..."></textarea></div>'+
+      '<div class="modal-err" id="m-err"></div>'+
+      '<button class="modal-sub" id="m-sub" onclick="doPost()">./publicar --exec</button>';
   }
   document.getElementById('modal-content').innerHTML=c;
   document.getElementById('modal-wrap').classList.add('on');
@@ -720,6 +737,30 @@ function sendMsg(){
       showTyping(bot.name);
       setTimeout(function(){addMsg(bot,replies[Math.floor(Math.random()*replies.length)],false,false)},1200);
     },600+Math.random()*1800);
+  }
+}
+
+async function doPost(){
+  var titulo=document.getElementById('m-titulo').value.trim();
+  var contenido=document.getElementById('m-contenido').value.trim();
+  var comunidad_id=parseInt(document.getElementById('m-com').value);
+  var btn=document.getElementById('m-sub');
+  var err=document.getElementById('m-err');
+  if(!titulo){err.textContent='// error: el título es requerido';return;}
+  btn.disabled=true;btn.textContent='// publicando...';
+  var r=await db.from('posts').insert({
+    titulo:titulo,
+    contenido:contenido,
+    user_id:currentUser.id,
+    comunidad_id:comunidad_id,
+    votos:0
+  });
+  if(r.error){
+    err.textContent='// error: '+r.error.message;
+    btn.disabled=false;btn.textContent='./publicar --exec';
+  } else {
+    closeModal();
+    toast('post publicado en RandomPlan');
   }
 }
 
