@@ -175,6 +175,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .ccvotes{font-size:.64rem;color:var(--green);font-weight:700}
 .ccvote-up.on{color:var(--green);font-weight:700}
 .ccvote-down.on{color:var(--purple)}
+.com-write{display:flex;align-items:center;gap:.4rem;padding:.45rem 0;border-bottom:1px solid var(--border);margin-bottom:.4rem}
+.com-write input{flex:1}
+.com-send-btn{background:none;border:1px solid var(--green);color:var(--green);padding:.22rem .6rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;white-space:nowrap}
+.com-send-btn:hover{background:var(--greendim)}
 .com-sort-bar{display:flex;align-items:center;gap:.35rem;padding:.3rem 0 .5rem;border-bottom:1px solid var(--border);margin-bottom:.4rem}
 .com-sort-lbl{font-size:.63rem;color:var(--text3);font-family:var(--mono)}
 .com-sort-btn{background:none;border:1px solid var(--border);color:var(--text3);padding:.18rem .5rem;border-radius:2px;font-size:.65rem;font-family:var(--mono);cursor:pointer;transition:all .12s}
@@ -1004,6 +1008,7 @@ function renderComSection(postId, sort){
   if(!cs)return;
   var existing=cs.querySelector('.com-section-inner');
   if(!existing){
+    var inputId='cinp-'+postId;
     var inner=document.createElement('div');
     inner.className='com-section-inner';
     inner.innerHTML=
@@ -1012,6 +1017,12 @@ function renderComSection(postId, sort){
         '<button class="com-sort-btn on" onclick="changeSort('+postId+',this,\'top\')">destacados</button>'+
         '<button class="com-sort-btn" onclick="changeSort('+postId+',this,\'new\')">recientes</button>'+
         '<button class="com-sort-btn" onclick="changeSort('+postId+',this,\'old\')">antiguos</button>'+
+      '</div>'+
+      '<div class="com-write" id="cwrite-'+postId+'">'+
+        '<input type="text" id="'+inputId+'" placeholder="escribe un comentario..." style="flex:1;background:var(--bg0);border:1px solid var(--border);border-radius:3px;padding:.38rem .6rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none">'+
+        '<button class="media-btn" data-inp="'+inputId+'" onclick="showEmoji(this)">😊</button>'+
+        '<button class="media-btn" data-inp="'+inputId+'" onclick="showGif(this)">GIF</button>'+
+        '<button class="com-send-btn" onclick="sendCommentInline('+postId+')">SEND</button>'+
       '</div>'+
       '<div class="com-list" id="clist-'+postId+'"></div>'+
       '<div class="com-load-more" id="cmore-'+postId+'"></div>';
@@ -1217,6 +1228,32 @@ function openCommentBox(postId){
   },0);
 }
 
+
+async function sendCommentInline(postId){
+  var inputId='cinp-'+postId;
+  var inp=document.getElementById(inputId);
+  if(!inp)return;
+  var texto=inp.value.trim();
+  if(!texto)return;
+  inp.value='';
+  var sess=await db.auth.getSession();
+  if(!sess.data||!sess.data.session){showModal('login');return;}
+  var uid=sess.data.session.user.id;
+  if(!currentPerfil) await loadPerfil();
+  var username=currentPerfil?currentPerfil.username:'anon';
+  var ciudad=currentPerfil?currentPerfil.ciudad:'Chile';
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||postId;
+  var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
+  if(r.error){toast('error: '+r.error.message);return;}
+  var list=document.getElementById('clist-'+postId);
+  if(list){
+    var newCid='new-'+Date.now();
+    var newHtml=renderCommentHTML(newCid, username, ciudad, 'ahora', linkify(texto), 0, true, null);
+    list.innerHTML=newHtml+list.innerHTML;
+    setTimeout(function(){attachDelBtn(newCid);},0);
+  }
+  toast('comentario publicado');
+}
 
 async function sendComment(postId){
   var inp=document.getElementById('cinp-'+postId);
@@ -1719,6 +1756,32 @@ function openCommentBox(postId){
     '<button onclick="sendComment('+postId+')" style="background:none;border:1px solid var(--green);color:var(--green);padding:.15rem .5rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;margin-left:.4rem">SEND</button>';
   var inp=document.getElementById('cinp-'+postId);
   if(inp)inp.focus();
+}
+
+async function sendCommentInline(postId){
+  var inputId='cinp-'+postId;
+  var inp=document.getElementById(inputId);
+  if(!inp)return;
+  var texto=inp.value.trim();
+  if(!texto)return;
+  inp.value='';
+  var sess=await db.auth.getSession();
+  if(!sess.data||!sess.data.session){showModal('login');return;}
+  var uid=sess.data.session.user.id;
+  if(!currentPerfil) await loadPerfil();
+  var username=currentPerfil?currentPerfil.username:'anon';
+  var ciudad=currentPerfil?currentPerfil.ciudad:'Chile';
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||postId;
+  var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
+  if(r.error){toast('error: '+r.error.message);return;}
+  var list=document.getElementById('clist-'+postId);
+  if(list){
+    var newCid='new-'+Date.now();
+    var newHtml=renderCommentHTML(newCid, username, ciudad, 'ahora', linkify(texto), 0, true, null);
+    list.innerHTML=newHtml+list.innerHTML;
+    setTimeout(function(){attachDelBtn(newCid);},0);
+  }
+  toast('comentario publicado');
 }
 
 async function sendComment(postId){
@@ -2394,6 +2457,32 @@ function openCommentBox(postId){
     '<button onclick="sendComment('+postId+')" style="background:none;border:1px solid var(--green);color:var(--green);padding:.15rem .5rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;margin-left:.4rem">SEND</button>';
   var inp=document.getElementById('cinp-'+postId);
   if(inp)inp.focus();
+}
+
+async function sendCommentInline(postId){
+  var inputId='cinp-'+postId;
+  var inp=document.getElementById(inputId);
+  if(!inp)return;
+  var texto=inp.value.trim();
+  if(!texto)return;
+  inp.value='';
+  var sess=await db.auth.getSession();
+  if(!sess.data||!sess.data.session){showModal('login');return;}
+  var uid=sess.data.session.user.id;
+  if(!currentPerfil) await loadPerfil();
+  var username=currentPerfil?currentPerfil.username:'anon';
+  var ciudad=currentPerfil?currentPerfil.ciudad:'Chile';
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||postId;
+  var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
+  if(r.error){toast('error: '+r.error.message);return;}
+  var list=document.getElementById('clist-'+postId);
+  if(list){
+    var newCid='new-'+Date.now();
+    var newHtml=renderCommentHTML(newCid, username, ciudad, 'ahora', linkify(texto), 0, true, null);
+    list.innerHTML=newHtml+list.innerHTML;
+    setTimeout(function(){attachDelBtn(newCid);},0);
+  }
+  toast('comentario publicado');
 }
 
 async function sendComment(postId){
