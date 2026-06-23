@@ -215,7 +215,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .u-avatar-sm{width:22px;height:22px;font-size:.6rem}
 
 /* SIDEBAR R */
-.sidebar-r{width:255px;flex-shrink:0;position:sticky;top:94px;height:fit-content}
+.sidebar-r{width:255px;flex-shrink:0;position:sticky;top:94px;max-height:calc(100vh - 94px);overflow-y:auto;padding-bottom:1.5rem;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 .widget{background:var(--bg1);border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:.6rem}
 .whead{padding:.42rem .75rem;font-family:var(--mono);font-size:.65rem;font-weight:700;color:var(--green);letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg0);display:flex;align-items:center;gap:.35rem}
 .whead::before{content:'//';color:var(--text3);font-weight:400}
