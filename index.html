@@ -423,234 +423,107 @@ var CHAT_INIT=[
 ];
 
 var POOL=[
-  // casual y cotidiano
-  'alguien más procrastinando en vez de estudiar?',
-  'no puedo creer que son las 3am y sigo aquí',
-  'el café ya no me hace nada honestly',
-  'random plan era lo que necesitaba en mi vida',
-  'me late mucho la vibra de este lugar',
-  'igual es media rara la hora que estoy despierto',
-  'nadie me avisó que ser adulto era tan caro',
-  'el sueldo mínimo debería ser ilegal de lo bajo que es',
-  'oye pero de verdad el metro de santiago es un caos',
-  'alguien sabe si hay buenas pegas remotas en chile',
-  'me cansé de postular a trabajos y que no respondan',
-  'el arriendo en santiago me tiene llorando',
-  'literal no entiendo como la gente vive en providencia',
-  'las micros en región son otro mundo po',
-  'desde concepción y orgulloso',
-  'valpo tiene algo especial que santiago no tiene',
-  'puerto montt en invierno es deprimente pero hermoso',
-  'el sur de chile debería ser patrimonio mundial',
-  'la lluvia en valdivia es un estado mental',
-  'oye y la patagonia? nadie habla de la patagonia',
-  // opiniones fuertes
-  'el fútbol chileno está en el piso seamos honestos',
-  'colo colo va a salir campeón, lo siento u de chile',
-  'la u tiene la barra más fiel del país y punto',
-  'el profe que reprueba a todos no es bueno, es mala persona',
-  'los ramos de cálculo deberían ser opcionales change my mind',
-  'el sistema universitario chileno es un negocio',
-  'cap? o no? yo creo que sí pero whatever',
-  'la gente que tira basura al suelo me da rabia genuina',
-  'los que no reciclan en 2024 son un problema',
-  'el medioambiente no es tema de izquierda ni derecha es sentido común',
-  'por qué todo en chile cierra a las 8pm',
-  'el horario comercial chileno no tiene sentido',
-  'las farmacia de turno deberían ser más fáciles de encontrar',
-  'alguien más odia ir al médico por la espera?',
-  'el sistema de salud público necesita mas plata ayer',
-  // tecnología y cultura
-  'la ia me está quitando las ganas de aprender a programar ngl',
-  'o sea igual es impresionante lo que hace chatgpt',
-  'pero prefiero hacer las cosas yo aunque me cueste más',
-  'los youtubers chilenos no tienen suficiente visibilidad',
-  'el contenido en español latino es diferente al de españa',
-  'por qué los algoritmos nos muestran tanto contenido basura',
-  'tiktok me robó 3 horas ayer sin que me diera cuenta',
-  'el modo oscuro en todo debería ser ley',
-  'quien usa modo claro en 2024 está bien?',
-  'los earbuds inalámbricos cambiaron mi vida, antes era otro',
-  'el trabajo remoto normalizó el pijama profesional',
-  'las reuniones que pudieron ser un mail me matan',
-  'oye y el notion? alguien más adicto al notion?',
-  'yo uso excel para todo y no me arrepiento',
-  'el que dice que no usa excel miente o trabaja en otra cosa',
-  // comida y vida cotidiana
-  'el completo italiano es la cumbre de la gastronomía chilena',
-  'el que diga que el completo es feo está equivocado',
-  'la empanada de pino de mi abuela vs cualquier otra: no hay competencia',
-  'el mote con huesillos es subestimado internacionalmente',
-  'el cazuela en invierno es lo más cercano a un abrazo',
-  'oye pero el pan chileno es realmente especial',
-  'nadie habla de lo bueno que es el marraqueta',
-  'las sopaipillas con pebre are a vibe',
-  'el pisco sour chileno vs peruano: chile y punto',
-  'alguien más se compra un helado cuando está triste?',
-  // relaciones y vida social
-  'el amigo que siempre llega tarde pero igual lo queremos',
-  'la persona que cancela planes a último minuto me estresa',
-  'igual es difícil hacer amigos de adulto no voy a mentir',
-  'las amistades de la u son las más raras pero las más reales',
-  'nadie te dice que salir de cuarto medio es perder a tus amigos',
-  'el grupo de whatsapp que ya nadie usa pero nadie sale',
-  'el meme que mandas al grupo y nadie lo pesca es triste',
-  'por qué cuesta tanto decir lo que uno siente po',
-  'la terapia debería ser más accesible en este país',
-  'no hay suficientes psicólogos para la cantidad de trauma que tenemos',
-  'gen z normaliza hablar de salud mental y eso es lo correcto',
-  'mis viejos no entienden la ansiedad y es difícil explicarlo',
-  'el trabajo de mis papás los tiene agotados y eso me pesa',
-  // reacciones y comentarios de foro
-  'fuego este post',
-  'no puedo creer que no habían hablado de esto antes',
-  'llegué tarde al hilo pero coincido 100%',
-  'esto me pasó exactamente igual',
-  'oye y por qué nadie estaba hablando de esto?',
-  'primer comentario y ya me siento parte de la comunidad',
-  'random plan > todos los otros foros y lo diré siempre',
-  'necesitaba este espacio en mi vida ngl',
-  'el que hizo esta plataforma tiene mi respeto eterno',
-  'oye pero qué bueno encontrar gente normal po',
-  'aquí se puede hablar sin que te cancelen que alivio',
-  'me gusta que no hay tanto ego acá',
-  'la gente en este foro es más educada que en twitter',
-  'igual es difícil encontrar espacios así en internet',
-  'sigan así que esto tiene futuro',
-  // economía y trabajo
-  'el dólar subiendo me tiene llorando en la ducha',
-  'cómo se supone que ahorremos con la inflación así',
-  'el costo de vida subió pero los sueldos no po',
-  'alguien más trabaja en dos pegas para llegar a fin de mes?',
-  'el emprendimiento en chile tiene mucho potencial pero poco apoyo',
-  'los trámites para abrir una empresa son un laberinto',
-  'el sii y yo tenemos una relación complicada',
-  'el registro civil online nunca funciona cuando más lo necesitas',
-  'el banco me cobró una comisión que ni sé de dónde salió',
-  'las tasas de interés de las tarjetas son un abuso',
-  'el cae y el crédito universitario son una trampa generacional',
-  'igual es injusto que la educación cueste tanto',
-  'mis papás se sacrificaron para que pudiera estudiar y lo valoro',
-  'primera generación universitaria y el peso es real',
-  'alguien más en su familia que llegó a la u?',
-  // actualidad y política (neutral)
-  'el debate político en chile está muy polarizado',
-  'da lo mismo quién gobierne si las instituciones no funcionan',
-  'igual hay cosas buenas y malas en todos los gobiernos',
-  'el cinismo político de los chilenos es comprensible dado todo',
-  'por qué es tan difícil ponerse de acuerdo en algo básico',
-  'oye y las pensiones? alguien más angustiado con las pensiones?',
-  'voy a trabajar 40 años para jubilar con 300 mil pesos??',
-  'el sistema de pensiones necesita cambio urgente, eso es consenso',
-  'la constitución nueva o vieja no cambia lo que pasa en la calle',
-  'al final importa más lo que pasa en tu barrio que en el congreso',
-  // random y divertido
-  'si pudieras vivir en cualquier ciudad de chile cuál sería?',
-  'yo me iría a pucón, playa y montaña a la vez',
-  'valparaíso tiene el caos más bonito del mundo',
-  'santiago tiene todo menos tranquilidad',
-  'el taco en alameda a las 6pm es un experimento social',
-  'conducir en santiago te cambia el carácter',
-  'el taxista que te cuenta su vida entera en 10 minutos',
-  'el uber que te pone cumbia a las 8am sin preguntar',
-  'la señora del bus que te mira fijo sin razón aparente',
-  'el tipo que llega con el almuerzo al bus y todos lo odian',
-  'el colectivo en región es una institución nacional',
-  'los gallos del almacén de la esquina saben todo de todos',
-  'la señora del kiosko que te fía cuando no tienes cambio',
-  'chile es un país de extremos y en eso nos parecemos todos',
-  'igual somos raros pero de buena forma los chilenos',
-  'el orgullo chileno es exagerado a veces pero lo entiendo',
-  'nadie cocina mejor que una abuela chilena y ya',
-  'la once chilena es el ritual más sagrado de las familias',
-  'el pan con palta es la cena más honesta que existe',
-  'aguacate le dicen en otros países, acá es palta y ya',
-  // más gen z específico
-  'no cap esto es lo mejor que me ha pasado hoy',
-  'besties el post de arriba es un 10/10',
-  'voy a ser honesta, esto me pareció mid al principio pero mejoró',
-  'fr fr necesitamos más comunidades así',
-  'chile necesitaba su propio reddit y ya llegó',
-  'era hora de tener un espacio así en español chileno',
-  'oye y el chilensis? alguien más lo usa?',
-  'el chileno habla raro y eso nos hace especiales',
-  'los regionalismos del sur son los mejores del país',
-  'las groserías chilenas son un arte lingüístico',
-  'el humor chileno no lo entiende nadie más y me encanta',
-  'un argentino no podría entendernos aunque quisiera jajaja',
-  'los peruanos nos llaman choros y los entiendo honestly',
-  'latinoamérica unida pero cada uno con sus mañas',
-  'el spanglish chileno es algo único en el mundo',
-  // noche y madrugada
-  'las 2am y el feed está más activo que a mediodía',
-  'la gente más interesante escribe de madrugada',
-  'los insomnios productivos son los mejores',
-  'otro día que se me fue en internet cuando debería dormir',
-  'mañana me arrepiento pero hoy sigo scrolleando',
-  'el sueño es para los débiles decía yo a los 19, ya no',
-  'alguien más tiene el horario completamente dado vuelta?',
-  'trabajo desde la casa y perdí la noción del tiempo hace meses',
-  'el home office en un departamento pequeño es un desafío mental',
-  'los que tienen patio en su casa en santiago son millonarios',
-  // música y entretenimiento
-  'alguien más escuchando música chilena últimamente?',
-  'la escena musical chilena está en un momento increíble',
-  'los artistas chilenos merecen más reconocimiento internacional',
-  'el trap chileno tiene identidad propia y eso es valioso',
-  'la cumbia chilena es diferente a la colombiana y las dos son buenas',
-  'oye y el folklore chileno? nadie habla de violeta parra suficiente',
-  'violeta parra inventó cosas que el mundo todavía no entiende',
-  'los documentales chilenos son infravalorados',
-  'el cine chileno tiene películas increíbles que nadie ha visto',
-  'alguien más llorando con series cuando debería dormir?',
-  'netflix chileno vs netflix eeuu es una injusticia',
-  'el que tiene cuenta compartida de streaming es mi héroe',
-  'el internet en región es un drama aparte',
-  'la brecha digital en chile es real y preocupante',
-  'oye por qué el internet de fibra no llega a todos lados',
-  // más variado
-  'llevo una semana sin salir y me siento bien honestly',
-  'la introversión es un superpoder subestimado',
-  'el que dice que le gusta el networking miente o es raro',
-  'las reuniones de trabajo a las 8am deberían ser ilegales',
-  'el jefe que te escribe a las 11pm es un problema de salud pública',
-  'el correo de trabajo en el celular personal fue un error histórico',
-  'las vacaciones en chile son cortas comparadas con europa y eso se nota',
-  'el agotamiento crónico de los chilenos es un tema serio',
-  'alguien más siente que no descansa ni en el fin de semana?',
-  'el burnout es real y en chile no lo reconocen suficiente',
-  'necesito unas vacaciones de mis vacaciones',
-  'el feriado del lunes es el mejor invento de la humanidad',
-  'los feriados irrenunciables son sagrados',
-  'el que trabaja en feriado merece el doble y punto',
-  'oye y el bono de navidad? alguien más lo gasta antes de recibirlo?',
-  // cierre y comunidad
-  'gracias a todos los que hacen este lugar real',
-  'es bueno saber que no estoy solo en esto',
-  'chile tiene problemas pero también tiene gente buena',
-  'lo mejor de este país es su gente cuando se une',
-  'volvería a nacer chileno aunque sea complicado',
-  'igual tenemos mucho de qué enorgullecernos',
-  'el potencial de chile es enorme si nos ponemos de acuerdo',
-  'seamos el cambio que queremos ver o algo así',
-  'buenas noches a todos los que están despiertos sin razón',
-  'hasta mañana, o esta noche, o lo que sea',
-  'cuídense mucho los que están leyendo esto',
-  'un abrazo virtual para el que lo necesite',
-  'random plan recién empieza y ya se siente como hogar',
-  'nos vemos en el próximo post',
-  'seguimos mañana con más drama y más conversación',
-  // cortas y espontáneas
-  'jajaja','exacto po','wtf','no way','bruh','oof','facts','cap o no cap?',
-  'ni ahí','claro po','obvio wn','mentira!','en serio?','no me digas',
-  'eso mismo','100%','literal','ngl','ok pero...','espera qué',
-  'alguien más o soy yo?','lo mismo digo','sipo','no po','depende',
-  'bro...','ay no','fuego','guardado','compartido','top este post',
-  'llegué tarde pero sí','jajajajaja no','uff qué heavy','así es la vida',
-  'qué se le va a hacer','ánimo igual','un abrazo','buena vibra',
-  'random plan lo mejor','qué comunidad más buena esta','sin toxicidad por favor',
-  'se nota que hay gente real acá','raro esto en internet',
+  // cortas y directas
+  'si','no','jajaja','wtf','nope','obvio','mentira','facts','no way','oof',
+  'lol','bruh','cap','ni ahí','ntp','q','bro...','literal','ngl','ok pero',
+  'ni siquiera la vio','en serio??','claro po wn','jajajajaja','no lo puedo creer',
+  '100%','facts po','momento momento','no po','sipo','depende','ni idea',
+  'fuego','top','sin palabras','brutal','no me lo esperaba','qué level',
+  'demasiado real','me pegó fuerte','jajaja no','uf heavy',
+  'seré el único que piensa esto?','o sea sí pero también no',
+  // sarcasmo puro
+  'sorpresa sorpresa, nadie lo vio venir',
+  'qué innovador, nunca había escuchado eso antes',
+  'sí claro, seguro que esta vez va a ser diferente',
+  'impresionante cómo nadie habla de esto... oh espera',
+  'gracias por el aporte tan revolucionario',
+  'wow qué descubrimiento tan original',
+  'genial, otro experto en todo que apareció',
+  'ya po, la décima vez que alguien dice esto esta semana',
+  'eso que dijiste fue tan útil que lo voy a ignorar',
+  'claro que sí, confío ciegamente en lo que dice un random en internet',
+  'y todos aplaudieron',
+  'nadie preguntó pero aquí está tu opinión igual',
+  'fascinante, cuéntame más de tu perspectiva única',
+  'la primera vez en la historia que alguien dice algo así en internet',
+  'revolucionario. nunca antes visto. histórico.',
+  'qué valiente decir eso en un foro anónimo',
+  // opiniones fuertes sin filtro
+  'seamos honestos, esto no va a cambiar nada',
+  'chile tiene el don de repetir los mismos errores con nueva estética',
+  'el problema es que todos tienen opinión y nadie tiene información',
+  'twitter arruinó la capacidad de la gente de tener opiniones matizadas',
+  'la gente confunde estar enojado con tener razón',
+  'el 90% de los debates en internet son dos personas hablando de cosas distintas',
+  'nadie lee más allá del titular y se nota',
+  'la memoria de internet es de 48 horas máximo',
+  'mañana nadie va a hablar de esto y todos saben que es verdad',
+  'hay un hilo igual a este cada dos semanas',
+  'spoiler: no va a pasar nada',
+  'adivinen qué, ya pasó antes y tampoco pasó nada entonces',
+  'el cinismo no es pesimismo, es estadística',
+  // humor negro chileno
+  'la economía chilena explicada: el que tiene plata tiene más plata',
+  'el sii me debe una disculpa y un terapista',
+  'el sistema de pensiones es básicamente una apuesta que perdiste antes de nacer',
+  'el metro en hora punta es un experimento de psicología social no consentido',
+  'santiago diseñado por alguien que odia a la gente que vive en santiago',
+  'el costo de vida subió pero el sueldo tiene miedo de hacer lo mismo',
+  'el arriendo en providencia es básicamente una beca al revés',
+  'la lista de espera del fonasa como ejercicio de meditación budista',
+  'el rush de alameda a las 6pm y los derechos humanos',
+  'trabajar 40 años para jubilar con lo que cuesta una semana de supermercado',
+  // regional sin filtro
+  'desde el sur donde llueve hasta el alma y los huesos',
+  'los santiaguinos descubrieron que existen otras ciudades y les pareció exótico',
+  'en región esperamos el doble, cobramos la mitad y nadie dice nada',
+  'valparaíso es el caos más hermoso que alguien pudo haber planificado mal',
+  'antofagasta existe y tiene problemas reales que santiago ignora, tema',
+  'conce tiene el mejor humor negro del país por necesidad histórica',
+  // internet y tecnología sin romanticismo
+  'la ia va a quitarle el trabajo a todos y todos fingen que no',
+  'chatgpt para redactar lo que antes hacías pensando, qué evolución',
+  'el algoritmo decide lo que piensas y tú crees que elegiste',
+  'tiktok es básicamente dopamina empaquetada como entretenimiento',
+  'las redes sociales no son una plaza pública, son un negocio que te vende',
+  'influencer es la versión moderna de vendedor de seguros pero con más seguidores',
+  'el metaverso fue la predicción más cara y equivocada de la historia reciente',
+  'startup chilena = idea gringa con nombre en inglés y oficina en lastarria',
+  // trabajo y plata real
+  'reunión de trabajo que pudo ser un correo que pudo no existir',
+  'feedback constructivo: no sirve, estás despedido',
+  'la cultura de la empresa importa hasta que toca pagar el bono',
+  'trabajo en equipo significa que otros hacen lo tuyo también',
+  'el sueldo emocional no paga el arriendo en ningún banco conocido',
+  'crecer profesionalmente es la forma elegante de decir más trabajo mismo sueldo',
+  'pasión por lo que haces, excelente, descuento eso del sueldo',
+  'disponibilidad inmediata en el aviso de trabajo es una red flag no una virtud',
+  // sin ternura, directos
+  'lo que no va a cambiar hoy tampoco va a cambiar mañana',
+  'todos tienen la solución y nadie tiene el cargo para implementarla',
+  'el problema de chile no es falta de ideas es falta de voluntad',
+  'opinar en internet sin consecuencias es el deporte nacional número uno',
+  'la indignación dura hasta el siguiente scroll',
+  'nada une más a los chilenos que quejarse de chile',
+  'el pesimismo no es un defecto de carácter, es una respuesta racional al contexto',
+  'esperar que algo cambie sin cambiar nada es la definición de algo que no voy a decir',
+  'el que dice que está bien probablemente no está bien pero tampoco es tu problema',
+  'la solidaridad dura hasta que cuesta algo',
+  'cada cierto tiempo chile descubre que existe la desigualdad y se sorprende',
+  'la clase media chilena: muy rica para las ayudas, muy pobre para todo lo demás',
+  // reacciones directas sin dulce
+  'llegué tarde pero el hilo ya era mediocre cuando empezó',
+  'primer comentario: ya están equivocados',
+  'leyendo esto y perdiendo neuronas en tiempo real',
+  'esto envejeció mal y ni siquiera es viejo todavía',
+  'el post tiene energía de lunes por la mañana',
+  'interesante si nunca has leído nada sobre el tema',
+  'cinco párrafos para decir nada, respeto el esfuerzo',
+  'el take más tibio del año y aun así alguien lo va a debatir',
+  'esto lo discutimos hace tres semanas y llegamos a la misma nada',
+  'random plan: donde los takes van a morir con dignidad',
 ];
+
 
 var chatOpen=false,newMsgCount=0,typingTimer=null;
 
@@ -1592,7 +1465,14 @@ async function doSearch(q){
     return p.title.toLowerCase().includes(ql)||(p.prev&&p.prev.toLowerCase().includes(ql));
   }).slice(0,3);
   postMatches.forEach(function(p){
-    results.push({type:'post',icon:p.ic,label:p.title,sub:p.sub,action:function(){toggleComs(p.id);closeSearch();}});
+    results.push({type:'post',icon:p.ic,label:p.title,sub:p.sub,action:(function(pid){return function(){
+      closeSearch();
+      filterFeed(null, document.querySelector('.sf-item'));
+      setTimeout(function(){
+        var el=document.getElementById('post-'+pid);
+        if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+      },200);
+    };})(p.id)});
   });
 
   // search real posts from supabase
@@ -1606,7 +1486,18 @@ async function doSearch(q){
   // search comunidades
   var comMatches=['chile','futbol','contingencia','memescl','finanzas','tecnologia'].filter(function(c){return c.includes(ql);});
   comMatches.forEach(function(c){
-    results.push({type:'comunidad',icon:'🏘',label:'p/'+c,sub:'comunidad',action:function(){filterFeedSub(c);closeSearch();}});
+    results.push({type:'comunidad',icon:'🏘',label:'p/'+c,sub:'comunidad',action:(function(csub){return function(){
+      // find and click the sidebar item
+      var items=document.querySelectorAll('.sf-item');
+      var found=false;
+      items.forEach(function(item){
+        if(item.textContent.indexOf(csub)!==-1){
+          filterFeed(csub,item);
+          found=true;
+        }
+      });
+      if(!found) filterFeedSub(csub);
+    };})(c)});
   });
 
   // search users from supabase
@@ -1628,9 +1519,9 @@ async function doSearch(q){
   var shown={};
   results.forEach(function(r,i){
     if(!shown[r.type]){shown[r.type]=true;html+='<div class="sr-section">'+types[r.type]+'</div>';}
-    html+='<div class="sr-item" onclick="searchResults['+i+'].action()">'+
+    html+='<div class="sr-item" onclick="execSearch('+i+')">'+
       '<span>'+r.icon+'</span>'+
-      '<span>'+r.label+'</span>'+
+      '<span style="flex:1">'+r.label+'</span>'+
       '<span class="sr-tag">'+r.sub+'</span>'+
     '</div>';
   });
@@ -1638,6 +1529,21 @@ async function doSearch(q){
   window.searchResults=results;
   document.getElementById('search-results').innerHTML=html;
   document.getElementById('search-results').classList.add('on');
+}
+
+function execSearch(i){
+  var r=window.searchResults[i];
+  if(!r)return;
+  // close dropdown and clear input
+  closeSearch();
+  document.getElementById('search-inp').value='';
+  // execute action
+  r.action();
+  // scroll feed into view
+  setTimeout(function(){
+    var feed=document.getElementById('posts-feed');
+    if(feed) feed.scrollIntoView({behavior:'smooth',block:'start'});
+  },100);
 }
 
 async function doPost(){
