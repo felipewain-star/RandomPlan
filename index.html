@@ -1158,26 +1158,17 @@ function openCommentBox(postId){
     '<div id="com-preview-'+postId+'"></div>'+
     '<button id="csend-'+postId+'" style="background:none;border:1px solid var(--green);color:var(--green);padding:.25rem .6rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;align-self:flex-end;margin-top:.2rem">SEND</button>'+
     '</div>';
-  // small timeout to ensure DOM is fully updated
+  // attach events after DOM update
   setTimeout(function(){
-    initMediaBar(inputId, emojiId, gifId);
     var inp=document.getElementById(inputId);
     if(inp){
-      inp.addEventListener('keydown',function(e){if(e.key==='Enter')sendComment(postId);});
-      inp.addEventListener('input',function(){checkCommentUrl(this.value,postId);});
       inp.focus();
+      inp.onkeydown=function(e){if(e.key==='Enter')sendComment(postId);};
+      inp.oninput=function(){checkCommentUrl(this.value,postId);};
     }
     var sbtn=document.getElementById('csend-'+postId);
-    if(sbtn) sbtn.addEventListener('click',function(){sendComment(postId);});
-  }, 10);
-  var inp=document.getElementById(inputId);
-  if(inp){
-    inp.addEventListener('keydown',function(e){if(e.key==='Enter')sendComment(postId);});
-    inp.addEventListener('input',function(){checkCommentUrl(this.value,postId);});
-    inp.focus();
-  }
-  var sbtn=document.getElementById('csend-'+postId);
-  if(sbtn) sbtn.addEventListener('click',function(){sendComment(postId);});
+    if(sbtn) sbtn.onclick=function(){sendComment(postId);};
+  },0);
 }
 
 
@@ -1578,10 +1569,7 @@ function showModal(tipo){
   }
   document.getElementById('modal-content').innerHTML=c;
   document.getElementById('modal-wrap').classList.add('on');
-  // init media bar if post modal
-  if(tipo==='post'){
-    initMediaBar('m-contenido','post-ep','post-gp');
-  }
+
 }
 
 async function doLogin(){
@@ -2044,18 +2032,62 @@ function selectGif(pickerId, fullUrl, thumbUrl){
   if(picker) picker.dataset.selectedGif=fullUrl;
 }
 
+var _mediaRegistry={};
 function buildMediaBar(inputId, emojiId, gifId){
-  var html='<div class="media-bar" id="bar-'+inputId+'">';
-  html+='<button class="media-btn" id="ebtn-'+inputId+'" type="button">😊</button>';
-  html+='<button class="media-btn" id="gbtn-'+inputId+'" type="button">GIF</button>';
+  _mediaRegistry[inputId]={emojiId:emojiId,gifId:gifId};
+  var emojisHtml=EMOJIS.map(function(e){
+    return '<span class="emoji-btn" data-inp="'+inputId+'" data-e="'+encodeURIComponent(e)+'" onclick="window._ec(this)">'+e+'</span>';
+  }).join('');
+  var html='<div class="media-bar">';
+  html+='<button class="media-btn" type="button" data-eid="'+emojiId+'" data-gid="'+gifId+'" onclick="window._te(this)">😊 emoji</button>';
+  html+='<button class="media-btn" type="button" data-gid="'+gifId+'" data-eid="'+emojiId+'" data-inp="'+inputId+'" onclick="window._tg(this)">GIF</button>';
   html+='</div>';
-  html+='<div class="emoji-picker" id="'+emojiId+'"></div>';
+  html+='<div class="emoji-picker" id="'+emojiId+'">'+emojisHtml+'</div>';
   html+='<div class="gif-picker" id="'+gifId+'">';
-  html+='<input class="gif-search" id="gsearch-'+inputId+'" placeholder="buscar GIF y presiona Enter">';
+  html+='<input class="gif-search" placeholder="buscar GIF + Enter" data-gid="'+gifId+'" data-inp="'+inputId+'" onkeydown="window._gk(event,this)">';
   html+='<div class="gif-grid" id="ggrid-'+inputId+'"></div>';
   html+='</div>';
   return html;
 }
+window._ec=function(btn){
+  var inputId=btn.getAttribute('data-inp');
+  var enc=btn.getAttribute('data-e');
+  var inp=document.getElementById(inputId);
+  if(!inp)return;
+  var e=decodeURIComponent(enc);
+  var s=inp.selectionStart||inp.value.length;
+  inp.value=inp.value.slice(0,s)+e+inp.value.slice(s);
+  inp.focus();inp.selectionStart=inp.selectionEnd=s+e.length;
+};
+window._te=function(btn){
+  var ep=document.getElementById(btn.getAttribute('data-eid'));
+  var gp=document.getElementById(btn.getAttribute('data-gid'));
+  if(!ep)return;
+  ep.classList.toggle('on');
+  if(gp)gp.classList.remove('on');
+};
+window._tg=function(btn){
+  var gid=btn.getAttribute('data-gid');
+  var eid=btn.getAttribute('data-eid');
+  var inputId=btn.getAttribute('data-inp');
+  var gp=document.getElementById(gid);
+  var ep=document.getElementById(eid);
+  if(!gp)return;
+  gp.classList.toggle('on');
+  if(ep)ep.classList.remove('on');
+  if(gp.classList.contains('on')){
+    var grid=document.getElementById('ggrid-'+inputId);
+    if(grid&&!grid.innerHTML) loadGifs(inputId,'meme chile',grid);
+  }
+};
+window._sg=function(inp){
+  var inputId=inp.getAttribute('data-inp');
+  var grid=document.getElementById('ggrid-'+inputId);
+  if(grid) loadGifs(inputId,inp.value,grid);
+};
+window._gk=function(ev,inp){
+  if(ev.key==='Enter') window._sg(inp);
+};
 
 function initMediaBar(inputId, emojiId, gifId){
   // emoji button
