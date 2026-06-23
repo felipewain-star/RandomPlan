@@ -55,8 +55,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 /* TICKER */
 .ticker-wrap{
   background:#0a0800;border-bottom:1px solid #3a2e00;
-  height:32px;overflow:hidden;position:sticky;top:48px;z-index:199;
-  display:block;position:relative;
+  height:28px;overflow:hidden;position:sticky;top:0;z-index:201;
+  display:block;
 }
 .ticker-live{
   display:flex;align-items:center;gap:.4rem;
@@ -205,7 +205,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .u-avatar-sm{width:22px;height:22px;font-size:.6rem}
 
 /* SIDEBAR R */
-.sidebar-r{width:255px;flex-shrink:0;position:sticky;top:88px;height:fit-content}
+.sidebar-r{width:255px;flex-shrink:0;position:sticky;top:84px;height:fit-content}
 .widget{background:var(--bg1);border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:.6rem}
 .whead{padding:.42rem .75rem;font-family:var(--mono);font-size:.65rem;font-weight:700;color:var(--green);letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg0);display:flex;align-items:center;gap:.35rem}
 .whead::before{content:'//';color:var(--text3);font-weight:400}
@@ -370,34 +370,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 @media(max-width:800px){.sidebar-l,.sidebar-r{display:none}.content{padding:.65rem}}
 </style>
 
-<div class="topbar">
-  <div class="logo"><span class="logo-rnd">Random</span>Plan<span class="logo-cursor"></span><span class="logo-v">v0.1.0</span></div>
-  <div class="search" style="position:relative">
-  <input type="text" id="search-inp" placeholder="buscar posts, comunidades, usuarios..." oninput="handleSearch(this.value)" onblur="setTimeout(function(){closeSearch()},200)">
-  <div class="search-results" id="search-results"></div>
-</div>
-  <div class="topbar-r">
-    <div class="ping"><span class="ping-dot"></span>1.2k online</div>
-    <div id="auth-btns" style="display:flex;align-items:center;gap:.5rem">
-      <button class="nav-btn" onclick="showModal('login')">login</button>
-      <button class="nav-btn pri" onclick="showModal('register')">./registrar</button>
-    </div>
-    <div id="user-btns" style="display:none;align-items:center;gap:.5rem">
-      <div class="user-info"><span id="user-name"></span><span class="user-karma" id="user-karma"></span></div>
-      <button class="nav-btn" onclick="doLogout()">salir</button>
-    </div>
-    <button class="chat-toggle" id="chat-toggle-btn" onclick="toggleChat()">▮ CHAT <span class="chat-badge" id="chat-badge">0</span></button>
-  </div>
-</div>
-
 <!-- TICKER TRADINGVIEW -->
-<div class="ticker-wrap" id="ticker-wrap" style="height:32px;overflow:hidden;padding:0">
-  <div class="ticker-live" style="position:absolute;left:0;top:0;bottom:0;z-index:2;display:flex;align-items:center;padding:0 .5rem;background:#0a0800;border-right:1px solid #3a2e00">
+<div class="ticker-wrap" id="ticker-wrap" style="height:28px;overflow:hidden;padding:0">
+  <div class="ticker-live" style="position:absolute;left:0;top:0;bottom:0;z-index:2;display:flex;align-items:center;padding:0 .45rem;background:#0a0800;border-right:1px solid #3a2e00">
     <span class="ticker-live-dot"></span>
     <span class="ticker-live-txt">LIVE</span>
   </div>
-  <div style="margin-left:70px;height:32px">
-    <div class="tradingview-widget-container" style="height:32px">
+  <div style="margin-left:64px;height:28px">
+    <div class="tradingview-widget-container" style="height:28px">
       <div class="tradingview-widget-container__widget"></div>
       <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
       {
@@ -421,6 +401,27 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
     </div>
   </div>
 </div>
+<div class="topbar">
+  <div class="logo"><span class="logo-rnd">Random</span>Plan<span class="logo-cursor"></span><span class="logo-v">v0.1.0</span></div>
+  <div class="search" style="position:relative">
+  <input type="text" id="search-inp" placeholder="buscar posts, comunidades, usuarios..." oninput="handleSearch(this.value)" onblur="setTimeout(function(){closeSearch()},200)">
+  <div class="search-results" id="search-results"></div>
+</div>
+  <div class="topbar-r">
+    <div class="ping"><span class="ping-dot"></span>1.2k online</div>
+    <div id="auth-btns" style="display:flex;align-items:center;gap:.5rem">
+      <button class="nav-btn" onclick="showModal('login')">login</button>
+      <button class="nav-btn pri" onclick="showModal('register')">./registrar</button>
+    </div>
+    <div id="user-btns" style="display:none;align-items:center;gap:.5rem">
+      <div class="user-info"><span id="user-name"></span><span class="user-karma" id="user-karma"></span></div>
+      <button class="nav-btn" onclick="doLogout()">salir</button>
+    </div>
+    <button class="chat-toggle" id="chat-toggle-btn" onclick="toggleChat()">▮ CHAT <span class="chat-badge" id="chat-badge">0</span></button>
+  </div>
+</div>
+
+
 
 <div class="main-wrap" id="main-wrap">
   <div class="content">
