@@ -759,7 +759,7 @@ function renderComs(cd){
     html+='<div class="ccmeta"><span class="u">u/'+c.bot.name+'</span> · '+c.t+' · <span class="ci">['+c.bot.ciudad+']</span></div>';
     html+='<div class="cctext">'+c.txt+'</div>';
     html+='<div class="ccacts">';
-    html+='<button class="ccact ccvote-up" onclick="voteComment(this,1)">▲ '+c.v+'</button>';
+    html+='<button class="ccact ccvote-up" data-votes="'+c.v+'" onclick="voteComment(this,1)">▲ '+c.v+'</button>';
     html+='<button class="ccact ccvote-down" onclick="voteComment(this,-1)">▼</button>';
     html+='</div>';
     html+='</div></div>';
@@ -824,17 +824,27 @@ function voteComment(btn, dir){
   var acts=btn.parentElement;
   var upBtn=acts.querySelector('.ccvote-up');
   var downBtn=acts.querySelector('.ccvote-down');
-  var current=parseInt(upBtn.textContent.replace('▲ ',''))||0;
+  // use data-votes for reliable count tracking
+  var current=parseInt(upBtn.getAttribute('data-votes'))||0;
   if(btn.classList.contains('on')){
+    // toggle off
     btn.classList.remove('on');
-    if(dir===1) upBtn.textContent='▲ '+(current-1);
+    if(dir===1){
+      upBtn.setAttribute('data-votes', current-1);
+      upBtn.textContent='▲ '+(current-1);
+    }
   } else {
-    // remove other
+    // remove previous vote
     upBtn.classList.remove('on');
     downBtn.classList.remove('on');
     btn.classList.add('on');
-    if(dir===1) upBtn.textContent='▲ '+(current+1);
-    else upBtn.textContent='▲ '+(current-1);
+    if(dir===1){
+      upBtn.setAttribute('data-votes', current+1);
+      upBtn.textContent='▲ '+(current+1);
+    } else {
+      upBtn.setAttribute('data-votes', current-1);
+      upBtn.textContent='▲ '+(current-1);
+    }
   }
 }
 
@@ -988,7 +998,7 @@ async function loadRealComments(postId){
     html+='<div class="ccmeta"><span class="u">u/'+user.username+'</span> · ahora · <span class="ci">['+user.ciudad+']</span></div>';
     html+='<div class="cctext">'+c.texto+'</div>';
     html+='<div class="ccacts">';
-    html+='<button class="ccact ccvote-up" onclick="voteComment(this,1)">▲ '+(c.votos||0)+'</button>';
+    html+='<button class="ccact ccvote-up" data-votes="'+(c.votos||0)+'" onclick="voteComment(this,1)">▲ '+(c.votos||0)+'</button>';
     html+='<button class="ccact ccvote-down" onclick="voteComment(this,-1)">▼</button>';
     html+='</div>';
     html+='</div></div>';
