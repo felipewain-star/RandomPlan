@@ -3979,42 +3979,37 @@ var _botPostsToday = 0;
 var _botPostsLastReset = new Date().toDateString();
 
 async function botCommentRealPost(postId, postTitle, postContenido, postSub, fakeId) {
-  var key = postId + '_' + postId;
+  var key = postId + '_' + postSub;
   if (_botCommentedPosts[key]) return;
   _botCommentedPosts[key] = true;
 
+  // Elegir bot apropiado para el tema
   var candidates = getBotsForTopic(postSub);
   if (!candidates.length) candidates = BOTS;
   var botData = candidates[Math.floor(Math.random() * candidates.length)];
 
+  // Usar pool propio del arquetipo — sin Claude API (CORS)
   var pool = getBotPool(botData);
-  var shortPool = pool.filter(function(p) { return p.length < 80; });
-  var txt = (shortPool.length ? shortPool : pool)[Math.floor(Math.random() * (shortPool.length || pool.length))];
+  var longitud = getBotLength(botData);
+  var filtered = longitud === 'muy_corta'
+    ? pool.filter(function(p) { return p.length <= 40; })
+    : longitud === 'corta'
+    ? pool.filter(function(p) { return p.length <= 80; })
+    : pool;
+  if (!filtered.length) filtered = pool;
+  var txt = filtered[Math.floor(Math.random() * filtered.length)];
 
+  // Insertar en Supabase
   try {
-    var resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        system: 'Eres "' + botData.name + '", usuario de RandomPlan.cl de ' + botData.ciudad + '. Escribe un comentario corto y natural sobre el post. Solo el texto, sin comillas.',
-        messages: [{ role: 'user', content: 'Post: "' + postTitle + '". ' + (postContenido || '') }]
-      })
-    });
-    if (resp.ok) {
-      var data = await resp.json();
-      if (data.content && data.content[0]) txt = data.content[0].text.trim();
-    }
-  } catch(e) {}
-
-  try {
-    await db.from('comentarios').insert({
+    var r = await db.from('comentarios').insert({
       texto: txt,
       user_id: '00000000-0000-0000-0000-000000000001',
       post_id: postId,
       votos: Math.floor(Math.random() * 8)
     });
+    if (r.error) return;
+
+    // Mostrar en DOM si el post está abierto
     if (fakeId) {
       var clist = document.getElementById('clist-' + fakeId);
       if (clist) {
@@ -4032,30 +4027,47 @@ async function botPublishPost(botData, comunidadNombre, comunidadId) {
   if (_botPostsLastReset !== today) { _botPostsToday = 0; _botPostsLastReset = today; }
   if (_botPostsToday >= 4) return;
 
+  // Posts predefinidos por comunidad — sin Claude API (CORS)
+  var postsByCom = {
+    chile: [
+      {titulo: 'El invierno este año está más frío que el año pasado o me estoy poniendo viejo?', contenido: 'Acá en Santiago la temperatura bajó bastante esta semana. Curiosidad nomás.'},
+      {titulo: 'Pregunta: ¿cuánto demora el cambio de domicilio en el Registro Civil online?', contenido: 'Llevo tres semanas intentando y el sistema me bota cada vez.'},
+      {titulo: 'El tráfico de Santiago a las 8am es un experimento social no consentido', contenido: 'Todos los días lo mismo. Alguien más o soy yo solo?'},
+      {titulo: 'Tips para bajar la cuenta del agua en invierno', contenido: 'Con el frío uno tiende a ducharse más tiempo. Comparto lo que me funcionó.'},
+    ],
+    futbol: [
+      {titulo: 'Colo Colo vs la U este fin de semana — predicciones?', contenido: 'El clásico siempre da para el debate. Yo voy con Colo Colo pero no confío.'},
+      {titulo: 'La Roja sub-20 jugó bien o mal? Análisis honesto', contenido: 'Vi el partido completo y tengo opiniones encontradas.'},
+      {titulo: 'El mejor jugador chileno de la última década — debate abierto', contenido: 'Para mí Alexis sin discusión, pero hay otros candidatos.'},
+    ],
+    finanzas: [
+      {titulo: 'El dólar esta semana — qué esperan para los próximos días?', contenido: 'Con el contexto internacional complicado, el tipo de cambio no da señales claras.'},
+      {titulo: 'Comparación de fondos mutuos en Chile — experiencias reales', contenido: 'He estado investigando opciones para ahorros a mediano plazo.'},
+      {titulo: 'APV vs ahorro tradicional — qué conviene más para alguien de 30 años?', contenido: 'Con las tasas actuales no sé cuál es la mejor opción.'},
+    ],
+    debate: [
+      {titulo: 'El transporte público en Chile: ¿mejor o peor que hace 10 años?', contenido: 'El Transantiago fue un desastre pero algo mejoró. Debate honesto.'},
+      {titulo: 'Horario de verano/invierno — ¿debería eliminarse en Chile?', contenido: 'Cada año el mismo debate. Esta vez lo abrimos acá.'},
+      {titulo: 'El comercio ambulante en Santiago: ¿problema o solución?', contenido: 'Opiniones encontradas en mi grupo de amigos. Qué piensan ustedes?'},
+    ],
+    contingencia: [
+      {titulo: 'Resumen de la semana en Chile — lo más importante', contenido: 'Para los que no pudieron seguir las noticias, acá va un resumen rápido.'},
+      {titulo: 'El costo de la vida en Chile en 2026 — encuesta rápida', contenido: 'Cuánto gastan al mes en lo básico? Arriendos, comida, transporte.'},
+    ]
+  };
+
+  var posts = postsByCom[comunidadNombre] || postsByCom['chile'];
+  var post = posts[Math.floor(Math.random() * posts.length)];
+
   try {
-    var resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        system: 'Eres "' + botData.name + '" de ' + botData.ciudad + '. Crea un post para p/' + comunidadNombre + '. Responde solo con JSON: {"titulo":"...","contenido":"..."}. Tema chileno 2026, tono natural.',
-        messages: [{ role: 'user', content: 'Genera el post.' }]
-      })
-    });
-    if (!resp.ok) return;
-    var data = await resp.json();
-    if (!data.content || !data.content[0]) return;
-    var raw = data.content[0].text.trim().replace(/```json|```/g, '').trim();
-    var parsed = JSON.parse(raw);
-    if (!parsed.titulo) return;
-    await db.from('posts').insert({
-      titulo: parsed.titulo,
-      contenido: parsed.contenido || '',
+    var r = await db.from('posts').insert({
+      titulo: post.titulo,
+      contenido: post.contenido,
       user_id: '00000000-0000-0000-0000-000000000001',
       comunidad_id: comunidadId,
       votos: Math.floor(Math.random() * 15) + 1
     });
+    if (r.error) return;
     _botPostsToday++;
     setTimeout(function() { loadRealPosts(null); }, 2000);
   } catch(e) {}
