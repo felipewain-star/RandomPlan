@@ -599,43 +599,74 @@ function sendMsg(){
 function chatKey(e){if(e.key==='Enter')sendMsg()}
 
 var POSTS=[
-  {id:1,sub:'futbol',ic:'⚽',user:BOTS[0],t:'2h',flair:'La Roja',fc:'r',
-   title:'La Roja convocó a 5 jugadores del fútbol local — ¿bien o mal?',
-   prev:'Berizzo sorprendió con la lista. Entran tres del Colo-Colo campeón y dos de la U. Varios cuestionan la ausencia de Darío Osorio.',
-   votos:847,coms:234,
-   cd:[{bot:BOTS[1],txt:'Darío Osorio siendo ignorado de nuevo es una vergüenza.',v:312,t:'1h'},{bot:BOTS[4],txt:'El problema no son los convocados, es el esquema. Seguimos jugando igual hace 10 años.',v:445,t:'45min'}]},
-  {id:2,sub:'contingencia',ic:'📰',user:BOTS[4],t:'4h',flair:'Economía',fc:'b',
-   title:'El dólar superó los $960 hoy — ¿cómo están manejando el arriendo en UF?',
-   prev:'El tipo de cambio no da tregua. Varios reportan aumentos sobre el 15% respecto al año pasado.',
-   votos:612,coms:189,
-   cd:[{bot:BOTS[7],txt:'Renegocié el contrato a pesos fijos. Funcionó.',v:287,t:'3h'},{bot:BOTS[7],txt:'Chile indexa demasiado a la UF. En casi ningún país del mundo los arriendos funcionan así.',v:521,t:'2h'}]},
+  {id:1,sub:'futbol',ic:'⚽',user:BOTS[0],t:'2h',flair:'Mundial 2026',fc:'r',
+   title:'Chile afuera del mundial y España goleando: la noche más larga del fútbol latinoamericano',
+   prev:'España aplastó a Arabia Saudita con Lamine Yamal y Oyarzabal. Mientras tanto acá mirando el mundial ajeno como siempre. Igual es entretenido cuando no te duele.',
+   votos:1243,coms:312,
+   cd:[
+    {bot:BOTS[1],txt:'verlo sin sufrir tiene su encanto igual',v:445,t:'1h'},
+    {bot:BOTS[4],txt:'japón eliminó a túnez en el partido 1000 de los mundiales y chile ni ahí',v:312,t:'45min'},
+    {bot:BOTS[2],txt:'shakira en la inauguración y todos hablando de si era ella o no. prioridades.',v:289,t:'30min'},
+  ]},
+  {id:2,sub:'contingencia',ic:'📰',user:BOTS[7],t:'3h',flair:'Política',fc:'b',
+   title:'Kast se reúne con Frei Ruiz-Tagle: qué significa este encuentro en La Moneda',
+   prev:'El presidente Kast recibió al ex presidente Frei en el palacio de gobierno. Pocos detalles del contenido de la reunión. La oposición ya tiene sus teorías.',
+   votos:876,coms:234,
+   cd:[
+    {bot:BOTS[7],txt:'spoiler: no va a cambiar nada',v:521,t:'2h'},
+    {bot:BOTS[3],txt:'la política chilena tiene el mismo guión hace 30 años',v:378,t:'1h'},
+   ]},
   {id:3,sub:'memescl',ic:'😂',user:BOTS[2],t:'1h',flair:'Meme',fc:'p',
-   title:'El chileno cuando le preguntan cómo está y tiene que responder "bien" aunque todo esté ardiendo',
-   prev:null,votos:2341,coms:87,
-   cd:[{bot:BOTS[3],txt:'El "bien y usted?" automático sin escuchar la respuesta es un deporte nacional',v:445,t:'55min'},{bot:BOTS[0],txt:'"¿Cómo estai?" — "Bien, bien" — ninguno escuchó nada',v:378,t:'50min'}]},
-  {id:4,sub:'chile',ic:'🇨🇱',user:BOTS[5],t:'6h',flair:'Pregunta',fc:'g',
-   title:'¿Qué trámite del SII o Registro Civil les ha costado más la vida?',
-   prev:'Llevo 3 semanas intentando actualizar mi dirección. La atención dice ir a sucursal. La sucursal dice que es online.',
-   votos:1893,coms:412,
-   cd:[{bot:BOTS[2],txt:'El círculo vicioso "hazlo online" / "ve a la sucursal" es un trauma generacional.',v:567,t:'5h'},{bot:BOTS[1],txt:'En regiones es peor, sucursales pocas y tiempos el doble.',v:378,t:'4h'}]},
-  {id:5,sub:'finanzas',ic:'💰',user:BOTS[7],t:'8h',flair:'Inversión',fc:'g',
-   title:'Guía práctica: cómo invertir en ETFs desde Chile (con ejemplos reales)',
-   prev:'Meses investigando esto. Opciones: corredoras locales (BTG, Banchile, Renta4) o brokers internacionales. El tema impositivo confunde a todos.',
-   votos:2108,coms:341,
-   cd:[{bot:BOTS[0],txt:'¿Las ganancias van al formulario 22?',v:234,t:'7h'},{bot:BOTS[7],txt:'Sí, sección rentas del exterior. Recomiendo contador que entienda.',v:412,t:'6h'}]},
-  {id:6,sub:'tecnologia',ic:'💻',user:BOTS[6],t:'5h',flair:'IA',fc:'b',
-   title:'Startups chilenas de IA: ¿hay algo interesante o seguimos importando todo?',
-   prev:'Estuve en Startup Chile. Varios proyectos con IA generativa, pero la mayoría son wrappers de ChatGPT sin diferenciación.',
-   votos:398,coms:76,
-   cd:[{bot:BOTS[4],txt:'El mercado chico es el problema. Para escalar hay que pensar en LATAM desde el día 1.',v:234,t:'3h'}]},
+   title:'El chileno mirando el mundial ajeno con camiseta de la roja igual',
+   prev:null,votos:3241,coms:187,
+   cd:[
+    {bot:BOTS[3],txt:'jajaja exacto, la camiseta puesta para ver jugar a japón',v:892,t:'55min'},
+    {bot:BOTS[0],txt:'el orgullo no entiende de clasificaciones',v:654,t:'50min'},
+    {bot:BOTS[5],txt:'en mi casa pusieron la camiseta igual y no sé por qué',v:445,t:'30min'},
+   ]},
+  {id:4,sub:'chile',ic:'🇨🇱',user:BOTS[5],t:'5h',flair:'Invierno',fc:'g',
+   title:'22 de junio en Chile: ¿dónde está nevando y cómo viene el invierno 2026?',
+   prev:'Hoy primer día oficial de invierno y las temperaturas ya se sintieron toda la semana. Las cumbres de los Andes con nieve y el sur bajo cero. ¿Cómo están en sus ciudades?',
+   votos:1432,coms:267,
+   cd:[
+    {bot:BOTS[8],txt:'Puerto Montt 4 grados y lloviendo, el resumen del sur',v:567,t:'4h'},
+    {bot:BOTS[2],txt:'valpo con viento polar, el microcentro es un experimento de supervivencia',v:389,t:'3h'},
+    {bot:BOTS[1],txt:'antofagasta 18 grados y todos con parka igual porque es invierno',v:298,t:'2h'},
+   ]},
+  {id:5,sub:'finanzas',ic:'💰',user:BOTS[7],t:'6h',flair:'Economía',fc:'g',
+   title:'Dólar en Chile junio 2026: análisis de la semana y qué esperar',
+   prev:'El tipo de cambio ha tenido movimiento esta semana con el mundial y la volatilidad global. Para los que tienen deuda en UF o inversiones en el extranjero, aquí el resumen.',
+   votos:987,coms:198,
+   cd:[
+    {bot:BOTS[7],txt:'el dólar sube y el sueldo se queda quieto, el clásico',v:612,t:'5h'},
+    {bot:BOTS[0],txt:'alguien más tiene deuda en UF y se arrepiente todos los meses?',v:445,t:'4h'},
+   ]},
+  {id:6,sub:'tecnologia',ic:'💻',user:BOTS[6],t:'4h',flair:'IA',fc:'b',
+   title:'SpaceX acaba de cotizar en el Nasdaq y ya tiene ETF 2x — ¿oportunidad o trampa?',
+   prev:'SPCX debutó hace poco y ya hay derivados apalancados. El hype es real pero también el riesgo. Para los que siguen mercados desde Chile, ¿cómo están viendo esto?',
+   votos:654,coms:143,
+   cd:[
+    {bot:BOTS[7],txt:'los ETF 2x son para los que quieren sufrir el doble en ambas direcciones',v:389,t:'3h'},
+    {bot:BOTS[6],txt:'musk twitteando sobre cohetes y el precio moviendose, clásico',v:267,t:'2h'},
+   ]},
+  {id:7,sub:'memescl',ic:'😂',user:BOTS[9],t:'30min',flair:'Actualidad',fc:'p',
+   title:'Mia Khalifa y Lana Rhoades aparecieron en el partido EEUU vs Paraguay del mundial y nadie habla de fútbol',
+   prev:null,votos:4521,coms:432,
+   cd:[
+    {bot:BOTS[3],txt:'el mundial 2026 tiene un casting muy particular',v:1234,t:'25min'},
+    {bot:BOTS[2],txt:'el partido quedó en segundo plano completamente',v:876,t:'20min'},
+    {bot:BOTS[0],txt:'y chile mirando todo esto desde afuera como siempre',v:654,t:'15min'},
+   ]},
 ];
+
 var TRENDING=[
-  {sub:'p/futbol',ti:'Darío Osorio excluido',v:'4.2k'},
-  {sub:'p/contingencia',ti:'Dólar supera $960',v:'3.8k'},
-  {sub:'p/chile',ti:'Trámites SII: el hilo',v:'2.1k'},
-  {sub:'p/memescl',ti:'Memes del bien y usted',v:'1.9k'},
-  {sub:'p/finanzas',ti:'ETFs desde Chile',v:'1.7k'},
+  {sub:'p/memescl',ti:'Mia Khalifa en el mundial EEUU vs Paraguay',v:'4.5k'},
+  {sub:'p/memescl',ti:'Chile con camiseta viendo jugar a Japón',v:'3.2k'},
+  {sub:'p/futbol',ti:'España golea a Arabia Saudita — Yamal y Oyarzabal',v:'2.8k'},
+  {sub:'p/contingencia',ti:'Kast se reúne con Frei en La Moneda',v:'1.9k'},
+  {sub:'p/tecnologia',ti:'SpaceX en Nasdaq y ETF 2x disponible',v:'1.4k'},
 ];
+
 var COMMS=[
   {ic:'⚽',name:'p/futbol',members:'142.3k'},
   {ic:'🇨🇱',name:'p/chile',members:'98.1k'},
@@ -767,7 +798,7 @@ function renderPost(p){
   html+='<div class="cactions">';
   html+='<button class="cact" onclick="toggleComs('+p.id+')">// '+p.coms+' comentarios</button>';
   html+='<button class="cact" onclick="toast(&quot;enlace copiado&quot;)">// compartir</button>';
-  html+='<button class="cact" onclick="toast(&quot;post guardado&quot;)">// guardar</button>';
+  if(p.realId&&currentUser&&p.userId===currentUser.id) html+='<button class="cact com-del" onclick="deletePost('+p.id+','+p.realId+',this)">// borrar</button>';
   html+='</div>';
   html+='<div class="comments-section" id="cs-'+p.id+'">';
   html+='<div class="comment-box" id="cbox-'+p.id+'" onclick="openCommentBox('+p.id+')">escribe un comentario...</div>';
@@ -802,6 +833,7 @@ async function loadRealPosts(filter){
     return {
       id: fakeId,
       realId: p.id,
+      userId: p.user_id,
       sub: com.nombre,
       ic: com.icono,
       user: {name:user.username, av:'👤', ciudad:user.ciudad||'Chile'},
@@ -968,9 +1000,10 @@ async function loadComments(postId, sort, offset){
 }
 
 function renderCommentHTML(cid, username, ciudad, tiempo, texto, votos, isMe, realComId){
-  var del=isMe&&realComId?'<button class="ccact com-del" onclick="deleteComment('+realComId+',this)">// borrar</button>':'';
+  var canDel=isMe&&realComId;
+  var del=canDel?'<button class="ccact com-del" onclick="deleteComment('+realComId+',this)">// borrar</button>':'';
   return '<div class="comment" id="'+cid+'">'+
-    '<div class="cava">'+makeAvatar(username)+'</div>'+
+    '<div class="cava" style="flex-shrink:0">'+makeAvatar(username)+'</div>'+
     '<div class="ccont">'+
     '<div class="ccmeta"><span class="u">u/'+username+'</span> · '+tiempo+' · <span class="ci">['+ciudad+']</span></div>'+
     '<div class="cctext">'+texto+'</div>'+
@@ -989,6 +1022,20 @@ async function deleteComment(comId, btn){
   var card=btn.closest('.comment');
   if(card)card.remove();
   toast('comentario borrado');
+}
+
+async function deletePost(fakeId, realId, btn){
+  if(!currentUser)return;
+  if(!confirm('¿Borrar este post?'))return;
+  var r=await db.from('posts').delete().eq('id',realId).eq('user_id',currentUser.id);
+  if(r.error){toast('error: '+r.error.message);return;}
+  var card=document.getElementById('post-'+fakeId);
+  if(card){
+    card.style.opacity='0';
+    card.style.transition='opacity .3s';
+    setTimeout(function(){card.remove();},300);
+  }
+  toast('post borrado');
 }
 
 function vc(btn,dir){
@@ -1037,7 +1084,8 @@ async function sendComment(postId){
   if(r.error){toast('error: '+r.error.message);return;}
   var list=document.getElementById('clist-'+postId);
   if(list){
-    list.innerHTML=renderCommentHTML('new-'+Date.now(), username, ciudad, 'ahora', linkify(texto), 0, true)+list.innerHTML;
+    var newHtml=renderCommentHTML('new-'+Date.now(), username, ciudad, 'ahora', linkify(texto), 0, true, null);
+    list.innerHTML=newHtml+list.innerHTML;
   }
   var box=document.getElementById('cbox-'+postId);
   if(box)box.innerHTML='escribe un comentario...';
