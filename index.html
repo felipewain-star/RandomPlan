@@ -2258,70 +2258,89 @@ function _initPickers(){
 }
 
 function showEmoji(btn){
-  _activeInput=btn.getAttribute('data-inp');
-  _initPickers();
+  var newInput=btn.getAttribute('data-inp');
   var ep=document.getElementById('global-emoji-picker');
   var gp=document.getElementById('global-gif-picker');
-  if(gp) gp.style.display='none';
-  _gifShowing=false;
-  _pickerShowing=!_pickerShowing;
-  ep.style.display=_pickerShowing?'flex':'none';
-  if(_pickerShowing){
-    var r=btn.getBoundingClientRect();
-    ep.style.top=(r.bottom+window.scrollY+4)+'px';
-    ep.style.left=Math.max(4,r.left)+'px';
+  // cerrar gif siempre
+  if(gp){gp.style.display='none';_gifShowing=false;}
+  // si ya está abierto para ESTE mismo input → cerrar (toggle)
+  if(_pickerShowing && _activeInput===newInput){
+    ep.style.display='none';
+    _pickerShowing=false;
+    return;
   }
+  // nuevo input o estaba cerrado → abrir
+  _activeInput=newInput;
+  _initPickers();
+  _pickerShowing=true;
+  ep.style.display='flex';
+  var r=btn.getBoundingClientRect();
+  ep.style.top=(r.bottom+6)+'px';
+  ep.style.left=Math.max(4,Math.min(r.left, window.innerWidth-280))+'px';
 }
 
 function showGif(btn){
-  _activeInput=btn.getAttribute('data-inp');
+  var newInput=btn.getAttribute('data-inp');
   var ep=document.getElementById('global-emoji-picker');
   var gp=document.getElementById('global-gif-picker');
-  if(ep) ep.style.display='none';
-  _pickerShowing=false;
-  _gifShowing=!_gifShowing;
-  gp.style.display=_gifShowing?'block':'none';
-  if(_gifShowing){
-    var r=btn.getBoundingClientRect();
-    gp.style.top=(r.bottom+window.scrollY+4)+'px';
-    gp.style.left=Math.max(4,r.left)+'px';
-    var grid=document.getElementById('gif-grid-global');
-    if(grid&&!grid.dataset.loaded){
-      grid.dataset.loaded='1';
-      buscarGif('meme chile');
-    }
+  // cerrar emoji siempre
+  if(ep){ep.style.display='none';_pickerShowing=false;}
+  // si ya está abierto para ESTE mismo input → cerrar (toggle)
+  if(_gifShowing && _activeInput===newInput){
+    gp.style.display='none';
+    _gifShowing=false;
+    return;
+  }
+  // nuevo input o estaba cerrado → abrir
+  _activeInput=newInput;
+  _gifShowing=true;
+  gp.style.display='block';
+  var r=btn.getBoundingClientRect();
+  gp.style.top=(r.bottom+6)+'px';
+  gp.style.left=Math.max(4,Math.min(r.left, window.innerWidth-290))+'px';
+  var grid=document.getElementById('gif-grid-global');
+  if(grid&&!grid.dataset.loaded){
+    grid.dataset.loaded='1';
+    buscarGif('meme chile');
   }
 }
 
 async function buscarGif(q){
   var grid=document.getElementById('gif-grid-global');
   if(!grid)return;
-  grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem">buscando...</span>';
+  grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// buscando...</span>';
   try{
-    var r=await fetch('https://api.tenor.com/v1/search?q='+encodeURIComponent(q)+'&key=LIVDSRZULELA&limit=9&media_filter=minimal');
+    // Tenor API v2 — v1 está deprecada y puede fallar
+    var key='AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';
+    var r=await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q)+'&key='+key+'&limit=9&media_filter=tinygif');
     if(!r.ok)throw new Error('tenor '+r.status);
     var d=await r.json();
+    var results=d.results||[];
     grid.innerHTML='';
-    (d.results||[]).forEach(function(item){
-      var m=item.media&&item.media[0];
-      var thumb=m&&m.tinygif?m.tinygif.url:'';
-      var full=m&&m.gif?m.gif.url:thumb;
+    results.forEach(function(item){
+      var formats=item.media_formats||{};
+      // v2 usa media_formats en vez de media[0]
+      var thumb=(formats.tinygif||formats.gif||{}).url||'';
+      var full=(formats.gif||formats.tinygif||{}).url||thumb;
       if(!thumb)return;
       var img=document.createElement('img');
       img.src=thumb;
       img.className='gif-thumb';
+      img.alt=item.content_description||'gif';
       img.onclick=function(){
         if(!_activeInput)return;
         var inp=document.getElementById(_activeInput);
         if(inp){inp.value+=' [gif:'+full+']';inp.focus();}
-        document.getElementById('global-gif-picker').style.display='none';
+        var gp=document.getElementById('global-gif-picker');
+        if(gp){gp.style.display='none';}
         _gifShowing=false;
       };
       grid.appendChild(img);
     });
-    if(!d.results||!d.results.length) grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem">sin resultados</span>';
+    if(!results.length)
+      grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// sin resultados</span>';
   }catch(e){
-    grid.innerHTML='<span style="color:var(--red);font-size:.7rem;padding:.3rem">error: '+e.message+'</span>';
+    grid.innerHTML='<span style="color:var(--red);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// error: '+e.message+'</span>';
   }
 }
 
@@ -2333,11 +2352,11 @@ function buildMediaBar(inputId){
 }
 
 document.addEventListener('click',function(e){
-  if(!e.target.closest('#global-emoji-picker')&&!e.target.classList.contains('media-btn')){
+  if(!e.target.closest('#global-emoji-picker')&&!e.target.closest('.media-btn')){
     var ep=document.getElementById('global-emoji-picker');
     if(ep){ep.style.display='none';_pickerShowing=false;}
   }
-  if(!e.target.closest('#global-gif-picker')&&!e.target.classList.contains('media-btn')){
+  if(!e.target.closest('#global-gif-picker')&&!e.target.closest('.media-btn')){
     var gp=document.getElementById('global-gif-picker');
     if(gp){gp.style.display='none';_gifShowing=false;}
   }
