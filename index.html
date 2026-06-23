@@ -817,24 +817,63 @@ async function loadRealPosts(filter){
   feed.innerHTML=html+feed.innerHTML;
 }
 function renderTrending(){
-  document.getElementById('trending-list').innerHTML=TRENDING.map(function(t,i){
-    return '<div class="trend-item"><div class="trend-n">0'+(i+1)+'</div><div class="trend-info"><div class="trend-sub">'+t.sub+'</div><div class="trend-ti">'+t.ti+'</div><div class="trend-v">'+t.v+' votos</div></div></div>';
-  }).join('');
+  var html='';
+  TRENDING.forEach(function(t,i){
+    var sub=t.sub.replace('p/','');
+    html+='<div class="trend-item" onclick="filterFeedSub(this.dataset.sub)" data-sub="'+sub+'">';
+    html+='<div class="trend-n">0'+(i+1)+'</div>';
+    html+='<div class="trend-info">';
+    html+='<div class="trend-sub">'+t.sub+'</div>';
+    html+='<div class="trend-ti">'+t.ti+'</div>';
+    html+='<div class="trend-v">'+t.v+' votos</div>';
+    html+='</div></div>';
+  });
+  document.getElementById('trending-list').innerHTML=html;
 }
+
 function renderComms(){
-  document.getElementById('communities-list').innerHTML=COMMS.map(function(c){
+  var html='';
+  COMMS.forEach(function(c){
     var j=joined[c.name];
-    return '<div class="comm-item"><div class="comm-ic">'+c.ic+'</div><div class="comm-info"><div class="comm-name">'+c.name+'</div><div class="comm-mem">'+c.members+' members</div></div><button class="btn-join '+(j?'joined':'')+'" onclick="joinComm(\''+c.name+'\',this)">'+(j?'✓ joined':'join')+'</button></div>';
-  }).join('');
+    var sub=c.name.replace('p/','');
+    html+='<div class="comm-item" style="cursor:pointer" onclick="filterFeedSub(this.dataset.sub)" data-sub="'+sub+'">';
+    html+='<div class="comm-ic">'+c.ic+'</div>';
+    html+='<div class="comm-info"><div class="comm-name">'+c.name+'</div><div class="comm-mem">'+c.members+' members</div></div>';
+    html+='<button class="btn-join '+(j?'joined':'')+'" onclick="event.stopPropagation();joinComm(this.dataset.name,this)" data-name="'+c.name+'">'+(j?'✓ joined':'join')+'</button>';
+    html+='</div>';
+  });
+  document.getElementById('communities-list').innerHTML=html;
 }
+
 function vote(id,dir){
-  var prev=votes[id]||0;votes[id]=(prev===dir)?0:dir;
-  var p=POSTS.find(function(x){return x.id===id});
-  var el=document.getElementById('vc-'+id);if(el)el.textContent=fmtV(p.votos+votes[id]);
-  var c=document.getElementById('post-'+id);
-  if(c){c.querySelector('.vbtn.up').classList.toggle('on',votes[id]===1);c.querySelector('.vbtn.down').classList.toggle('on',votes[id]===-1)}
+  var prev=votes[id]||0;
+  votes[id]=(prev===dir)?0:dir;
+  var p=POSTS.find(function(x){return x.id===id;});
+  if(!p)return;
+  var newV=p.votos+votes[id];
+  var el=document.getElementById('vc-'+id);
+  if(el)el.textContent=fmtV(newV);
+  var card=document.getElementById('post-'+id);
+  if(card){
+    var upBtn=card.querySelector('.vbtn.up');
+    var downBtn=card.querySelector('.vbtn.down');
+    if(upBtn)upBtn.classList.toggle('on',votes[id]===1);
+    if(downBtn)downBtn.classList.toggle('on',votes[id]===-1);
+  }
 }
-function toggleComs(id){openComs[id]=!openComs[id];var el=document.getElementById('cs-'+id);if(el)el.classList.toggle('open',openComs[id])}
+function toggleComs(id){
+  openComs[id]=!openComs[id];
+  var el=document.getElementById('cs-'+id);
+  if(!el)return;
+  el.classList.toggle('open',openComs[id]);
+  // update button text
+  var btns=document.querySelectorAll('#post-'+id+' .cact');
+  if(btns[0]) btns[0].textContent=openComs[id]?'// cerrar comentarios':'// '+getComs(id)+' comentarios';
+}
+function getComs(id){
+  var p=POSTS.find(function(x){return x.id===id;});
+  return p?p.coms:0;
+}
 function filterFeed(sub,el){
   document.querySelectorAll('.sf-item').forEach(function(i){i.classList.remove('on')});
   if(el)el.classList.add('on');
@@ -857,7 +896,12 @@ function setTab(btn,tab){
   if(tab==='debate')sorted.sort(function(a,b){return b.coms-a.coms});
   document.getElementById('posts-feed').innerHTML=sorted.map(renderPost).join('');
 }
-function joinComm(name,btn){joined[name]=!joined[name];btn.textContent=joined[name]?'✓ joined':'join';btn.classList.toggle('joined',joined[name]);if(joined[name])toast('joined '+name)}
+function joinComm(name,btn){
+  joined[name]=!joined[name];
+  btn.textContent=joined[name]?'✓ joined':'join';
+  btn.classList.toggle('joined',joined[name]);
+  if(joined[name])toast('unido a '+name);
+}
 // showModal replaced by Supabase version below
 function closeModal(){document.getElementById('modal-wrap').classList.remove('on')}
 function closeMBg(e){if(e.target===document.getElementById('modal-wrap'))closeModal()}
