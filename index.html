@@ -1136,14 +1136,26 @@ function openCommentBox(postId){
   if(!currentUser){showModal('login');return;}
   var box=document.getElementById('cbox-'+postId);
   if(!box)return;
-  var ep='ep-'+postId, gp='gp-'+postId;
+  var inputId='cinp-'+postId;
+  var emojiId='ep-'+postId;
+  var gifId='gp-'+postId;
   box.innerHTML=
     '<div style="display:flex;flex-direction:column;gap:.35rem;width:100%">'+
-    '<input type="text" id="cinp-'+postId+'" style="flex:1;background:transparent;border:none;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none;width:100%" placeholder="escribe tu comentario..." onkeydown="if(event.key===\'Enter\')sendComment('+postId+')" oninput="checkCommentUrl(this.value,'+postId+')">'+
-    buildMediaBar('cinp-'+postId, ep, gp)+
+    '<input type="text" id="'+inputId+'" style="flex:1;background:transparent;border:none;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none;width:100%" placeholder="escribe tu comentario...">'+
+    buildMediaBar(inputId, emojiId, gifId)+
     '<div id="com-preview-'+postId+'"></div>'+
-    '<button onclick="sendComment('+postId+')" style="background:none;border:1px solid var(--green);color:var(--green);padding:.25rem .6rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;align-self:flex-end">SEND</button>'+
+    '<button id="csend-'+postId+'" style="background:none;border:1px solid var(--green);color:var(--green);padding:.25rem .6rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;align-self:flex-end">SEND</button>'+
     '</div>';
+  // init after DOM is ready
+  initMediaBar(inputId, emojiId, gifId);
+  var inp=document.getElementById(inputId);
+  if(inp){
+    inp.addEventListener('keydown',function(e){if(e.key==='Enter')sendComment(postId);});
+    inp.addEventListener('input',function(){checkCommentUrl(inp.value,postId);});
+    inp.focus();
+  }
+  var sbtn=document.getElementById('csend-'+postId);
+  if(sbtn) sbtn.addEventListener('click',function(){sendComment(postId);});
   var inp=document.getElementById('cinp-'+postId);
   if(inp)inp.focus();
 }
@@ -1545,6 +1557,10 @@ function showModal(tipo){
   }
   document.getElementById('modal-content').innerHTML=c;
   document.getElementById('modal-wrap').classList.add('on');
+  // init media bar if post modal
+  if(tipo==='post'){
+    initMediaBar('m-contenido','post-ep','post-gp');
+  }
 }
 
 async function doLogin(){
@@ -2007,36 +2023,115 @@ function selectGif(pickerId, fullUrl, thumbUrl){
   if(picker) picker.dataset.selectedGif=fullUrl;
 }
 
-function buildMediaBar(inputId, emojiPickerId, gifPickerId){
-  // Use data attributes to avoid emoji/quote escaping issues
-  var emojisHtml=EMOJIS.map(function(e){
-    return '<button class="emoji-btn" data-input="'+inputId+'" data-emoji="'+encodeURIComponent(e)+'" onclick="insertEmojiFromBtn(this)">'+e+'</button>';
-  }).join('');
-
-  var html='<div class="media-bar">';
-  html+='<button class="media-btn" data-picker="'+emojiPickerId+'" onclick="togglePickerById(this,\'emoji\')">😊 emoji</button>';
-  html+='<button class="media-btn" data-picker="'+gifPickerId+'" onclick="togglePickerById(this,\'gif\')">GIF</button>';
+function buildMediaBar(inputId, emojiId, gifId){
+  var html='<div class="media-bar" id="bar-'+inputId+'">';
+  html+='<button class="media-btn" id="ebtn-'+inputId+'" type="button">😊</button>';
+  html+='<button class="media-btn" id="gbtn-'+inputId+'" type="button">GIF</button>';
   html+='</div>';
-  html+='<div class="emoji-picker" id="'+emojiPickerId+'">'+emojisHtml+'</div>';
-  html+='<div class="gif-picker" id="'+gifPickerId+'" data-input="'+inputId+'">';
-  html+='<input class="gif-search" placeholder="buscar GIF... enter para buscar" data-picker="'+gifPickerId+'" onkeydown="if(event.key===\'Enter\'){searchGifs(this.dataset.picker,this.value)}">';
-  html+='<div class="gif-grid" id="'+gifPickerId+'-grid"></div>';
-  html+='<img class="gif-preview" id="'+gifPickerId+'-preview" src="">';
+  html+='<div class="emoji-picker" id="'+emojiId+'"></div>';
+  html+='<div class="gif-picker" id="'+gifId+'">';
+  html+='<input class="gif-search" id="gsearch-'+inputId+'" placeholder="buscar GIF y presiona Enter">';
+  html+='<div class="gif-grid" id="ggrid-'+inputId+'"></div>';
   html+='</div>';
   return html;
 }
 
-function insertEmojiFromBtn(btn){
-  var inputId=btn.getAttribute('data-input');
-  var emoji=decodeURIComponent(btn.getAttribute('data-emoji'));
-  insertEmoji(inputId, emoji);
+function initMediaBar(inputId, emojiId, gifId){
+  // emoji button
+  var ebtn=document.getElementById('ebtn-'+inputId);
+  var ep=document.getElementById(emojiId);
+  if(ebtn&&ep){
+    // populate emojis
+    if(!ep.innerHTML){
+      ep.innerHTML=EMOJIS.map(function(e){
+        return '<button class="emoji-btn" type="button">'+e+'</button>';
+      }).join('');
+      // attach clicks
+      ep.querySelectorAll('.emoji-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          var inp=document.getElementById(inputId);
+          if(!inp)return;
+          var s=inp.selectionStart||inp.value.length;
+          var e=inp.selectionEnd||s;
+          var em=btn.textContent;
+          inp.value=inp.value.slice(0,s)+em+inp.value.slice(e);
+          inp.focus();
+          inp.selectionStart=inp.selectionEnd=s+em.length;
+        });
+      });
+    }
+    ebtn.addEventListener('click',function(ev){
+      ev.stopPropagation();
+      ep.classList.toggle('on');
+      var gp=document.getElementById(gifId);
+      if(gp)gp.classList.remove('on');
+    });
+  }
+  // gif button
+  var gbtn=document.getElementById('gbtn-'+inputId);
+  var gp=document.getElementById(gifId);
+  var gs=document.getElementById('gsearch-'+inputId);
+  var gg=document.getElementById('ggrid-'+inputId);
+  if(gbtn&&gp){
+    gbtn.addEventListener('click',function(ev){
+      ev.stopPropagation();
+      gp.classList.toggle('on');
+      if(ep)ep.classList.remove('on');
+      if(gp.classList.contains('on')&&gg&&!gg.innerHTML){
+        loadGifs(inputId,'meme chile',gg);
+      }
+    });
+  }
+  if(gs&&gg){
+    gs.addEventListener('keydown',function(ev){
+      if(ev.key==='Enter') loadGifs(inputId,gs.value,gg);
+    });
+  }
 }
 
-function togglePickerById(btn, type){
-  var pickerId=btn.getAttribute('data-picker');
-  if(type==='emoji') toggleEmojiPicker(pickerId);
-  else toggleGifPicker(pickerId);
+async function loadGifs(inputId, query, grid){
+  grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem">buscando...</span>';
+  try {
+    var key='LIVDSRZULELA';
+    var url='https://api.tenor.com/v1/search?q='+encodeURIComponent(query)+'&key='+key+'&limit=9&media_filter=minimal';
+    var r=await fetch(url);
+    if(!r.ok) throw new Error();
+    var d=await r.json();
+    var results=d.results||[];
+    if(!results.length){grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem">sin resultados</span>';return;}
+    grid.innerHTML='';
+    results.forEach(function(item){
+      var media=item.media&&item.media[0];
+      var gif=media&&media.tinygif?media.tinygif.url:'';
+      var full=media&&media.gif?media.gif.url:gif;
+      if(!gif)return;
+      var img=document.createElement('img');
+      img.className='gif-thumb';
+      img.src=gif;
+      img.addEventListener('click',function(){
+        var inp=document.getElementById(inputId);
+        if(inp){
+          inp.value=inp.value+' [gif:'+full+']';
+          inp.focus();
+        }
+        var gp=img.closest('.gif-picker');
+        if(gp)gp.classList.remove('on');
+        // show preview in feed after send
+      });
+      grid.appendChild(img);
+    });
+  } catch(e){
+    grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem">error cargando GIFs</span>';
+  }
 }
+
+// close pickers when clicking outside
+document.addEventListener('click',function(){
+  document.querySelectorAll('.emoji-picker.on,.gif-picker.on').forEach(function(el){
+    el.classList.remove('on');
+  });
+});
+
 
 // Init
 addMsg(null,'// chat global activo · randomplan.cl',false,true);
