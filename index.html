@@ -476,8 +476,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 </div>
 
 <!-- GLOBAL EMOJI/GIF PICKERS -->
-<div id="global-emoji-picker" style="display:none;position:fixed;z-index:9999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;max-width:270px;flex-wrap:wrap;gap:.1rem;max-height:190px;overflow-y:auto;box-shadow:0 4px 24px rgba(0,0,0,.8)"></div>
-<div id="global-gif-picker" style="display:none;position:fixed;z-index:9999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;width:280px;box-shadow:0 4px 24px rgba(0,0,0,.8)">
+<div id="global-emoji-picker" style="display:none;position:fixed;z-index:99999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;max-width:270px;flex-wrap:wrap;gap:.1rem;max-height:190px;overflow-y:auto;box-shadow:0 4px 24px rgba(0,0,0,.8)"></div>
+<div id="global-gif-picker" style="display:none;position:fixed;z-index:99999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;width:280px;box-shadow:0 4px 24px rgba(0,0,0,.8)">
   <input id="gif-search-global" placeholder="buscar GIF + Enter" style="width:100%;background:#0d1117;border:1px solid #2a3f55;border-radius:3px;padding:.38rem .6rem;font-family:monospace;font-size:.75rem;color:#e6edf3;outline:none;margin-bottom:.4rem;box-sizing:border-box" onkeydown="if(event.key==='Enter'){document.getElementById('gif-grid-global').dataset.loaded='1';buscarGif(this.value)}">
   <div id="gif-grid-global" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:165px;overflow-y:auto"></div>
 </div>
@@ -1517,19 +1517,37 @@ async function fetchLinkPreview(url, container){
 
 function linkify(text){
   if(!text) return text;
-  // 1. escape HTML entities first
-  var safe=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  // 2. convert [gif:url] tags
-  safe=safe.replace(/\[gif:(https?[^\]]+)\]/g,'<img src="$1" class="inserted-gif" loading="lazy">');
-  // 3. convert plain URLs to links or images
-  safe=safe.replace(/(https?:\/\/[^\s<>"]+)/g,function(url){
-    if(/\.(gif|mp4|webp)(\?|$)/i.test(url)||url.indexOf('media.tenor.com')!==-1||url.indexOf('c.tenor.com')!==-1){
-      return '<img src="'+url+'" class="inserted-gif" loading="lazy">';
+  // 1. extract gifs first before any escaping
+  var parts=[];
+  var gifRegex=/\[gif:(https?[^\]]+)\]/g;
+  var lastIdx=0, m;
+  while((m=gifRegex.exec(text))!==null){
+    // push text before gif (escaped)
+    parts.push({type:'text',val:text.slice(lastIdx,m.index)});
+    // push gif url
+    parts.push({type:'gif',val:m[1]});
+    lastIdx=m.index+m[0].length;
+  }
+  parts.push({type:'text',val:text.slice(lastIdx)});
+  // 2. process each part
+  var out='';
+  parts.forEach(function(p){
+    if(p.type==='gif'){
+      out+='<img src="'+p.val+'" class="inserted-gif" loading="lazy">';
+    } else {
+      // escape then linkify text
+      var s=p.val.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      s=s.replace(/(https?:\/\/[^\s<>"]+)/g,function(url){
+        if(/\.(gif|mp4|webp)(\?|$)/i.test(url)||url.indexOf('media.tenor.com')!==-1||url.indexOf('c.tenor.com')!==-1){
+          return '<img src="'+url+'" class="inserted-gif" loading="lazy">';
+        }
+        var d=url.length>50?url.slice(0,50)+'...':url;
+        return '<a href="'+url+'" target="_blank" rel="noopener noreferrer" class="inline-link">'+d+'</a>';
+      });
+      out+=s;
     }
-    var d=url.length>50?url.slice(0,50)+'...':url;
-    return '<a href="'+url+'" target="_blank" rel="noopener noreferrer" class="inline-link">'+d+'</a>';
   });
-  return safe;
+  return out;
 }
 
 function extractUrl(text){
@@ -2245,19 +2263,37 @@ document.addEventListener('click',function(e){
 
 function linkify(text){
   if(!text) return text;
-  // 1. escape HTML entities first
-  var safe=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  // 2. convert [gif:url] tags
-  safe=safe.replace(/\[gif:(https?[^\]]+)\]/g,'<img src="$1" class="inserted-gif" loading="lazy">');
-  // 3. convert plain URLs to links or images
-  safe=safe.replace(/(https?:\/\/[^\s<>"]+)/g,function(url){
-    if(/\.(gif|mp4|webp)(\?|$)/i.test(url)||url.indexOf('media.tenor.com')!==-1||url.indexOf('c.tenor.com')!==-1){
-      return '<img src="'+url+'" class="inserted-gif" loading="lazy">';
+  // 1. extract gifs first before any escaping
+  var parts=[];
+  var gifRegex=/\[gif:(https?[^\]]+)\]/g;
+  var lastIdx=0, m;
+  while((m=gifRegex.exec(text))!==null){
+    // push text before gif (escaped)
+    parts.push({type:'text',val:text.slice(lastIdx,m.index)});
+    // push gif url
+    parts.push({type:'gif',val:m[1]});
+    lastIdx=m.index+m[0].length;
+  }
+  parts.push({type:'text',val:text.slice(lastIdx)});
+  // 2. process each part
+  var out='';
+  parts.forEach(function(p){
+    if(p.type==='gif'){
+      out+='<img src="'+p.val+'" class="inserted-gif" loading="lazy">';
+    } else {
+      // escape then linkify text
+      var s=p.val.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      s=s.replace(/(https?:\/\/[^\s<>"]+)/g,function(url){
+        if(/\.(gif|mp4|webp)(\?|$)/i.test(url)||url.indexOf('media.tenor.com')!==-1||url.indexOf('c.tenor.com')!==-1){
+          return '<img src="'+url+'" class="inserted-gif" loading="lazy">';
+        }
+        var d=url.length>50?url.slice(0,50)+'...':url;
+        return '<a href="'+url+'" target="_blank" rel="noopener noreferrer" class="inline-link">'+d+'</a>';
+      });
+      out+=s;
     }
-    var d=url.length>50?url.slice(0,50)+'...':url;
-    return '<a href="'+url+'" target="_blank" rel="noopener noreferrer" class="inline-link">'+d+'</a>';
   });
-  return safe;
+  return out;
 }
 
 function extractUrl(text){
