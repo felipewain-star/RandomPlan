@@ -55,7 +55,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 /* TICKER */
 .ticker-wrap{
   background:#0a0800;border-bottom:1px solid #3a2e00;
-  height:46px;overflow:hidden;position:sticky;top:48px;z-index:199;
+  height:32px;overflow:hidden;position:sticky;top:48px;z-index:199;
   display:block;position:relative;
 }
 .ticker-live{
@@ -205,7 +205,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .u-avatar-sm{width:22px;height:22px;font-size:.6rem}
 
 /* SIDEBAR R */
-.sidebar-r{width:255px;flex-shrink:0;position:sticky;top:102px;height:fit-content}
+.sidebar-r{width:255px;flex-shrink:0;position:sticky;top:88px;height:fit-content}
 .widget{background:var(--bg1);border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:.6rem}
 .whead{padding:.42rem .75rem;font-family:var(--mono);font-size:.65rem;font-weight:700;color:var(--green);letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg0);display:flex;align-items:center;gap:.35rem}
 .whead::before{content:'//';color:var(--text3);font-weight:400}
@@ -391,13 +391,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 </div>
 
 <!-- TICKER TRADINGVIEW -->
-<div class="ticker-wrap" id="ticker-wrap" style="height:46px;overflow:hidden;padding:0">
-  <div class="ticker-live" style="position:absolute;left:0;top:0;bottom:0;z-index:2;display:flex;align-items:center;padding:0 .6rem;background:#0a0800;border-right:1px solid #3a2e00">
+<div class="ticker-wrap" id="ticker-wrap" style="height:32px;overflow:hidden;padding:0">
+  <div class="ticker-live" style="position:absolute;left:0;top:0;bottom:0;z-index:2;display:flex;align-items:center;padding:0 .5rem;background:#0a0800;border-right:1px solid #3a2e00">
     <span class="ticker-live-dot"></span>
     <span class="ticker-live-txt">LIVE</span>
   </div>
-  <div style="margin-left:70px;height:46px">
-    <div class="tradingview-widget-container" style="height:46px">
+  <div style="margin-left:70px;height:32px">
+    <div class="tradingview-widget-container" style="height:32px">
       <div class="tradingview-widget-container__widget"></div>
       <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
       {
