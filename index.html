@@ -974,6 +974,9 @@ function voteComment(btn, dir){
   }
 }
 
+function memeImgError(img){
+  img.parentElement.innerHTML='<div class="meme-placeholder" style="font-size:2rem;padding:2rem;text-align:center;color:rgba(255,255,255,.15)">😂</div>';
+}
 function renderPost(p){
   var voto=votes[p.id]||0;
   var v=p.votos+voto;
@@ -1004,7 +1007,7 @@ function renderPost(p){
       src = p.img;
     }
     if(src){
-      html+='<img src="'+src+'" alt="meme" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=meme-placeholder style=font-size:2rem>😂</div>\'">';
+      html+='<img src="'+src+'" alt="meme" loading="lazy" onerror="memeImgError(this)">';
     } else {
       html+='<div class="meme-placeholder">😂</div>';
     }
