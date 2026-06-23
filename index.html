@@ -95,11 +95,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .media-bar{display:flex;align-items:center;gap:.3rem;margin-top:.35rem;flex-wrap:wrap}
 .media-btn{background:none;border:1px solid var(--border2);color:var(--text3);padding:.2rem .5rem;border-radius:3px;font-size:.72rem;font-family:var(--mono);cursor:pointer;transition:all .12s}
 .media-btn:hover{border-color:var(--green);color:var(--green)}
-.emoji-picker{display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:.4rem;margin-top:.3rem;max-height:160px;overflow-y:auto;flex-wrap:wrap;gap:.15rem}
+.emoji-picker{display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:.4rem;margin-top:.3rem;max-height:160px;overflow-y:auto;flex-wrap:wrap;gap:.15rem;position:relative;z-index:50}
 .emoji-picker.on{display:flex}
 .emoji-btn{background:none;border:none;font-size:1.1rem;cursor:pointer;padding:.15rem .2rem;border-radius:3px;transition:background .1s;line-height:1}
 .emoji-btn:hover{background:var(--bg3)}
-.gif-picker{display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:.4rem;margin-top:.3rem}
+.gif-picker{display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:.4rem;margin-top:.3rem;position:relative;z-index:50}
 .gif-picker.on{display:block}
 .gif-search{width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:3px;padding:.35rem .6rem;font-family:var(--mono);font-size:.75rem;color:var(--text1);outline:none;margin-bottom:.4rem}
 .gif-search:focus{border-color:var(--green)}
@@ -134,10 +134,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .tabs{display:flex;gap:0;margin-bottom:.6rem;border-bottom:1px solid var(--border)}
 .tab{padding:.42rem .75rem;border:none;border-bottom:2px solid transparent;background:none;font-family:var(--mono);font-size:.8rem;color:var(--text3);cursor:pointer;transition:all .12s;margin-bottom:-1px}
 .tab:hover{color:var(--text2)}.tab.on{color:var(--green);border-bottom-color:var(--green);font-weight:700}
-.card{background:var(--bg1);border:1px solid var(--border);border-radius:3px;margin-bottom:.42rem;display:flex;overflow:hidden;transition:border-color .12s;position:relative}
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:3px;margin-bottom:.42rem;display:flex;overflow:visible;transition:border-color .12s;position:relative}
 .card:hover{border-color:var(--border2)}
-.card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:0;background:var(--green);transition:width .12s;pointer-events:none}
-.card:hover::before{width:2px}
+.card{border-left:2px solid transparent;transition:border-color .12s,border-left-color .12s}
+.card:hover{border-left-color:var(--green)}
 .vote-col{width:34px;flex-shrink:0;background:var(--bg0);display:flex;flex-direction:column;align-items:center;padding:.5rem .2rem;gap:.1rem;border-right:1px solid var(--border)}
 .vbtn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:.88rem;line-height:1;padding:.13rem;border-radius:2px;transition:all .1s;font-family:var(--mono)}
 .vbtn.up:hover,.vbtn.up.on{color:var(--green)}.vbtn.down:hover,.vbtn.down.on{color:var(--purple)}
@@ -160,7 +160,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .cact{display:flex;align-items:center;gap:.22rem;padding:.23rem .48rem;border-radius:2px;border:none;background:none;font-family:var(--mono);font-size:.76rem;color:var(--text3);cursor:pointer;transition:all .1s}
 .cact:hover{background:var(--bg2);color:var(--text2)}
 .comments-section{display:none;margin-top:.45rem;padding-top:.45rem;border-top:1px solid var(--border)}
-.comments-section.open{display:block}
+.comments-section.open{display:block;overflow:visible}
 .comment-box{background:var(--bg0);border:1px solid var(--border);border-radius:2px;padding:.38rem .6rem;margin-bottom:.42rem;font-size:.73rem;cursor:text;color:var(--text3);display:flex;align-items:center;gap:.35rem}
 .comment-box::before{content:'> ';color:var(--green)}
 .comment{display:flex;gap:.42rem;margin-bottom:.45rem}
@@ -1449,22 +1449,19 @@ async function fetchLinkPreview(url, container){
 
 function linkify(text){
   if(!text) return text;
-  // handle gif tags first
-  text=text.replace(/\[gif:(https?:\/\/[^\]]+)\]/g,function(m,url){
-    return '<img src="'+url+'" class="inserted-gif" loading="lazy">';
-  });
-  text = text.replace(/&(?!amp;|lt;|gt;)/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  // fix gifs that got escaped
-  text=text.replace(/&lt;img src="(https?:[^"]+)" class="inserted-gif" loading="lazy"&gt;/g,'<img src="$1" class="inserted-gif" loading="lazy">');
-  var urlRegex=/(https?:\/\/[^\s<>"\[]+)/g;
-  text = text.replace(urlRegex, function(url){
-    if(url.indexOf('tenor.com')!==-1||url.indexOf('giphy.com')!==-1||url.match(/\.(gif|mp4)$/i)){
+  // 1. escape HTML entities first
+  var safe=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // 2. convert [gif:url] tags
+  safe=safe.replace(/\[gif:(https?[^\]]+)\]/g,'<img src="$1" class="inserted-gif" loading="lazy">');
+  // 3. convert plain URLs to links or images
+  safe=safe.replace(/(https?:\/\/[^\s<>"]+)/g,function(url){
+    if(/\.(gif|mp4|webp)(\?|$)/i.test(url)||url.indexOf('media.tenor.com')!==-1||url.indexOf('c.tenor.com')!==-1){
       return '<img src="'+url+'" class="inserted-gif" loading="lazy">';
     }
-    var display=url.length>50?url.slice(0,50)+'...':url;
-    return '<a href="'+url+'" target="_blank" rel="noopener noreferrer" class="inline-link">'+display+'</a>';
+    var d=url.length>50?url.slice(0,50)+'...':url;
+    return '<a href="'+url+'" target="_blank" rel="noopener noreferrer" class="inline-link">'+d+'</a>';
   });
-  return text;
+  return safe;
 }
 
 function extractUrl(text){
