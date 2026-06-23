@@ -2135,26 +2135,27 @@ function showEmoji(btn){
   _activeInput = btn.getAttribute('data-inp');
   var ep = document.getElementById('global-emoji-picker');
   var gp = document.getElementById('global-gif-picker');
-  gp.classList.remove('on');
+  gp.style.display='none';
   var rect = btn.getBoundingClientRect();
   ep.style.top = (rect.bottom + window.scrollY + 4) + 'px';
   ep.style.left = Math.max(4, rect.left) + 'px';
-  ep.classList.toggle('on');
+  ep.style.display = ep.style.display==='flex' ? 'none' : 'flex';
 }
 
 function showGif(btn){
   _activeInput = btn.getAttribute('data-inp');
   var ep = document.getElementById('global-emoji-picker');
   var gp = document.getElementById('global-gif-picker');
-  ep.classList.remove('on');
+  ep.style.display='none';
   var rect = btn.getBoundingClientRect();
   gp.style.top = (rect.bottom + window.scrollY + 4) + 'px';
   gp.style.left = Math.max(4, rect.left) + 'px';
-  gp.classList.toggle('on');
-  if(gp.classList.contains('on')){
+  var wasHidden = gp.style.display!=='block';
+  gp.style.display = wasHidden ? 'block' : 'none';
+  if(wasHidden){
     var grid = document.getElementById('gif-grid-global');
     if(grid && !grid.dataset.loaded){
-      grid.dataset.loaded = '1';
+      grid.dataset.loaded='1';
       buscarGif('meme chile');
     }
   }
@@ -2213,10 +2214,10 @@ document.addEventListener('click', function(e){
   var ep = document.getElementById('global-emoji-picker');
   var gp = document.getElementById('global-gif-picker');
   if(!e.target.closest('#global-emoji-picker') && !e.target.classList.contains('media-btn')){
-    if(ep) ep.classList.remove('on');
+    if(ep) ep.style.display='none';
   }
   if(!e.target.closest('#global-gif-picker') && !e.target.classList.contains('media-btn')){
-    if(gp) gp.classList.remove('on');
+    if(gp) gp.style.display='none';
   }
 });
 
