@@ -2331,23 +2331,19 @@ async function buscarGif(q){
   if(!grid)return;
   grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// buscando...</span>';
   try{
-    // Tenor API v2 — v1 está deprecada y puede fallar
-    var key='AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';
-    var r=await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q)+'&key='+key+'&limit=9&media_filter=tinygif');
+    var r=await fetch('https://api.tenor.com/v1/search?q='+encodeURIComponent(q)+'&key=LIVDSRZULELA&limit=9&media_filter=minimal&locale=es');
     if(!r.ok)throw new Error('tenor '+r.status);
     var d=await r.json();
     var results=d.results||[];
     grid.innerHTML='';
     results.forEach(function(item){
-      var formats=item.media_formats||{};
-      // v2 usa media_formats en vez de media[0]
-      var thumb=(formats.tinygif||formats.gif||{}).url||'';
-      var full=(formats.gif||formats.tinygif||{}).url||thumb;
+      var m=item.media&&item.media[0]||{};
+      var thumb=(m.tinygif||m.gif||{}).url||'';
+      var full=(m.gif||m.tinygif||{}).url||thumb;
       if(!thumb)return;
       var img=document.createElement('img');
       img.src=thumb;
       img.className='gif-thumb';
-      img.alt=item.content_description||'gif';
       img.onclick=function(){
         if(!_activeInput)return;
         var inp=document.getElementById(_activeInput);
