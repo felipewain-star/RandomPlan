@@ -1194,24 +1194,154 @@ function toast(msg){var el=document.getElementById('toast');el.textContent=msg;e
 function tickVotes(){POSTS.forEach(function(p){if(Math.random()<.2){p.votos+=Math.floor(Math.random()*3);var el=document.getElementById('vc-'+p.id);if(el)el.textContent=fmtV(p.votos+(votes[p.id]||0))}})}
 
 // ── AVATARES ──
-function getAvatarColor(username){
-  var colors=[
-    ['#1a3a2a','#00ff88'],['#2a1a1a','#ff6b6b'],['#1a1a3a','#79c0ff'],
-    ['#2a2a1a','#ffa657'],['#2a1a2a','#d2a8ff'],['#1a2a2a','#a5d6ff'],
-    ['#3a1a1a','#ff7b72'],['#1a3a3a','#39d353'],['#2a1a3a','#f778ba'],
-    ['#3a2a1a','#e3b341'],['#1a2a3a','#58a6ff'],['#3a1a2a','#ff9bce']
-  ];
-  var hash=0;
-  for(var i=0;i<username.length;i++) hash=(hash*31+username.charCodeAt(i))&0xffffffff;
-  var idx=Math.abs(hash)%colors.length;
-  return colors[idx];
+function hashN(str, mod){
+  var h=5381;
+  for(var i=0;i<str.length;i++) h=((h*33)^str.charCodeAt(i))>>>0;
+  return h%mod;
 }
 
 function makeAvatar(username, size){
-  var cls='u-avatar'+(size==='lg'?' u-avatar-lg':size==='sm'?' u-avatar-sm':'');
-  var colors=getAvatarColor(username);
-  var initials=(username||'?').slice(0,2).toUpperCase();
-  return '<span class="'+cls+'" style="background:'+colors[0]+';color:'+colors[1]+';border-color:'+colors[1]+'40">'+initials+'</span>';
+  var u=username||'anon';
+  var s=size==='lg'?36:size==='sm'?22:28;
+  var cx=s/2, cy=s/2, r=s/2-1;
+
+  var bgs=['#080b0f','#0a0d12','#07090c','#0c0f14','#090c10'];
+  var accents=['#00ff88','#79c0ff','#ffa657','#d2a8ff','#ff7b72','a5d6ff','#f778ba','#39d353','#e3b341','#58a6ff'];
+  var bg=bgs[hashN(u,bgs.length)];
+  var ac=accents[hashN(u+'a',accents.length)];
+  var ac2=accents[hashN(u+'b',accents.length)];
+
+  var p=r*0.78;
+  var faceTop=cy-p*0.72;
+  var eyeY=cy-p*0.08;
+  var elx=cx-p*0.28, erx=cx+p*0.28;
+  var ew=p*0.2, eh=p*0.14;
+
+  // face shape
+  var faceType=hashN(u+'f',4);
+  var faceFill='#e8eaed';
+  var faceStroke=ac;
+  var faceSVG='';
+  if(faceType===0){
+    faceSVG='<rect x="'+(cx-p*0.72)+'" y="'+(cy-p*0.72)+'" width="'+(p*1.44)+'" height="'+(p*1.44)+'" rx="'+(r*0.08)+'" fill="'+faceFill+'" stroke="'+faceStroke+'" stroke-width="'+(r*0.07)+'"/>';
+  } else if(faceType===1){
+    faceSVG='<rect x="'+(cx-p*0.72)+'" y="'+(cy-p*0.72)+'" width="'+(p*1.44)+'" height="'+(p*1.44)+'" rx="'+(r*0.25)+'" fill="'+faceFill+'" stroke="'+faceStroke+'" stroke-width="'+(r*0.07)+'"/>';
+  } else if(faceType===2){
+    var pts=''; for(var a=0;a<6;a++){var ang=Math.PI/180*(60*a-30);pts+=(cx+p*0.78*Math.cos(ang)).toFixed(1)+','+(cy+p*0.78*Math.sin(ang)).toFixed(1)+' ';}
+    faceSVG='<polygon points="'+pts+'" fill="'+faceFill+'" stroke="'+faceStroke+'" stroke-width="'+(r*0.07)+'"/>';
+  } else {
+    faceSVG='<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+(p*0.72)+'" ry="'+(p*0.78)+'" fill="'+faceFill+'" stroke="'+faceStroke+'" stroke-width="'+(r*0.07)+'"/>';
+  }
+
+  // eyes
+  var eyeType=hashN(u+'e',5);
+  var eyeSVG='';
+  if(eyeType===0){
+    eyeSVG='<circle cx="'+elx+'" cy="'+eyeY+'" r="'+(ew*0.65)+'" fill="#111"/><circle cx="'+erx+'" cy="'+eyeY+'" r="'+(ew*0.65)+'" fill="#111"/>';
+    eyeSVG+='<circle cx="'+(elx+ew*0.2)+'" cy="'+(eyeY-ew*0.2)+'" r="'+(ew*0.22)+'" fill="'+ac+'" opacity="0.9"/><circle cx="'+(erx+ew*0.2)+'" cy="'+(eyeY-ew*0.2)+'" r="'+(ew*0.22)+'" fill="'+ac+'" opacity="0.9"/>';
+  } else if(eyeType===1){
+    eyeSVG='<rect x="'+(cx-p*0.5)+'" y="'+(eyeY-eh*0.7)+'" width="'+p+'" height="'+(eh*1.4)+'" rx="'+(eh*0.4)+'" fill="#111"/>';
+    eyeSVG+='<rect x="'+(cx-p*0.5)+'" y="'+(eyeY-eh*0.7)+'" width="'+p+'" height="'+(eh*0.5)+'" rx="'+(eh*0.4)+'" fill="'+ac+'" opacity="0.4"/>';
+  } else if(eyeType===2){
+    eyeSVG='<rect x="'+(elx-ew)+'" y="'+(eyeY-eh)+'" width="'+(ew*2)+'" height="'+(eh*2)+'" fill="#111" rx="2"/><rect x="'+(erx-ew)+'" y="'+(eyeY-eh)+'" width="'+(ew*2)+'" height="'+(eh*2)+'" fill="#111" rx="2"/>';
+    eyeSVG+='<rect x="'+(elx-ew*0.5)+'" y="'+(eyeY-eh*0.3)+'" width="'+ew+'" height="'+(eh*0.5)+'" fill="'+ac+'" opacity="0.7"/><rect x="'+(erx-ew*0.5)+'" y="'+(eyeY-eh*0.3)+'" width="'+ew+'" height="'+(eh*0.5)+'" fill="'+ac+'" opacity="0.7"/>';
+  } else if(eyeType===3){
+    var es=ew*0.7;
+    eyeSVG='<line x1="'+(elx-es)+'" y1="'+(eyeY-es)+'" x2="'+(elx+es)+'" y2="'+(eyeY+es)+'" stroke="#111" stroke-width="'+(r*0.08)+'" stroke-linecap="round"/>';
+    eyeSVG+='<line x1="'+(elx+es)+'" y1="'+(eyeY-es)+'" x2="'+(elx-es)+'" y2="'+(eyeY+es)+'" stroke="#111" stroke-width="'+(r*0.08)+'" stroke-linecap="round"/>';
+    eyeSVG+='<line x1="'+(erx-es)+'" y1="'+(eyeY-es)+'" x2="'+(erx+es)+'" y2="'+(eyeY+es)+'" stroke="#111" stroke-width="'+(r*0.08)+'" stroke-linecap="round"/>';
+    eyeSVG+='<line x1="'+(erx+es)+'" y1="'+(eyeY-es)+'" x2="'+(erx-es)+'" y2="'+(eyeY+es)+'" stroke="#111" stroke-width="'+(r*0.08)+'" stroke-linecap="round"/>';
+  } else {
+    eyeSVG='<polygon points="'+elx+','+(eyeY-eh)+' '+(elx-ew)+','+(eyeY+eh)+' '+(elx+ew)+','+(eyeY+eh)+'" fill="#111"/>';
+    eyeSVG+='<polygon points="'+erx+','+(eyeY-eh)+' '+(erx-ew)+','+(eyeY+eh)+' '+(erx+ew)+','+(eyeY+eh)+'" fill="#111"/>';
+  }
+
+  // mouth
+  var mouthType=hashN(u+'m',4);
+  var my=cy+p*0.3;
+  var mouthSVG='';
+  if(mouthType===0){
+    mouthSVG='<rect x="'+(cx-p*0.32)+'" y="'+(my-eh*0.6)+'" width="'+(p*0.64)+'" height="'+(eh*1.2)+'" rx="'+(r*0.04)+'" fill="none" stroke="#555" stroke-width="'+(r*0.06)+'"/>';
+    for(var g=1;g<4;g++) mouthSVG+='<line x1="'+(cx-p*0.32+p*0.16*g)+'" y1="'+(my-eh*0.6)+'" x2="'+(cx-p*0.32+p*0.16*g)+'" y2="'+(my+eh*0.6)+'" stroke="#555" stroke-width="'+(r*0.04)+'" opacity="0.6"/>';
+  } else if(mouthType===1){
+    mouthSVG='<line x1="'+(cx-p*0.3)+'" y1="'+my+'" x2="'+(cx+p*0.3)+'" y2="'+my+'" stroke="#555" stroke-width="'+(r*0.07)+'" stroke-dasharray="'+(r*0.1)+' '+(r*0.06)+'" stroke-linecap="round"/>';
+  } else if(mouthType===2){
+    for(var h=0;h<5;h++) mouthSVG+='<circle cx="'+(cx-p*0.24+p*0.12*h)+'" cy="'+my+'" r="'+(r*0.04)+'" fill="#555"/>';
+  } else {
+    mouthSVG='<polyline points="'+(cx-p*0.3)+','+(my+eh*0.4)+' '+(cx-p*0.15)+','+(my-eh*0.4)+' '+cx+','+(my+eh*0.4)+' '+(cx+p*0.15)+','+(my-eh*0.4)+' '+(cx+p*0.3)+','+(my+eh*0.4)+'" fill="none" stroke="#555" stroke-width="'+(r*0.06)+'" stroke-linecap="round" stroke-linejoin="round"/>';
+  }
+
+  // scanline
+  var scanSVG='<line x1="'+(cx-p*0.7)+'" y1="'+(cy-p*0.2)+'" x2="'+(cx+p*0.7)+'" y2="'+(cy-p*0.2)+'" stroke="'+ac+'" stroke-width="'+(r*0.035)+'" opacity="0.2"/>';
+
+  // accessories — crypto hacker style, no antenas
+  var accType=hashN(u+'acc',5);
+  var accSVG='';
+
+  if(accType===0){
+    // hoodie con capucha — crypto staple
+    // hood back (behind face)
+    accSVG+='<path d="M'+(cx-r*0.92)+','+(cy+r*0.7)+' L'+(cx-r*0.9)+','+(cy-p*0.3)+' Q'+(cx-r*0.82)+','+(faceTop-r*0.18)+' '+cx+','+(faceTop-r*0.22)+' Q'+(cx+r*0.82)+','+(faceTop-r*0.18)+' '+(cx+r*0.9)+','+(cy-p*0.3)+' L'+(cx+r*0.92)+','+(cy+r*0.7)+'" fill="'+ac+'" opacity="0.9"/>';
+    // inner shadow
+    accSVG+='<path d="M'+(cx-p*0.52)+','+(cy-p*0.52)+' Q'+cx+','+(faceTop-r*0.05)+' '+(cx+p*0.52)+','+(cy-p*0.52)+'" fill="'+bg+'" opacity="0.45"/>';
+    // small logo on chest area
+    accSVG+='<text x="'+cx+'" y="'+(cy+r*0.72)+'" text-anchor="middle" font-size="'+(r*0.22)+'" fill="'+bg+'" font-family="monospace" opacity="0.7">RP</text>';
+
+  } else if(accType===1){
+    // lentes de sol — grandes y oscuros
+    accSVG+='<rect x="'+(cx-p*0.58)+'" y="'+(eyeY-eh*1.4)+'" width="'+(p*0.46)+'" height="'+(eh*2.5)+'" rx="'+(r*0.1)+'" fill="#0a0a0a" opacity="0.95"/>';
+    accSVG+='<rect x="'+(cx+p*0.12)+'" y="'+(eyeY-eh*1.4)+'" width="'+(p*0.46)+'" height="'+(eh*2.5)+'" rx="'+(r*0.1)+'" fill="#0a0a0a" opacity="0.95"/>';
+    accSVG+='<line x1="'+(cx-p*0.12)+'" y1="'+eyeY+'" x2="'+(cx+p*0.12)+'" y2="'+eyeY+'" stroke="#0a0a0a" stroke-width="'+(r*0.08)+'"/>';
+    accSVG+='<line x1="'+(cx-p*0.58)+'" y1="'+eyeY+'" x2="'+(cx-r*0.95)+'" y2="'+(eyeY+r*0.05)+'" stroke="#0a0a0a" stroke-width="'+(r*0.07)+'"/>';
+    accSVG+='<line x1="'+(cx+p*0.58)+'" y1="'+eyeY+'" x2="'+(cx+r*0.95)+'" y2="'+(eyeY+r*0.05)+'" stroke="#0a0a0a" stroke-width="'+(r*0.07)+'"/>';
+    // shine
+    accSVG+='<rect x="'+(cx-p*0.52)+'" y="'+(eyeY-eh*1.1)+'" width="'+(p*0.14)+'" height="'+(eh*0.7)+'" rx="2" fill="'+ac+'" opacity="0.3"/>';
+    accSVG+='<rect x="'+(cx+p*0.18)+'" y="'+(eyeY-eh*1.1)+'" width="'+(p*0.14)+'" height="'+(eh*0.7)+'" rx="2" fill="'+ac+'" opacity="0.3"/>';
+
+  } else if(accType===2){
+    // jockey cap
+    var capY=faceTop+r*0.12;
+    // dome
+    accSVG+='<path d="M'+(cx-p*0.74)+','+capY+' Q'+cx+','+(capY-r*0.58)+' '+(cx+p*0.74)+','+capY+' Z" fill="'+ac+'"/>';
+    // brim
+    accSVG+='<rect x="'+(cx-p*0.74)+'" y="'+(capY-r*0.06)+'" width="'+(p*1.22)+'" height="'+(r*0.16)+'" rx="'+(r*0.07)+'" fill="'+ac+'" opacity="0.9"/>';
+    // button on top
+    accSVG+='<circle cx="'+cx+'" cy="'+(capY-r*0.55)+'" r="'+(r*0.06)+'" fill="'+bg+'" opacity="0.6"/>';
+    // logo
+    accSVG+='<text x="'+cx+'" y="'+(capY-r*0.12)+'" text-anchor="middle" font-size="'+(r*0.18)+'" fill="'+bg+'" font-family="monospace" opacity="0.5">RP</text>';
+
+  } else if(accType===3){
+    // cadena — chain around neck area
+    var chainY=cy+p*0.5;
+    var chainR=r*0.07;
+    var chainCount=7;
+    for(var ci=0;ci<chainCount;ci++){
+      var cx2=cx-p*0.42+p*0.14*ci;
+      if(ci%2===0){
+        accSVG+='<ellipse cx="'+cx2+'" cy="'+chainY+'" rx="'+(chainR)+'" ry="'+(chainR*0.5)+'" fill="none" stroke="'+ac+'" stroke-width="'+(r*0.055)+'"/>';
+      } else {
+        accSVG+='<ellipse cx="'+cx2+'" cy="'+chainY+'" rx="'+(chainR*0.5)+'" ry="'+(chainR)+'" fill="none" stroke="'+ac+'" stroke-width="'+(r*0.055)+'"/>';
+      }
+    }
+    // pendant
+    accSVG+='<polygon points="'+cx+','+(chainY+chainR*2.5)+' '+(cx-chainR*1.2)+','+(chainY+chainR*0.5)+' '+(cx+chainR*1.2)+','+(chainY+chainR*0.5)+'" fill="'+ac+'"/>';
+
+  } else {
+    // sin accesorio — clean hacker
+    // pequeño símbolo crypto en la frente
+    accSVG+='<text x="'+cx+'" y="'+(cy-p*0.52)+'" text-anchor="middle" font-size="'+(r*0.2)+'" fill="'+ac+'" font-family="monospace" opacity="0.7">₿</text>';
+  }
+
+  var svg='<svg width="'+s+'" height="'+s+'" viewBox="0 0 '+s+' '+s+'" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;border-radius:50%;flex-shrink:0;background:'+bg+'">'+
+    '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+bg+'"/>'+
+    faceSVG+
+    eyeSVG+
+    mouthSVG+
+    scanSVG+
+    accSVG+
+    '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+ac+'" stroke-width="'+(r*0.05)+'" opacity="0.3"/>'+
+  '</svg>';
+  return svg;
 }
 
 // ── SUPABASE ──
