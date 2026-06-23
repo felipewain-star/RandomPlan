@@ -1141,24 +1141,22 @@ function openCommentBox(postId){
   var gifId='gp-'+postId;
   box.innerHTML=
     '<div style="display:flex;flex-direction:column;gap:.35rem;width:100%">'+
-    '<input type="text" id="'+inputId+'" style="flex:1;background:transparent;border:none;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none;width:100%" placeholder="escribe tu comentario...">'+
+    '<input type="text" id="'+inputId+'" style="width:100%;background:transparent;border:none;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none" placeholder="escribe tu comentario...">'+
     buildMediaBar(inputId, emojiId, gifId)+
     '<div id="com-preview-'+postId+'"></div>'+
-    '<button id="csend-'+postId+'" style="background:none;border:1px solid var(--green);color:var(--green);padding:.25rem .6rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;align-self:flex-end">SEND</button>'+
+    '<button id="csend-'+postId+'" style="background:none;border:1px solid var(--green);color:var(--green);padding:.25rem .6rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;align-self:flex-end;margin-top:.2rem">SEND</button>'+
     '</div>';
-  // init after DOM is ready
   initMediaBar(inputId, emojiId, gifId);
   var inp=document.getElementById(inputId);
   if(inp){
     inp.addEventListener('keydown',function(e){if(e.key==='Enter')sendComment(postId);});
-    inp.addEventListener('input',function(){checkCommentUrl(inp.value,postId);});
+    inp.addEventListener('input',function(){checkCommentUrl(this.value,postId);});
     inp.focus();
   }
   var sbtn=document.getElementById('csend-'+postId);
   if(sbtn) sbtn.addEventListener('click',function(){sendComment(postId);});
-  var inp=document.getElementById('cinp-'+postId);
-  if(inp)inp.focus();
 }
+
 
 async function sendComment(postId){
   var inp=document.getElementById('cinp-'+postId);
