@@ -52,45 +52,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 @keyframes badge-pulse{0%,100%{opacity:1}50%{opacity:.5}}
 
 /* LAYOUT */
-/* TICKER */
-.ticker-wrap{
-  background:#0a0800;border-bottom:1px solid #3a2e00;
-  height:28px;overflow:hidden;position:sticky;top:48px;z-index:199;
-  display:flex;align-items:center;
-}
-.ticker-live{
-  display:flex;align-items:center;gap:.4rem;
-  padding:0 .8rem;border-right:1px solid #3a2e00;
-  flex-shrink:0;
-}
-.ticker-live-dot{
-  width:7px;height:7px;border-radius:50%;background:#e8a020;
-  animation:amber-pulse .9s step-end infinite;
-  box-shadow:0 0 6px #e8a020;
-}
+/* TICKER TRADINGVIEW — estilos del contenedor */
 @keyframes amber-pulse{0%,100%{opacity:1;box-shadow:0 0 8px #e8a020}50%{opacity:0;box-shadow:none}}
-.ticker-live-txt{font-family:var(--mono);font-size:.6rem;font-weight:700;color:#e8a020;letter-spacing:.08em}
-.ticker-track{
-  display:flex;align-items:center;gap:0;
-  animation:ticker-scroll 60s linear infinite;
-  white-space:nowrap;
-}
-.ticker-wrap:hover .ticker-track{animation-play-state:paused}
-@keyframes ticker-scroll{
-  0%{transform:translateX(0)}
-  100%{transform:translateX(-50%)}
-}
-.ticker-item{
-  display:inline-flex;align-items:center;gap:.35rem;
-  padding:0 1.1rem;border-right:1px solid #2a2000;
-  font-family:var(--mono);font-size:.68rem;
-  cursor:default;
-}
-.ticker-sym{color:#c8920a;font-weight:700;font-size:.65rem}
-.ticker-price{color:#f5c842;font-weight:700}
-.ticker-chg.up{color:#39d353}
-.ticker-chg.down{color:#ff6b6b}
-.ticker-loading{font-family:var(--mono);font-size:.65rem;color:#c8920a;padding:0 1rem}
 /* EMOJI / GIF PICKER */
 .media-bar{display:flex;align-items:center;gap:.3rem;margin-top:.35rem;flex-wrap:wrap}
 .media-btn{background:none;border:1px solid var(--border2);color:var(--text3);padding:.2rem .5rem;border-radius:3px;font-size:.72rem;font-family:var(--mono);cursor:pointer;transition:all .12s}
@@ -115,7 +78,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .content{flex:1;display:flex;gap:.9rem;max-width:1060px;margin:0 auto;padding:.9rem;width:100%}
 
 /* SIDEBAR L */
-.sidebar-l{width:185px;flex-shrink:0;position:sticky;top:56px;height:fit-content}
+.sidebar-l{width:185px;flex-shrink:0;position:sticky;top:94px;height:fit-content}
 .sf-label{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);padding:.35rem .5rem .2rem;border-left:2px solid var(--border);margin-bottom:.2rem}
 .sf-item{display:flex;align-items:center;gap:.5rem;padding:.4rem .5rem;cursor:pointer;font-size:.83rem;color:var(--text2);transition:all .12s;border-left:2px solid transparent;margin-bottom:1px}
 .sf-item:hover{color:var(--text1);border-left-color:var(--border2);background:var(--bg1)}
@@ -205,7 +168,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .u-avatar-sm{width:22px;height:22px;font-size:.6rem}
 
 /* SIDEBAR R */
-.sidebar-r{width:255px;flex-shrink:0;position:sticky;top:84px;height:fit-content}
+.sidebar-r{width:255px;flex-shrink:0;position:sticky;top:94px;height:fit-content}
 .widget{background:var(--bg1);border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:.6rem}
 .whead{padding:.42rem .75rem;font-family:var(--mono);font-size:.65rem;font-weight:700;color:var(--green);letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg0);display:flex;align-items:center;gap:.35rem}
 .whead::before{content:'//';color:var(--text3);font-weight:400}
@@ -240,7 +203,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 
 /* ── CHAT PANEL ── */
 .chat-panel{
-  position:fixed;top:48px;right:0;bottom:0;width:var(--chat-w);
+  position:fixed;top:94px;right:0;bottom:0;width:var(--chat-w);
   background:var(--bg0);border-left:2px solid var(--red);
   display:flex;flex-direction:column;z-index:150;
   transform:translateX(100%);transition:transform .25s;
@@ -391,7 +354,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 </div>
 
 <!-- TICKER TRADINGVIEW -->
-<div style="height:46px;overflow:hidden;position:sticky;top:0;z-index:201;background:#0a0800;border-bottom:1px solid #3a2e00;display:flex;align-items:center">
+<div style="height:46px;overflow:hidden;position:sticky;top:48px;z-index:199;background:#0a0800;border-bottom:1px solid #3a2e00;display:flex;align-items:center">
   <div style="display:flex;align-items:center;padding:0 .5rem;border-right:1px solid #3a2e00;gap:.3rem;flex-shrink:0">
     <span style="width:7px;height:7px;border-radius:50%;background:#e8a020;animation:amber-pulse .9s step-end infinite;box-shadow:0 0 6px #e8a020;display:inline-block"></span>
     <span style="font-family:monospace;font-size:.6rem;font-weight:700;color:#e8a020;letter-spacing:.08em">LIVE</span>
