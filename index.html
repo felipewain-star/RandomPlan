@@ -126,6 +126,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .com-more-btn:hover{border-color:var(--green);color:var(--green)}
 .com-del{color:var(--red)!important}
 .com-del:hover{color:var(--red)!important;background:var(--reddim)!important}
+.u-avatar{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;font-family:var(--mono);border:1.5px solid transparent}
+.u-avatar-lg{width:36px;height:36px;font-size:.85rem}
+.u-avatar-sm{width:22px;height:22px;font-size:.6rem}
 
 /* SIDEBAR R */
 .sidebar-r{width:255px;flex-shrink:0;position:sticky;top:56px;height:fit-content}
@@ -763,7 +766,7 @@ function renderComs(cd){
   return cd.map(function(c,i){
     var cid='c'+Math.random().toString(36).slice(2);
     var html='<div class="comment" id="'+cid+'">';
-    html+='<div class="cava">'+c.bot.av+'</div>';
+    html+='<div class="cava">'+makeAvatar(c.bot.name)+'</div>';
     html+='<div class="ccont">';
     html+='<div class="ccmeta"><span class="u">u/'+c.bot.name+'</span> · '+c.t+' · <span class="ci">['+c.bot.ciudad+']</span></div>';
     html+='<div class="cctext">'+c.txt+'</div>';
@@ -870,7 +873,7 @@ function renderPost(p){
   html+='<div class="cmeta">';
   html+='<span class="csub" onclick="filterFeedSub(this.dataset.sub)" data-sub="'+p.sub+'">'+p.ic+' '+p.sub+'</span>';
   html+='<span class="dot">::</span>';
-  html+='<span class="cuser">u/'+p.user.name+'</span>';
+  html+='<span class="cuser">'+makeAvatar(p.user.name,'sm')+' u/'+p.user.name+'</span>';
   html+='<span class="dot">::</span>';
   html+='<span>'+p.t+'</span>';
   html+='<span class="flair '+p.fc+'">'+p.flair+'</span>';
@@ -1083,7 +1086,7 @@ async function loadComments(postId, sort, offset){
 function renderCommentHTML(cid, username, ciudad, tiempo, texto, votos, isMe, realComId){
   var del=isMe&&realComId?'<button class="ccact com-del" onclick="deleteComment('+realComId+',this)">// borrar</button>':'';
   return '<div class="comment" id="'+cid+'">'+
-    '<div class="cava">'+( isMe?'👤':''+['🦅','🌵','😐','🐕','📚','☕','🎮','📊','🏔','😎'][Math.floor(Math.random()*10)])+' </div>'+
+    '<div class="cava">'+makeAvatar(username)+'</div>'+
     '<div class="ccont">'+
     '<div class="ccmeta"><span class="u">u/'+username+'</span> · '+tiempo+' · <span class="ci">['+ciudad+']</span></div>'+
     '<div class="cctext">'+texto+'</div>'+
@@ -1190,6 +1193,27 @@ var toastT;
 function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){el.classList.remove('on')},2600)}
 function tickVotes(){POSTS.forEach(function(p){if(Math.random()<.2){p.votos+=Math.floor(Math.random()*3);var el=document.getElementById('vc-'+p.id);if(el)el.textContent=fmtV(p.votos+(votes[p.id]||0))}})}
 
+// ── AVATARES ──
+function getAvatarColor(username){
+  var colors=[
+    ['#1a3a2a','#00ff88'],['#2a1a1a','#ff6b6b'],['#1a1a3a','#79c0ff'],
+    ['#2a2a1a','#ffa657'],['#2a1a2a','#d2a8ff'],['#1a2a2a','#a5d6ff'],
+    ['#3a1a1a','#ff7b72'],['#1a3a3a','#39d353'],['#2a1a3a','#f778ba'],
+    ['#3a2a1a','#e3b341'],['#1a2a3a','#58a6ff'],['#3a1a2a','#ff9bce']
+  ];
+  var hash=0;
+  for(var i=0;i<username.length;i++) hash=(hash*31+username.charCodeAt(i))&0xffffffff;
+  var idx=Math.abs(hash)%colors.length;
+  return colors[idx];
+}
+
+function makeAvatar(username, size){
+  var cls='u-avatar'+(size==='lg'?' u-avatar-lg':size==='sm'?' u-avatar-sm':'');
+  var colors=getAvatarColor(username);
+  var initials=(username||'?').slice(0,2).toUpperCase();
+  return '<span class="'+cls+'" style="background:'+colors[0]+';color:'+colors[1]+';border-color:'+colors[1]+'40">'+initials+'</span>';
+}
+
 // ── SUPABASE ──
 var SUPA_URL = 'https://jquycrzqspdwciwvmuse.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxdXljcnpxc3Bkd2Npd3ZtdXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTA4MDcsImV4cCI6MjA5NzcyNjgwN30.ThqHOnX-bdro7CbGAe3PLDgM3O-RiK8NHhDuDufULs4';
@@ -1219,9 +1243,12 @@ async function loadPerfil(){
   var r = await db.from('perfiles').select('*').eq('id', currentUser.id).single();
   if(r.data){
     currentPerfil = r.data;
-    document.getElementById('user-name').textContent = 'u/'+r.data.username;
-    document.getElementById('user-karma').textContent = '· '+r.data.karma+' karma';
-    document.getElementById('comp-prompt').textContent = r.data.username+'@randomplan:~$';
+    var un=document.getElementById('user-name');
+    if(un) un.innerHTML=makeAvatar(r.data.username,'sm')+' u/'+r.data.username;
+    var uk=document.getElementById('user-karma');
+    if(uk) uk.textContent='· '+r.data.karma+' karma';
+    var cp=document.getElementById('comp-prompt');
+    if(cp) cp.textContent=r.data.username+'@randomplan:~$';
   }
 }
 
