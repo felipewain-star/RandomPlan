@@ -95,11 +95,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .media-bar{display:flex;align-items:center;gap:.3rem;margin-top:.35rem;flex-wrap:wrap}
 .media-btn{background:none;border:1px solid var(--border2);color:var(--text3);padding:.2rem .5rem;border-radius:3px;font-size:.72rem;font-family:var(--mono);cursor:pointer;transition:all .12s}
 .media-btn:hover{border-color:var(--green);color:var(--green)}
-.emoji-picker{display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:.4rem;margin-top:.3rem;max-height:160px;overflow-y:auto;flex-wrap:wrap;gap:.15rem;position:relative;z-index:50}
+.emoji-picker{display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:.4rem;margin-top:.3rem;max-height:150px;overflow-y:auto;flex-wrap:wrap;gap:.15rem;z-index:300;width:100%}
 .emoji-picker.on{display:flex}
 .emoji-btn{background:none;border:none;font-size:1.1rem;cursor:pointer;padding:.15rem .2rem;border-radius:3px;transition:background .1s;line-height:1}
 .emoji-btn:hover{background:var(--bg3)}
-.gif-picker{display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:.4rem;margin-top:.3rem;position:relative;z-index:50}
+.gif-picker{display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:.4rem;margin-top:.3rem;z-index:300;width:100%}
 .gif-picker.on{display:block}
 .gif-search{width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:3px;padding:.35rem .6rem;font-family:var(--mono);font-size:.75rem;color:var(--text1);outline:none;margin-bottom:.4rem}
 .gif-search:focus{border-color:var(--green)}
@@ -136,13 +136,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .tab:hover{color:var(--text2)}.tab.on{color:var(--green);border-bottom-color:var(--green);font-weight:700}
 .card{background:var(--bg1);border:1px solid var(--border);border-radius:3px;margin-bottom:.42rem;display:flex;overflow:visible;transition:border-color .12s;position:relative}
 .card:hover{border-color:var(--border2)}
-.card{border-left:2px solid transparent;transition:border-color .12s,border-left-color .12s}
-.card:hover{border-left-color:var(--green)}
+.card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:0;background:var(--green);transition:width .12s;pointer-events:none}
+.card:hover::before{width:2px}
 .vote-col{width:34px;flex-shrink:0;background:var(--bg0);display:flex;flex-direction:column;align-items:center;padding:.5rem .2rem;gap:.1rem;border-right:1px solid var(--border)}
 .vbtn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:.88rem;line-height:1;padding:.13rem;border-radius:2px;transition:all .1s;font-family:var(--mono)}
 .vbtn.up:hover,.vbtn.up.on{color:var(--green)}.vbtn.down:hover,.vbtn.down.on{color:var(--purple)}
 .vcount{font-size:.68rem;font-weight:700;color:var(--text2)}
-.cbody{flex:1;padding:.6rem .8rem .5rem;min-width:0}
+.cbody{flex:1;padding:.6rem .8rem .5rem;min-width:0;overflow:visible}
 .cmeta{display:flex;align-items:center;gap:.38rem;flex-wrap:wrap;font-size:.75rem;color:var(--text3);margin-bottom:.28rem}
 .csub{color:var(--blue);cursor:pointer;font-weight:700}.csub:hover{text-decoration:underline}
 .cuser{color:var(--amber);cursor:pointer}.cuser:hover{text-decoration:underline}
@@ -160,7 +160,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .cact{display:flex;align-items:center;gap:.22rem;padding:.23rem .48rem;border-radius:2px;border:none;background:none;font-family:var(--mono);font-size:.76rem;color:var(--text3);cursor:pointer;transition:all .1s}
 .cact:hover{background:var(--bg2);color:var(--text2)}
 .comments-section{display:none;margin-top:.45rem;padding-top:.45rem;border-top:1px solid var(--border)}
-.comments-section.open{display:block;overflow:visible}
+.comments-section.open{display:block}
 .comment-box{background:var(--bg0);border:1px solid var(--border);border-radius:2px;padding:.38rem .6rem;margin-bottom:.42rem;font-size:.73rem;cursor:text;color:var(--text3);display:flex;align-items:center;gap:.35rem}
 .comment-box::before{content:'> ';color:var(--green)}
 .comment{display:flex;gap:.42rem;margin-bottom:.45rem}
@@ -1089,8 +1089,15 @@ async function loadComments(postId, sort, offset){
 }
 
 function renderCommentHTML(cid, username, ciudad, tiempo, texto, votos, isMe, realComId){
-  var canDel=isMe&&realComId;
-  var del=canDel?'<button class="ccact com-del" onclick="deleteComment('+realComId+',this)">// borrar</button>':'';
+  var del='';
+  if(isMe){
+    if(realComId){
+      del='<button class="ccact com-del" onclick="deleteComment('+realComId+',this)">// borrar</button>';
+    } else {
+      // newly sent comment - just remove from DOM
+      del='<button class="ccact com-del" onclick="this.closest(\'.comment\').remove();toast(\'comentario borrado\')">// borrar</button>';
+    }
+  }
   var safeUser=username||'anon';
   return '<div class="comment" id="'+cid+'">'+
     '<div class="cava" style="flex-shrink:0;width:28px">'+makeAvatar(safeUser)+'</div>'+
