@@ -2654,16 +2654,16 @@ async function buscarGif(q){
   if(!grid)return;
   grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// buscando...</span>';
   try{
-    // Tenor API v2 — v1 está deprecada y puede fallar
-    var r=await fetch('https://api.tenor.com/v1/search?q='+encodeURIComponent(q)+'&key=LIVDSRZULELA&limit=9&media_filter=minimal');
+    var key='AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';
+    var r=await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q)+'&key='+key+'&limit=9&media_filter=gif');
     if(!r.ok)throw new Error('tenor '+r.status);
     var d=await r.json();
     var results=d.results||[];
     grid.innerHTML='';
     results.forEach(function(item){
-      var m=item.media&&item.media[0]||{};
-      var thumb=(m.tinygif||m.gif||{}).url||'';
-      var full=(m.gif||m.tinygif||{}).url||thumb;
+      var formats=item.media_formats||{};
+      var thumb=(formats.tinygif||formats.gif||{}).url||'';
+      var full=(formats.gif||formats.tinygif||{}).url||thumb;
       if(!thumb)return;
       var img=document.createElement('img');
       img.src=thumb;
@@ -3614,36 +3614,38 @@ function insertEmojiGlobal(e){
 }
 
 async function loadGlobalGifs(query){
-  var grid = document.getElementById('global-gif-grid');
+  var grid = document.getElementById('global-gif-grid') || document.getElementById('gif-grid-global');
   if(!grid) return;
-  grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem">buscando...</span>';
+  grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">// buscando...</span>';
   try {
-    var r = await fetch('https://api.tenor.com/v1/search?q='+encodeURIComponent(query)+'&key=LIVDSRZULELA&limit=9&media_filter=minimal');
+    var key='AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';
+    var r = await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(query)+'&key='+key+'&limit=9&media_filter=gif');
+    if(!r.ok) throw new Error('tenor '+r.status);
     var d = await r.json();
     var results = d.results||[];
     grid.innerHTML = '';
     results.forEach(function(item){
-      var media = item.media&&item.media[0];
-      var thumb = media&&media.tinygif ? media.tinygif.url : '';
-      var full = media&&media.gif ? media.gif.url : thumb;
+      var formats = item.media_formats||{};
+      var thumb = (formats.tinygif||formats.gif||{}).url||'';
+      var full = (formats.gif||formats.tinygif||{}).url||thumb;
       if(!thumb) return;
       var img = document.createElement('img');
       img.src = thumb;
       img.className = 'gif-thumb';
+      img.alt = item.content_description||'gif';
       img.onclick = function(){
         if(!_activeInput) return;
         var inp = document.getElementById(_activeInput);
-        if(inp){
-          inp.value += ' [gif:'+full+']';
-          inp.focus();
-        }
-        document.getElementById('global-gif-picker').style.display='none';
+        if(inp){ inp.value += ' [gif:'+full+']'; inp.focus(); }
+        var gp = document.getElementById('global-gif-picker');
+        if(gp) gp.style.display='none';
+        _gifShowing=false;
       };
       grid.appendChild(img);
     });
-    if(!results.length) grid.innerHTML='<span style="color:var(--text3);font-size:.7rem">sin resultados</span>';
+    if(!results.length) grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">// sin resultados</span>';
   } catch(e){
-    grid.innerHTML='<span style="color:var(--text3);font-size:.7rem">error cargando GIFs</span>';
+    grid.innerHTML='<span style="color:var(--red);font-size:.7rem;font-family:var(--mono)">// error: '+e.message+'</span>';
   }
 }
 
