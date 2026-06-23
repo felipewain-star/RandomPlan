@@ -52,8 +52,45 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 @keyframes badge-pulse{0%,100%{opacity:1}50%{opacity:.5}}
 
 /* LAYOUT */
-/* TICKER TRADINGVIEW — estilos del contenedor */
+/* TICKER */
+.ticker-wrap{
+  background:#0a0800;border-bottom:1px solid #3a2e00;
+  height:28px;overflow:hidden;position:sticky;top:48px;z-index:199;
+  display:flex;align-items:center;
+}
+.ticker-live{
+  display:flex;align-items:center;gap:.4rem;
+  padding:0 .8rem;border-right:1px solid #3a2e00;
+  flex-shrink:0;
+}
+.ticker-live-dot{
+  width:7px;height:7px;border-radius:50%;background:#e8a020;
+  animation:amber-pulse .9s step-end infinite;
+  box-shadow:0 0 6px #e8a020;
+}
 @keyframes amber-pulse{0%,100%{opacity:1;box-shadow:0 0 8px #e8a020}50%{opacity:0;box-shadow:none}}
+.ticker-live-txt{font-family:var(--mono);font-size:.6rem;font-weight:700;color:#e8a020;letter-spacing:.08em}
+.ticker-track{
+  display:flex;align-items:center;gap:0;
+  animation:ticker-scroll 60s linear infinite;
+  white-space:nowrap;
+}
+.ticker-wrap:hover .ticker-track{animation-play-state:paused}
+@keyframes ticker-scroll{
+  0%{transform:translateX(0)}
+  100%{transform:translateX(-50%)}
+}
+.ticker-item{
+  display:inline-flex;align-items:center;gap:.35rem;
+  padding:0 1.1rem;border-right:1px solid #2a2000;
+  font-family:var(--mono);font-size:.68rem;
+  cursor:default;
+}
+.ticker-sym{color:#c8920a;font-weight:700;font-size:.65rem}
+.ticker-price{color:#f5c842;font-weight:700}
+.ticker-chg.up{color:#39d353}
+.ticker-chg.down{color:#ff6b6b}
+.ticker-loading{font-family:var(--mono);font-size:.65rem;color:#c8920a;padding:0 1rem}
 /* EMOJI / GIF PICKER */
 .media-bar{display:flex;align-items:center;gap:.3rem;margin-top:.35rem;flex-wrap:wrap}
 .media-btn{background:none;border:1px solid var(--border2);color:var(--text3);padding:.2rem .5rem;border-radius:3px;font-size:.72rem;font-family:var(--mono);cursor:pointer;transition:all .12s}
@@ -117,6 +154,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .flair.p{background:rgba(210,168,255,.1);color:var(--purple);border:1px solid rgba(210,168,255,.2)}
 .flair.a{background:rgba(255,166,87,.1);color:var(--amber);border:1px solid rgba(255,166,87,.2)}
 .ctitle{word-break:break-word;overflow-wrap:break-word;font-family:var(--sans);font-size:1rem;font-weight:700;color:var(--text1);line-height:1.35;margin-bottom:.32rem;cursor:pointer}
+/* MEME CARD */
+.card.card-meme{flex-direction:column}
+.card.card-meme .vote-col{width:100%;flex-direction:row;height:32px;padding:.3rem .6rem;border-right:none;border-bottom:1px solid var(--border);justify-content:flex-start;gap:.5rem}
+.card.card-meme .vote-col .vcount{font-size:.78rem}
+.meme-img-wrap{width:100%;background:var(--bg0);display:flex;align-items:center;justify-content:center;max-height:340px;overflow:hidden;cursor:pointer}
+.meme-img-wrap img{width:100%;max-height:340px;object-fit:contain;display:block}
+.meme-img-wrap .meme-placeholder{width:100%;height:180px;display:flex;align-items:center;justify-content:center;font-size:3rem;opacity:.15}
+.card.card-meme .cbody{padding:.5rem .8rem .5rem}
+.card.card-meme .ctitle{font-size:.9rem;margin-bottom:.2rem}
+.card.card-meme .cmeta{margin-bottom:.2rem}
 .ctitle:hover{color:var(--green)}
 .cprev{word-break:break-word;overflow-wrap:break-word;font-family:var(--sans);font-size:.86rem;color:var(--text2);line-height:1.5;margin-bottom:.42rem}
 .cactions{display:flex;align-items:center;gap:.1rem;flex-wrap:wrap}
@@ -391,15 +438,19 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
       <div class="sf-label">Comunidades</div>
       <div class="sf-item on" onclick="filterFeed('inicio',this)"><span class="sf-ic">~</span><span class="sf-n">inicio</span></div>
       <div class="sf-item" onclick="filterFeed('chile',this)"><span class="sf-ic">🇨🇱</span><span class="sf-n">p/chile</span><span class="sf-c">98k</span></div>
-      <div class="sf-item" onclick="filterFeed('futbol',this)"><span class="sf-ic">⚽</span><span class="sf-n">p/futbol</span><span class="sf-c">142k</span></div>
-      <div class="sf-item" onclick="filterFeed('contingencia',this)"><span class="sf-ic">📰</span><span class="sf-n">p/contingencia</span><span class="sf-c">67k</span></div>
       <div class="sf-item" onclick="filterFeed('memescl',this)"><span class="sf-ic">😂</span><span class="sf-n">p/memescl</span><span class="sf-c">55k</span></div>
       <div class="sf-item" onclick="filterFeed('finanzas',this)"><span class="sf-ic">💰</span><span class="sf-n">p/finanzas</span><span class="sf-c">28k</span></div>
-      <div class="sf-item" onclick="filterFeed('tecnologia',this)"><span class="sf-ic">💻</span><span class="sf-n">p/tecnologia</span><span class="sf-c">21k</span></div>
-      <div class="sf-item" onclick="filterFeed('marketplace',this)"><span class="sf-ic">🛒</span><span class="sf-n">p/marketplace</span><span class="sf-c">1.2k</span></div>
-      <div class="sf-item" onclick="filterFeed('polemicas',this)"><span class="sf-ic">🔥</span><span class="sf-n">p/polémicas</span><span class="sf-c">3.4k</span></div>
-      <div class="sf-item" onclick="filterFeed('desahogo',this)"><span class="sf-ic">😤</span><span class="sf-n">p/desahogo</span><span class="sf-c">2.1k</span></div>
-      <div class="sf-item" onclick="filterFeed('datos',this)"><span class="sf-ic">📊</span><span class="sf-n">p/datos</span><span class="sf-c">1.8k</span></div>
+      <div class="sf-item" onclick="filterFeed('futbol',this)"><span class="sf-ic">⚽</span><span class="sf-n">p/futbol</span><span class="sf-c">142k</span></div>
+      <div class="sf-item" onclick="filterFeed('marketplace',this)"><span class="sf-ic">🛒</span><span class="sf-n">p/feria</span><span class="sf-c">1.2k</span></div>
+      <div class="sf-sep"></div>
+      <div class="sf-label" style="margin-top:.3rem">Más</div>
+      <div class="sf-item" onclick="filterFeed('debate',this)"><span class="sf-ic">💬</span><span class="sf-n">p/debate</span><span class="sf-c">3.4k</span></div>
+      <!-- ocultas hasta tener tracción:
+      <div class="sf-item" onclick="filterFeed('contingencia',this)"><span class="sf-ic">📰</span><span class="sf-n">p/contingencia</span></div>
+      <div class="sf-item" onclick="filterFeed('tecnologia',this)"><span class="sf-ic">💻</span><span class="sf-n">p/tecnologia</span></div>
+      <div class="sf-item" onclick="filterFeed('desahogo',this)"><span class="sf-ic">😤</span><span class="sf-n">p/desahogo</span></div>
+      <div class="sf-item" onclick="filterFeed('datos',this)"><span class="sf-ic">📊</span><span class="sf-n">p/datos</span></div>
+      -->
       <div class="sf-sep"></div>
       <div class="sf-create" onclick="showModal('post')">+ nuevo post</div>
     </div>
@@ -887,12 +938,33 @@ function voteComment(btn, dir){
 function renderPost(p){
   var voto=votes[p.id]||0;
   var v=p.votos+voto;
-  var html='<div class="card" id="post-'+p.id+'">';
+  var isMeme=(p.sub==='memescl');
+  var cardClass='card'+(isMeme?' card-meme':'');
+  var html='<div class="'+cardClass+'" id="post-'+p.id+'">';
+
+  // VOTE COL — horizontal en memes, vertical en el resto
   html+='<div class="vote-col">';
   html+='<button class="vbtn up '+(voto===1?'on':'')+'" onclick="vote('+p.id+',1)">▲</button>';
   html+='<span class="vcount" id="vc-'+p.id+'">'+fmtV(v)+'</span>';
   html+='<button class="vbtn down '+(voto===-1?'on':'')+'" onclick="vote('+p.id+',-1)">▼</button>';
   html+='</div>';
+
+  // IMAGEN PROTAGONISTA en memes
+  if(isMeme){
+    html+='<div class="meme-img-wrap" onclick="toggleComs('+p.id+')">';
+    // buscar gif o imagen en prev
+    var gifMatch=p.prev?p.prev.match(/\[gif:(https?:\/\/[^\]]+)\]/):null;
+    var imgMatch=p.img||null;
+    if(gifMatch){
+      html+='<img src="'+gifMatch[1]+'" alt="meme gif" loading="lazy">';
+    } else if(imgMatch){
+      html+='<img src="'+imgMatch+'" alt="meme" loading="lazy">';
+    } else {
+      html+='<div class="meme-placeholder">😂</div>';
+    }
+    html+='</div>';
+  }
+
   html+='<div class="cbody">';
   html+='<div class="cmeta">';
   html+='<span class="csub" onclick="filterFeedSub(this.dataset.sub)" data-sub="'+p.sub+'">'+p.ic+' '+p.sub+'</span>';
@@ -903,21 +975,23 @@ function renderPost(p){
   html+='<span class="flair '+p.fc+'">'+p.flair+'</span>';
   html+='</div>';
   html+='<div class="ctitle" onclick="toggleComs('+p.id+')">'+p.title+'</div>';
-  if(p.prev){
+
+  // En memes no mostramos el texto prev (ya está la imagen)
+  if(p.prev && !isMeme){
     var prevText=linkify(p.prev);
     var isLong=p.prev.length>120;
     var shortText=isLong?linkify(p.prev.slice(0,120))+'...':prevText;
     var pid='prev-'+p.id;
     if(isLong){
-      // store full text in global map to avoid HTML attribute encoding issues
       window._prevMap=window._prevMap||{};
       window._prevMap[pid]=p.prev;
       html+='<div class="cprev" id="'+pid+'">'+shortText+
-        ' <button class="show-more-btn" onclick="togglePrev(this,\''+pid+'\')">mostrar más</button></div>';
+        ' <button class="show-more-btn" onclick="togglePrev(this,\''+pid+'\')" >mostrar más</button></div>';
     } else {
       html+='<div class="cprev">'+prevText+'</div>';
     }
   }
+
   html+='<div class="cactions">';
   html+='<button class="cact" onclick="toggleComs('+p.id+')">// '+p.coms+' comentarios</button>';
   html+='<button class="cact" onclick="toast(&quot;enlace copiado&quot;)">// compartir</button>';
@@ -1704,7 +1778,7 @@ function showModal(tipo){
       {id:5,nombre:'finanzas',icono:'💰'},
       {id:6,nombre:'tecnologia',icono:'💻'},
       {id:7,nombre:'marketplace',icono:'🛒'},
-      {id:8,nombre:'polemicas',icono:'🔥'},
+      {id:8,nombre:'debate',icono:'🔥'},
       {id:9,nombre:'desahogo',icono:'😤'},
       {id:10,nombre:'datos',icono:'📊'},
     ];
@@ -2467,7 +2541,7 @@ function showModal(tipo){
       {id:5,nombre:'finanzas',icono:'💰'},
       {id:6,nombre:'tecnologia',icono:'💻'},
       {id:7,nombre:'marketplace',icono:'🛒'},
-      {id:8,nombre:'polemicas',icono:'🔥'},
+      {id:8,nombre:'debate',icono:'🔥'},
       {id:9,nombre:'desahogo',icono:'😤'},
       {id:10,nombre:'datos',icono:'📊'},
     ];
