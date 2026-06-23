@@ -925,10 +925,11 @@ function renderPost(p){
     var shortText=isLong?linkify(p.prev.slice(0,120))+'...':prevText;
     var pid='prev-'+p.id;
     if(isLong){
-      // store full text in data-full to avoid encoding issues
-      var safeFullText=p.prev.replace(/"/g,'&quot;');
-      html+='<div class="cprev" id="'+pid+'" data-full="'+safeFullText+'">'+shortText+
-        ' <button class="show-more-btn" onclick="togglePrev(this,\''+pid+'\')"">mostrar más</button></div>';
+      // store full text in global map to avoid HTML attribute encoding issues
+      window._prevMap=window._prevMap||{};
+      window._prevMap[pid]=p.prev;
+      html+='<div class="cprev" id="'+pid+'">'+shortText+
+        ' <button class="show-more-btn" onclick="togglePrev(this,\''+pid+'\')">mostrar más</button></div>';
     } else {
       html+='<div class="cprev">'+prevText+'</div>';
     }
@@ -1379,13 +1380,13 @@ function toast(msg){var el=document.getElementById('toast');el.textContent=msg;e
 function togglePrev(btn, pid){
   var el=document.getElementById(pid);
   if(!el)return;
+  var full=(window._prevMap&&window._prevMap[pid])||'';
+  if(!full)return;
+  var esc=pid.replace(/'/g,"\\'");
   if(btn.textContent==='mostrar más'){
-    // show full text stored in data-full
-    var full=el.getAttribute('data-full')||'';
-    el.innerHTML=linkify(full)+' <button class="show-more-btn" onclick="togglePrev(this,\''+pid+'\')">mostrar menos</button>';
+    el.innerHTML=linkify(full)+'<button class="show-more-btn" onclick="togglePrev(this,\''+esc+'\')"> mostrar menos</button>';
   } else {
-    var full=el.getAttribute('data-full')||'';
-    el.innerHTML=linkify(full.slice(0,120))+'... <button class="show-more-btn" onclick="togglePrev(this,\''+pid+'\')">mostrar más</button>';
+    el.innerHTML=linkify(full.slice(0,120))+'...<button class="show-more-btn" onclick="togglePrev(this,\''+esc+'\')"> mostrar más</button>';
   }
 }
 
