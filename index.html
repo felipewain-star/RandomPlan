@@ -155,7 +155,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .flair.a{background:rgba(255,166,87,.1);color:var(--amber);border:1px solid rgba(255,166,87,.2)}
 .ctitle{font-family:var(--sans);font-size:1rem;font-weight:700;color:var(--text1);line-height:1.35;margin-bottom:.32rem;cursor:pointer}
 .ctitle:hover{color:var(--green)}
-.cprev{font-family:var(--sans);font-size:.86rem;color:var(--text2);line-height:1.5;margin-bottom:.42rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cprev{font-family:var(--sans);font-size:.86rem;color:var(--text2);line-height:1.5;margin-bottom:.42rem}
 .cactions{display:flex;align-items:center;gap:.1rem;flex-wrap:wrap}
 .cact{display:flex;align-items:center;gap:.22rem;padding:.23rem .48rem;border-radius:2px;border:none;background:none;font-family:var(--mono);font-size:.76rem;color:var(--text3);cursor:pointer;transition:all .1s}
 .cact:hover{background:var(--bg2);color:var(--text2)}
@@ -921,12 +921,14 @@ function renderPost(p){
   html+='<div class="ctitle" onclick="toggleComs('+p.id+')">'+p.title+'</div>';
   if(p.prev){
     var prevText=linkify(p.prev);
-    var isLong=p.prev.length>180;
-    var shortText=isLong?linkify(p.prev.slice(0,180))+'...':prevText;
+    var isLong=p.prev.length>120;
+    var shortText=isLong?linkify(p.prev.slice(0,120))+'...':prevText;
     var pid='prev-'+p.id;
     if(isLong){
-      html+='<div class="cprev" id="'+pid+'">'+shortText+
-        ' <button class="show-more-btn" onclick="togglePrev(this,\''+pid+'\',\''+encodeURIComponent(p.prev)+'\')">mostrar más</button></div>';
+      // store full text in data-full to avoid encoding issues
+      var safeFullText=p.prev.replace(/"/g,'&quot;');
+      html+='<div class="cprev" id="'+pid+'" data-full="'+safeFullText+'">'+shortText+
+        ' <button class="show-more-btn" onclick="togglePrev(this,\''+pid+'\')"">mostrar más</button></div>';
     } else {
       html+='<div class="cprev">'+prevText+'</div>';
     }
@@ -1374,14 +1376,16 @@ function closeModal(){document.getElementById('modal-wrap').classList.remove('on
 function closeMBg(e){if(e.target===document.getElementById('modal-wrap'))closeModal()}
 var toastT;
 function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){el.classList.remove('on')},2600)}
-function togglePrev(btn, pid, encodedText){
+function togglePrev(btn, pid){
   var el=document.getElementById(pid);
   if(!el)return;
   if(btn.textContent==='mostrar más'){
-    el.innerHTML=linkify(decodeURIComponent(encodedText))+' <button class="show-more-btn" onclick="togglePrev(this,\''+pid+'\',\''+encodedText+'\')">mostrar menos</button>';
+    // show full text stored in data-full
+    var full=el.getAttribute('data-full')||'';
+    el.innerHTML=linkify(full)+' <button class="show-more-btn" onclick="togglePrev(this,\''+pid+'\')">mostrar menos</button>';
   } else {
-    var short=linkify(decodeURIComponent(encodedText).slice(0,180))+'...';
-    el.innerHTML=short+' <button class="show-more-btn" onclick="togglePrev(this,\''+pid+'\',\''+encodedText+'\')">mostrar más</button>';
+    var full=el.getAttribute('data-full')||'';
+    el.innerHTML=linkify(full.slice(0,120))+'... <button class="show-more-btn" onclick="togglePrev(this,\''+pid+'\')">mostrar más</button>';
   }
 }
 
