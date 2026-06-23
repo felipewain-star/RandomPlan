@@ -54,10 +54,22 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 /* LAYOUT */
 /* TICKER */
 .ticker-wrap{
-  background:var(--bg1);border-bottom:1px solid var(--border);
+  background:#0a0800;border-bottom:1px solid #3a2e00;
   height:28px;overflow:hidden;position:sticky;top:48px;z-index:199;
   display:flex;align-items:center;
 }
+.ticker-live{
+  display:flex;align-items:center;gap:.4rem;
+  padding:0 .8rem;border-right:1px solid #3a2e00;
+  flex-shrink:0;
+}
+.ticker-live-dot{
+  width:7px;height:7px;border-radius:50%;background:#e8a020;
+  animation:amber-pulse .9s step-end infinite;
+  box-shadow:0 0 6px #e8a020;
+}
+@keyframes amber-pulse{0%,100%{opacity:1;box-shadow:0 0 8px #e8a020}50%{opacity:0;box-shadow:none}}
+.ticker-live-txt{font-family:var(--mono);font-size:.6rem;font-weight:700;color:#e8a020;letter-spacing:.08em}
 .ticker-track{
   display:flex;align-items:center;gap:0;
   animation:ticker-scroll 60s linear infinite;
@@ -70,15 +82,33 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 }
 .ticker-item{
   display:inline-flex;align-items:center;gap:.35rem;
-  padding:0 1.2rem;border-right:1px solid var(--border);
-  font-family:var(--mono);font-size:.68rem;color:var(--text2);
+  padding:0 1.1rem;border-right:1px solid #2a2000;
+  font-family:var(--mono);font-size:.68rem;
   cursor:default;
 }
-.ticker-sym{color:var(--text3);font-weight:700;font-size:.65rem}
-.ticker-price{color:var(--text1);font-weight:700}
-.ticker-chg.up{color:var(--green)}
-.ticker-chg.down{color:var(--red)}
-.ticker-loading{font-family:var(--mono);font-size:.65rem;color:var(--text3);padding:0 1rem}
+.ticker-sym{color:#c8920a;font-weight:700;font-size:.65rem}
+.ticker-price{color:#f5c842;font-weight:700}
+.ticker-chg.up{color:#39d353}
+.ticker-chg.down{color:#ff6b6b}
+.ticker-loading{font-family:var(--mono);font-size:.65rem;color:#c8920a;padding:0 1rem}
+/* EMOJI / GIF PICKER */
+.media-bar{display:flex;align-items:center;gap:.3rem;margin-top:.35rem;flex-wrap:wrap}
+.media-btn{background:none;border:1px solid var(--border2);color:var(--text3);padding:.2rem .5rem;border-radius:3px;font-size:.72rem;font-family:var(--mono);cursor:pointer;transition:all .12s}
+.media-btn:hover{border-color:var(--green);color:var(--green)}
+.emoji-picker{display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:.4rem;margin-top:.3rem;max-height:160px;overflow-y:auto;flex-wrap:wrap;gap:.15rem}
+.emoji-picker.on{display:flex}
+.emoji-btn{background:none;border:none;font-size:1.1rem;cursor:pointer;padding:.15rem .2rem;border-radius:3px;transition:background .1s;line-height:1}
+.emoji-btn:hover{background:var(--bg3)}
+.gif-picker{display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:.4rem;margin-top:.3rem}
+.gif-picker.on{display:block}
+.gif-search{width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:3px;padding:.35rem .6rem;font-family:var(--mono);font-size:.75rem;color:var(--text1);outline:none;margin-bottom:.4rem}
+.gif-search:focus{border-color:var(--green)}
+.gif-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:160px;overflow-y:auto}
+.gif-thumb{width:100%;height:70px;object-fit:cover;border-radius:3px;cursor:pointer;border:1px solid transparent;transition:border-color .1s}
+.gif-thumb:hover{border-color:var(--green)}
+.gif-preview{margin-top:.4rem;border-radius:3px;max-width:100%;display:none}
+.gif-preview.on{display:block}
+.inserted-gif{max-width:280px;border-radius:4px;margin-top:.4rem;display:block}
 
 .main-wrap{display:flex;transition:padding-right .25s}
 .main-wrap.chat-open{padding-right:var(--chat-w)}
@@ -356,6 +386,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 
 <!-- TICKER -->
 <div class="ticker-wrap" id="ticker-wrap">
+  <div class="ticker-live">
+    <span class="ticker-live-dot"></span>
+    <span class="ticker-live-txt">LIVE</span>
+  </div>
   <div class="ticker-track" id="ticker-track">
     <span class="ticker-loading">// cargando precios...</span>
   </div>
@@ -372,6 +406,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
       <div class="sf-item" onclick="filterFeed('memescl',this)"><span class="sf-ic">😂</span><span class="sf-n">p/memescl</span><span class="sf-c">55k</span></div>
       <div class="sf-item" onclick="filterFeed('finanzas',this)"><span class="sf-ic">💰</span><span class="sf-n">p/finanzas</span><span class="sf-c">28k</span></div>
       <div class="sf-item" onclick="filterFeed('tecnologia',this)"><span class="sf-ic">💻</span><span class="sf-n">p/tecnologia</span><span class="sf-c">21k</span></div>
+      <div class="sf-item" onclick="filterFeed('marketplace',this)"><span class="sf-ic">🛒</span><span class="sf-n">p/marketplace</span><span class="sf-c">1.2k</span></div>
+      <div class="sf-item" onclick="filterFeed('polemicas',this)"><span class="sf-ic">🔥</span><span class="sf-n">p/polémicas</span><span class="sf-c">3.4k</span></div>
+      <div class="sf-item" onclick="filterFeed('desahogo',this)"><span class="sf-ic">😤</span><span class="sf-n">p/desahogo</span><span class="sf-c">2.1k</span></div>
+      <div class="sf-item" onclick="filterFeed('datos',this)"><span class="sf-ic">📊</span><span class="sf-n">p/datos</span><span class="sf-c">1.8k</span></div>
       <div class="sf-sep"></div>
       <div class="sf-create" onclick="showModal('post')">+ nuevo post</div>
     </div>
@@ -708,6 +746,10 @@ var COMMS=[
   {ic:'📰',name:'p/contingencia',members:'67.4k'},
   {ic:'😂',name:'p/memescl',members:'54.8k'},
   {ic:'💰',name:'p/finanzas',members:'28.2k'},
+  {ic:'🔥',name:'p/polemicas',members:'3.4k'},
+  {ic:'😤',name:'p/desahogo',members:'2.1k'},
+  {ic:'🛒',name:'p/marketplace',members:'1.2k'},
+  {ic:'📊',name:'p/datos',members:'1.8k'},
 ];
 var votes={},openComs={},joined={};
 function fmtV(n){return n>=1000?(n/1000).toFixed(1)+'k':n}
@@ -1094,9 +1136,11 @@ function openCommentBox(postId){
   if(!currentUser){showModal('login');return;}
   var box=document.getElementById('cbox-'+postId);
   if(!box)return;
+  var ep='ep-'+postId, gp='gp-'+postId;
   box.innerHTML=
-    '<div style="display:flex;flex-direction:column;gap:.4rem;width:100%">'+
-    '<input type="text" id="cinp-'+postId+'" style="flex:1;background:transparent;border:none;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none;width:100%" placeholder="escribe tu comentario o pega un link..." onkeydown="if(event.key===\'Enter\')sendComment('+postId+')" oninput="checkCommentUrl(this.value,'+postId+')">'+
+    '<div style="display:flex;flex-direction:column;gap:.35rem;width:100%">'+
+    '<input type="text" id="cinp-'+postId+'" style="flex:1;background:transparent;border:none;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none;width:100%" placeholder="escribe tu comentario..." onkeydown="if(event.key===\'Enter\')sendComment('+postId+')" oninput="checkCommentUrl(this.value,'+postId+')">'+
+    buildMediaBar('cinp-'+postId, ep, gp)+
     '<div id="com-preview-'+postId+'"></div>'+
     '<button onclick="sendComment('+postId+')" style="background:none;border:1px solid var(--green);color:var(--green);padding:.25rem .6rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;align-self:flex-end">SEND</button>'+
     '</div>';
@@ -1108,7 +1152,11 @@ async function sendComment(postId){
   var inp=document.getElementById('cinp-'+postId);
   if(!inp)return;
   var texto=inp.value.trim();
-  if(!texto)return;
+  // check for selected gif
+  var gp=document.getElementById('gp-'+postId);
+  var gifUrl=gp?gp.dataset.selectedGif:'';
+  if(!texto&&!gifUrl)return;
+  if(gifUrl) texto=texto+(texto?' ':'')+'[gif:'+gifUrl+']';
   var sess=await db.auth.getSession();
   if(!sess.data||!sess.data.session){showModal('login');return;}
   var uid=sess.data.session.user.id;
@@ -1377,9 +1425,18 @@ async function fetchLinkPreview(url, container){
 
 function linkify(text){
   if(!text) return text;
-  text = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  var urlRegex=/(https?:\/\/[^\s<>"]+)/g;
+  // handle gif tags first
+  text=text.replace(/\[gif:(https?:\/\/[^\]]+)\]/g,function(m,url){
+    return '<img src="'+url+'" class="inserted-gif" loading="lazy">';
+  });
+  text = text.replace(/&(?!amp;|lt;|gt;)/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // fix gifs that got escaped
+  text=text.replace(/&lt;img src="(https?:[^"]+)" class="inserted-gif" loading="lazy"&gt;/g,'<img src="$1" class="inserted-gif" loading="lazy">');
+  var urlRegex=/(https?:\/\/[^\s<>"\[]+)/g;
   text = text.replace(urlRegex, function(url){
+    if(url.indexOf('tenor.com')!==-1||url.indexOf('giphy.com')!==-1||url.match(/\.(gif|mp4)$/i)){
+      return '<img src="'+url+'" class="inserted-gif" loading="lazy">';
+    }
     var display=url.length>50?url.slice(0,50)+'...':url;
     return '<a href="'+url+'" target="_blank" rel="noopener noreferrer" class="inline-link">'+display+'</a>';
   });
@@ -1471,6 +1528,10 @@ function showModal(tipo){
       {id:4,nombre:'memescl',icono:'😂'},
       {id:5,nombre:'finanzas',icono:'💰'},
       {id:6,nombre:'tecnologia',icono:'💻'},
+      {id:7,nombre:'marketplace',icono:'🛒'},
+      {id:8,nombre:'polemicas',icono:'🔥'},
+      {id:9,nombre:'desahogo',icono:'😤'},
+      {id:10,nombre:'datos',icono:'📊'},
     ];
     var opts=comunidades_list.map(function(c){return '<option value="'+c.id+'">'+c.icono+' p/'+c.nombre+'</option>';}).join('');
     c='<h2>$ nuevo_post</h2><p class="sub">// comparte algo con RandomPlan</p>'+
@@ -1479,6 +1540,7 @@ function showModal(tipo){
       '<div class="field"><label>contenido (opcional)</label><textarea id="m-contenido" rows="4" placeholder="más detalles... pega un link https://... para preview" oninput="checkPostUrl(this.value)"></textarea></div>'+
       '<div id="post-preview-container"></div>'+
       '<div class="modal-err" id="m-err"></div>'+
+      buildMediaBar('m-contenido','post-ep','post-gp')+
       '<button class="modal-sub" id="m-sub" onclick="doPost()">./publicar --exec</button>';
   }
   document.getElementById('modal-content').innerHTML=c;
@@ -1868,6 +1930,99 @@ function renderTicker(){
 // Load ticker and refresh every 60s
 loadTicker();
 setInterval(loadTicker, 60000);
+
+// ── EMOJI & GIF ──
+var EMOJIS='😂,🔥,💀,🤣,😭,🤯,👀,😤,🫡,🤔,💯,🎯,🤙,👊,😎,🥲,😬,🤦,🙄,👏,🫠,😅,🤡,💪,🫶,❤️,🖤,⚡,🌊,🏔,🐍,🦅,🦁,🐺,💻,📱,🎮,🏆,🎯,💰,📈,📉,🔑,⚠️,❌,✅,🚀,🌙,☀️,🌧,❄️,🍺,🍕,🌮,☕,🤝,🙏,👋,✌️,🤞,💪,🫵,🧠,👁️,💬,🔊,📢,🗣️,⏰,📅,🔗,📎,✏️,🗑️,🔍,💡,🎵,🎶'.split(',');
+
+function toggleEmojiPicker(pickerId){
+  var el=document.getElementById(pickerId);
+  if(!el)return;
+  el.classList.toggle('on');
+  var gp=document.getElementById(pickerId.replace('emoji','gif'));
+  if(gp)gp.classList.remove('on');
+}
+
+function toggleGifPicker(pickerId){
+  var el=document.getElementById(pickerId);
+  if(!el)return;
+  el.classList.toggle('on');
+  var ep=document.getElementById(pickerId.replace('gif','emoji'));
+  if(ep)ep.classList.remove('on');
+  if(el.classList.contains('on')&&!el.dataset.loaded){
+    el.dataset.loaded='1';
+    searchGifs(pickerId,'meme chile');
+  }
+}
+
+function insertEmoji(targetId, emoji){
+  var inp=document.getElementById(targetId);
+  if(!inp)return;
+  var pos=inp.selectionStart||inp.value.length;
+  inp.value=inp.value.slice(0,pos)+emoji+inp.value.slice(pos);
+  inp.focus();
+  inp.selectionStart=inp.selectionEnd=pos+emoji.length;
+}
+
+var gifCache={};
+async function searchGifs(pickerId, query){
+  var grid=document.getElementById(pickerId+'-grid');
+  if(!grid)return;
+  grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">// buscando...</span>';
+  try {
+    // Tenor API v2 - free
+    var key='AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY'; // demo key
+    var url='https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(query)+'&key='+key+'&limit=9&media_filter=gif';
+    var r=await fetch(url);
+    if(!r.ok) throw new Error('tenor error');
+    var data=await r.json();
+    var results=data.results||[];
+    if(!results.length){grid.innerHTML='<span style="color:var(--text3);font-size:.7rem">// sin resultados</span>';return;}
+    grid.innerHTML='';
+    results.forEach(function(item){
+      var gif=item.media_formats&&item.media_formats.tinygif?item.media_formats.tinygif.url:'';
+      var full=item.media_formats&&item.media_formats.gif?item.media_formats.gif.url:gif;
+      if(!gif)return;
+      var img=document.createElement('img');
+      img.className='gif-thumb';
+      img.src=gif;
+      img.alt=item.content_description||'gif';
+      img.onclick=function(){selectGif(pickerId,full,gif);};
+      grid.appendChild(img);
+    });
+  } catch(e){
+    // fallback - show message
+    grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">// conecta internet para ver GIFs</span>';
+  }
+}
+
+function selectGif(pickerId, fullUrl, thumbUrl){
+  var preview=document.getElementById(pickerId+'-preview');
+  if(preview){
+    preview.src=thumbUrl;
+    preview.classList.add('on');
+    preview.dataset.full=fullUrl;
+  }
+  // store selected gif for send
+  var picker=document.getElementById(pickerId);
+  if(picker) picker.dataset.selectedGif=fullUrl;
+}
+
+function buildMediaBar(inputId, emojiPickerId, gifPickerId){
+  var emojisHtml=EMOJIS.map(function(e){
+    return '<button class="emoji-btn" onclick="insertEmoji(\''+inputId+'\',\''+e+'\')" title="'+e+'">'+e+'</button>';
+  }).join('');
+
+  return '<div class="media-bar">'+
+    '<button class="media-btn" onclick="toggleEmojiPicker(\''+emojiPickerId+'\')">😊 emoji</button>'+
+    '<button class="media-btn" onclick="toggleGifPicker(\''+gifPickerId+'\')">GIF</button>'+
+  '</div>'+
+  '<div class="emoji-picker" id="'+emojiPickerId+'">'+emojisHtml+'</div>'+
+  '<div class="gif-picker" id="'+gifPickerId+'">'+
+    '<input class="gif-search" placeholder="buscar GIF... (ej: meme, jajaja, wtf)" onkeydown="if(event.key===\'Enter\')searchGifs(\''+gifPickerId+'\',this.value)">'+
+    '<div class="gif-grid" id="'+gifPickerId+'-grid"></div>'+
+    '<img class="gif-preview" id="'+gifPickerId+'-preview" src="">'+
+  '</div>';
+}
 
 // Init
 addMsg(null,'// chat global activo · randomplan.cl',false,true);
