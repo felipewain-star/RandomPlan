@@ -117,6 +117,15 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .ccvotes{font-size:.64rem;color:var(--green);font-weight:700}
 .ccvote-up.on{color:var(--green);font-weight:700}
 .ccvote-down.on{color:var(--purple)}
+.com-sort-bar{display:flex;align-items:center;gap:.35rem;padding:.3rem 0 .5rem;border-bottom:1px solid var(--border);margin-bottom:.4rem}
+.com-sort-lbl{font-size:.63rem;color:var(--text3);font-family:var(--mono)}
+.com-sort-btn{background:none;border:1px solid var(--border);color:var(--text3);padding:.18rem .5rem;border-radius:2px;font-size:.65rem;font-family:var(--mono);cursor:pointer;transition:all .12s}
+.com-sort-btn:hover{border-color:var(--border2);color:var(--text2)}
+.com-sort-btn.on{border-color:var(--green);color:var(--green)}
+.com-more-btn{background:none;border:1px solid var(--border2);color:var(--text3);padding:.3rem .7rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;transition:all .12s;margin:.4rem 0;display:block;width:100%}
+.com-more-btn:hover{border-color:var(--green);color:var(--green)}
+.com-del{color:var(--red)!important}
+.com-del:hover{color:var(--red)!important;background:var(--reddim)!important}
 
 /* SIDEBAR R */
 .sidebar-r{width:255px;flex-shrink:0;position:sticky;top:56px;height:fit-content}
@@ -978,35 +987,121 @@ function toggleComs(id){
   if(!el)return;
   el.classList.toggle('open',openComs[id]);
   var btn=document.querySelector('#post-'+id+' .cact');
-  if(btn) btn.textContent=openComs[id]?'// cerrar comentarios':'// comentarios';
-  if(openComs[id]) loadComments(id);
+  if(btn) btn.textContent=openComs[id]?'// cerrar':'// comentarios';
+  if(openComs[id]) renderComSection(id,'top');
 }
 
-async function loadComments(postId){
+function renderComSection(postId, sort){
+  var cs=document.getElementById('cs-'+postId);
+  if(!cs)return;
+  // render sort bar + list container
+  var existing=cs.querySelector('.com-section-inner');
+  if(!existing){
+    var inner=document.createElement('div');
+    inner.className='com-section-inner';
+    inner.innerHTML=
+      '<div class="com-sort-bar">'+
+        '<span class="com-sort-lbl">ordenar:</span>'+
+        '<button class="com-sort-btn on" onclick="changeSort('+postId+',this,\'top\')">destacados</button>'+
+        '<button class="com-sort-btn" onclick="changeSort('+postId+',this,\'new\')">recientes</button>'+
+        '<button class="com-sort-btn" onclick="changeSort('+postId+',this,\'old\')">antiguos</button>'+
+      '</div>'+
+      '<div class="com-list" id="clist-'+postId+'"></div>'+
+      '<div class="com-load-more" id="cmore-'+postId+'"></div>';
+    var cbox=cs.querySelector('.comment-box');
+    if(cbox) cs.insertBefore(inner, cbox.nextSibling);
+    else cs.appendChild(inner);
+  }
+  loadComments(postId, sort, 0);
+}
+
+function changeSort(postId, btn, sort){
+  document.querySelectorAll('#cs-'+postId+' .com-sort-btn').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
   var list=document.getElementById('clist-'+postId);
-  if(!list||list.dataset.loaded) return;
-  list.dataset.loaded='1';
+  if(list){list.innerHTML='';delete list.dataset.loaded;}
+  loadComments(postId, sort, 0);
+}
+
+async function loadComments(postId, sort, offset){
+  var list=document.getElementById('clist-'+postId);
+  if(!list)return;
+  var more=document.getElementById('cmore-'+postId);
   var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||postId;
-  var r=await db.from('comentarios')
-    .select('*, perfiles(username,ciudad)')
-    .eq('post_id',realId)
-    .order('votos',{ascending:false})
-    .limit(50);
-  if(r.error||!r.data||!r.data.length) return;
+  var LIMIT=10;
+
+  // bot comments for bot posts (id < 9000)
+  if(postId < 9000){
+    var p=POSTS.find(function(x){return x.id===postId;});
+    if(!p)return;
+    var allComs=generateBotComments(p.coms, p.cd||[]);
+    if(sort==='new') allComs=allComs.slice().reverse();
+    if(sort==='old') allComs=allComs.slice();
+    if(sort==='top') allComs=allComs.slice().sort(function(a,b){return b.v-a.v;});
+    var page=allComs.slice(offset, offset+LIMIT);
+    var html='';
+    page.forEach(function(c){
+      var cid='bc-'+Math.random().toString(36).slice(2);
+      html+=renderCommentHTML(cid, c.bot.name, c.bot.ciudad, c.t, c.txt, c.v, false);
+    });
+    if(offset===0) list.innerHTML=html;
+    else list.innerHTML+=html;
+    if(more){
+      if(allComs.length > offset+LIMIT){
+        more.innerHTML='<button class="com-more-btn" onclick="loadComments('+postId+',\''+sort+'\','+(offset+LIMIT)+')">ver más comentarios ('+(allComs.length-offset-LIMIT)+' restantes)</button>';
+      } else {
+        more.innerHTML='';
+      }
+    }
+    return;
+  }
+
+  // real comments from supabase
+  var q=db.from('comentarios').select('*, perfiles(username,ciudad)').eq('post_id',realId).range(offset, offset+LIMIT-1);
+  if(sort==='top') q=q.order('votos',{ascending:false});
+  else if(sort==='new') q=q.order('created_at',{ascending:false});
+  else q=q.order('created_at',{ascending:true});
+  var r=await q;
+  if(r.error) return;
   var html='';
-  r.data.forEach(function(c){
+  (r.data||[]).forEach(function(c){
     var u=c.perfiles||{username:'anon',ciudad:'Chile'};
-    html+='<div class="comment">';
-    html+='<div class="cava">👤</div>';
-    html+='<div class="ccont">';
-    html+='<div class="ccmeta"><span class="u">u/'+u.username+'</span> · <span class="ci">['+u.ciudad+']</span></div>';
-    html+='<div class="cctext">'+c.texto+'</div>';
-    html+='<div class="ccacts">';
-    html+='<button class="ccact ccvote-up" data-v="'+(c.votos||0)+'" onclick="vc(this,1)">▲ '+(c.votos||0)+'</button>';
-    html+='<button class="ccact ccvote-down" onclick="vc(this,-1)">▼</button>';
-    html+='</div></div></div>';
+    var isMe=currentUser&&c.user_id===currentUser.id;
+    html+=renderCommentHTML('rc-'+c.id, u.username, u.ciudad, 'ahora', c.texto, c.votos||0, isMe, c.id);
   });
-  list.innerHTML=html+list.innerHTML;
+  if(offset===0) list.innerHTML=html;
+  else list.innerHTML+=html;
+  if(more){
+    if(r.data&&r.data.length===LIMIT){
+      more.innerHTML='<button class="com-more-btn" onclick="loadComments('+postId+',\''+sort+'\','+(offset+LIMIT)+')">ver más comentarios</button>';
+    } else {
+      more.innerHTML='';
+    }
+  }
+}
+
+function renderCommentHTML(cid, username, ciudad, tiempo, texto, votos, isMe, realComId){
+  var del=isMe&&realComId?'<button class="ccact com-del" onclick="deleteComment('+realComId+',this)">// borrar</button>':'';
+  return '<div class="comment" id="'+cid+'">'+
+    '<div class="cava">'+( isMe?'👤':''+['🦅','🌵','😐','🐕','📚','☕','🎮','📊','🏔','😎'][Math.floor(Math.random()*10)])+' </div>'+
+    '<div class="ccont">'+
+    '<div class="ccmeta"><span class="u">u/'+username+'</span> · '+tiempo+' · <span class="ci">['+ciudad+']</span></div>'+
+    '<div class="cctext">'+texto+'</div>'+
+    '<div class="ccacts">'+
+      '<button class="ccact ccvote-up" data-v="'+votos+'" onclick="vc(this,1)">▲ '+votos+'</button>'+
+      '<button class="ccact ccvote-down" onclick="vc(this,-1)">▼</button>'+
+      del+
+    '</div></div></div>';
+}
+
+async function deleteComment(comId, btn){
+  if(!currentUser)return;
+  if(!confirm('¿Borrar este comentario?'))return;
+  var r=await db.from('comentarios').delete().eq('id',comId).eq('user_id',currentUser.id);
+  if(r.error){toast('error al borrar');return;}
+  var card=btn.closest('.comment');
+  if(card)card.remove();
+  toast('comentario borrado');
 }
 
 function vc(btn,dir){
@@ -1050,10 +1145,7 @@ async function sendComment(postId){
   if(r.error){toast('error: '+r.error.message);return;}
   var list=document.getElementById('clist-'+postId);
   if(list){
-    var div=document.createElement('div');
-    div.className='comment';
-    div.innerHTML='<div class="cava">👤</div><div class="ccont"><div class="ccmeta"><span class="u">u/'+username+'</span> · <span class="ci">['+ciudad+']</span></div><div class="cctext">'+texto+'</div><div class="ccacts"><button class="ccact ccvote-up" data-v="0" onclick="vc(this,1">▲ 0</button><button class="ccact ccvote-down" onclick="vc(this,-1)">▼</button></div></div>';
-    list.insertBefore(div,list.firstChild);
+    list.innerHTML=renderCommentHTML('new-'+Date.now(), username, ciudad, 'ahora', texto, 0, true)+list.innerHTML;
   }
   var box=document.getElementById('cbox-'+postId);
   if(box)box.innerHTML='escribe un comentario...';
