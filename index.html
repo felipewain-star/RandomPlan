@@ -990,7 +990,6 @@ function toggleComs(id){
 function renderComSection(postId, sort){
   var cs=document.getElementById('cs-'+postId);
   if(!cs)return;
-  // render sort bar + list container
   var existing=cs.querySelector('.com-section-inner');
   if(!existing){
     var inner=document.createElement('div');
@@ -1005,8 +1004,21 @@ function renderComSection(postId, sort){
       '<div class="com-list" id="clist-'+postId+'"></div>'+
       '<div class="com-load-more" id="cmore-'+postId+'"></div>';
     var cbox=cs.querySelector('.comment-box');
-    if(cbox) cs.insertBefore(inner, cbox.nextSibling);
-    else cs.appendChild(inner);
+    if(cbox){
+      cs.insertBefore(inner, cbox.nextSibling);
+      // convert static cbox to interactive one
+      cbox.innerHTML='> escribe un comentario...';
+      cbox.onclick=function(){ openCommentBox(postId); };
+    } else {
+      // no cbox exists - create one
+      var newBox=document.createElement('div');
+      newBox.className='comment-box';
+      newBox.id='cbox-'+postId;
+      newBox.innerHTML='> escribe un comentario...';
+      newBox.onclick=function(){ openCommentBox(postId); };
+      cs.insertBefore(newBox, inner);
+      cs.insertBefore(inner, newBox.nextSibling);
+    }
   }
   loadComments(postId, sort, 0);
 }
@@ -1146,7 +1158,18 @@ function openCommentBox(postId){
     '<div id="com-preview-'+postId+'"></div>'+
     '<button id="csend-'+postId+'" style="background:none;border:1px solid var(--green);color:var(--green);padding:.25rem .6rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;align-self:flex-end;margin-top:.2rem">SEND</button>'+
     '</div>';
-  initMediaBar(inputId, emojiId, gifId);
+  // small timeout to ensure DOM is fully updated
+  setTimeout(function(){
+    initMediaBar(inputId, emojiId, gifId);
+    var inp=document.getElementById(inputId);
+    if(inp){
+      inp.addEventListener('keydown',function(e){if(e.key==='Enter')sendComment(postId);});
+      inp.addEventListener('input',function(){checkCommentUrl(this.value,postId);});
+      inp.focus();
+    }
+    var sbtn=document.getElementById('csend-'+postId);
+    if(sbtn) sbtn.addEventListener('click',function(){sendComment(postId);});
+  }, 10);
   var inp=document.getElementById(inputId);
   if(inp){
     inp.addEventListener('keydown',function(e){if(e.key==='Enter')sendComment(postId);});
