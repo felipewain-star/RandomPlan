@@ -568,28 +568,335 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 
 <script>
 var BOTS=[
-  {name:'condor_88',av:'🦅',ciudad:'Santiago'},
-  {name:'titi_norte',av:'🌵',ciudad:'Antofagasta'},
-  {name:'pelao_fome',av:'😐',ciudad:'Valparaíso'},
-  {name:'cachorraCL',av:'🐕',ciudad:'Concepción'},
-  {name:'profe_historia',av:'📚',ciudad:'Temuco'},
-  {name:'mirna_conce',av:'☕',ciudad:'Concepción'},
-  {name:'gamer_iquique',av:'🎮',ciudad:'Iquique'},
-  {name:'economistaRoto',av:'📊',ciudad:'Santiago'},
-  {name:'vikinga_sur',av:'🏔',ciudad:'Puerto Montt'},
-  {name:'flaite_fino',av:'😎',ciudad:'Santiago'},
+  // NORTEÑOS
+  {name:'titi_norte',av:'🌵',ciudad:'Antofagasta',arq:'nortenio'},
+  {name:'Rodrigo83',av:'⛏',ciudad:'Calama',arq:'nortenio'},
+  {name:'caliche_wn',av:'🏜',ciudad:'Antofagasta',arq:'nortenio'},
+  {name:'pampino_real',av:'🌞',ciudad:'Iquique',arq:'nortenio'},
+  {name:'norte_grande_cl',av:'🧂',ciudad:'Arica',arq:'nortenio'},
+  {name:'atacameno_2',av:'🌵',ciudad:'Copiapó',arq:'nortenio'},
+  {name:'nortino_puro',av:'⛏',ciudad:'Antofagasta',arq:'nortenio'},
+  // PORTEÑOS
+  {name:'pelao_fome',av:'😐',ciudad:'Valparaíso',arq:'portenio'},
+  {name:'cerro_alegre_99',av:'🎨',ciudad:'Valparaíso',arq:'portenio'},
+  {name:'trolebusero',av:'🚢',ciudad:'Valparaíso',arq:'portenio'},
+  {name:'portena_real',av:'🌊',ciudad:'Valparaíso',arq:'portenio'},
+  {name:'ascensor_roto',av:'🎭',ciudad:'Valparaíso',arq:'portenio'},
+  {name:'vina_del_mar_22',av:'🏔',ciudad:'Viña del Mar',arq:'portenio'},
+  // SANTIAGUINOS
+  {name:'condor_88',av:'🦅',ciudad:'Santiago',arq:'santiaguino'},
+  {name:'metro_l4_trauma',av:'🚇',ciudad:'Santiago',arq:'santiaguino'},
+  {name:'pancho72',av:'☕',ciudad:'Santiago',arq:'santiaguino'},
+  {name:'CarolinaV91',av:'🏙',ciudad:'Providencia',arq:'santiaguino'},
+  {name:'rush_alameda',av:'😤',ciudad:'Santiago',arq:'santiaguino'},
+  {name:'maipucino_real',av:'🚌',ciudad:'Maipú',arq:'santiaguino'},
+  {name:'pedro_stgo',av:'💼',ciudad:'Santiago',arq:'santiaguino'},
+  {name:'Francisca88',av:'☕',ciudad:'Ñuñoa',arq:'santiaguino'},
+  {name:'user_4821',av:'🏢',ciudad:'Santiago',arq:'santiaguino'},
+  {name:'Jose2024',av:'🚇',ciudad:'La Florida',arq:'santiaguino'},
+  {name:'nuevousuario_cl',av:'😤',ciudad:'Puente Alto',arq:'santiaguino'},
+  {name:'stgo_usuario',av:'🏙',ciudad:'Santiago',arq:'santiaguino'},
+  // SUREÑOS
+  {name:'vikinga_sur',av:'🏔',ciudad:'Puerto Montt',arq:'sureno'},
+  {name:'mirna_conce',av:'☕',ciudad:'Concepción',arq:'sureno'},
+  {name:'cachorraCL',av:'🐕',ciudad:'Concepción',arq:'sureno'},
+  {name:'lluvia_eterna',av:'🌧',ciudad:'Valdivia',arq:'sureno'},
+  {name:'Wladimir_sur',av:'🌲',ciudad:'Temuco',arq:'sureno'},
+  {name:'pelotero_conce',av:'☔',ciudad:'Concepción',arq:'sureno'},
+  {name:'sur_profundo',av:'🐄',ciudad:'Osorno',arq:'sureno'},
+  {name:'chillan_tranquilo',av:'🍺',ciudad:'Chillán',arq:'sureno'},
+  {name:'Mario1975',av:'🌿',ciudad:'Temuco',arq:'sureno'},
+  {name:'claudia_valdivia',av:'🌧',ciudad:'Valdivia',arq:'sureno'},
+  // ECONOMISTAS
+  {name:'economistaRoto',av:'📊',ciudad:'Santiago',arq:'economista'},
+  {name:'uf_diaria',av:'💹',ciudad:'Santiago',arq:'economista'},
+  {name:'ipsa_en_rojo',av:'📈',ciudad:'Concepción',arq:'economista'},
+  {name:'deuda_educacional',av:'🏦',ciudad:'Valparaíso',arq:'economista'},
+  {name:'rentista_frustrado',av:'💰',ciudad:'Santiago',arq:'economista'},
+  {name:'Alberto_economista',av:'📊',ciudad:'Santiago',arq:'economista'},
+  // GAMERS
+  {name:'gamer_iquique',av:'🎮',ciudad:'Iquique',arq:'gamer_tech'},
+  {name:'lag_de_vida',av:'💻',ciudad:'Santiago',arq:'gamer_tech'},
+  {name:'fps_gamer_cl',av:'🕹',ciudad:'Concepción',arq:'gamer_tech'},
+  {name:'techlover_stgo',av:'⚡',ciudad:'Santiago',arq:'gamer_tech'},
+  {name:'Sebastian_gamer',av:'👾',ciudad:'Antofagasta',arq:'gamer_tech'},
+  {name:'dev_cl_2024',av:'💻',ciudad:'Valparaíso',arq:'gamer_tech'},
+  // SEÑORAS
+  {name:'senora_juanita',av:'🛒',ciudad:'Concepción',arq:'senora_barrio'},
+  {name:'feria_libre_fan',av:'🏠',ciudad:'Temuco',arq:'senora_barrio'},
+  {name:'Rosa_del_sur',av:'☕',ciudad:'Valdivia',arq:'senora_barrio'},
+  {name:'mama_chilena_09',av:'🌸',ciudad:'Santiago',arq:'senora_barrio'},
+  {name:'vecina_real',av:'🍞',ciudad:'Concepción',arq:'senora_barrio'},
+  {name:'Patricia_V',av:'🛒',ciudad:'Antofagasta',arq:'senora_barrio'},
+  {name:'duena_casa_real',av:'☕',ciudad:'La Serena',arq:'senora_barrio'},
+  // PROFES
+  {name:'profe_historia',av:'📚',ciudad:'Temuco',arq:'profe'},
+  {name:'memo_1988',av:'🎓',ciudad:'Santiago',arq:'profe'},
+  {name:'aula_magna_wn',av:'✏',ciudad:'Concepción',arq:'profe'},
+  {name:'historia_real_cl',av:'📖',ciudad:'Valparaíso',arq:'profe'},
+  {name:'Eduardo_prof',av:'🏫',ciudad:'Temuco',arq:'profe'},
+  // FLAITES
+  {name:'flaite_fino',av:'😎',ciudad:'Santiago',arq:'flaite'},
+  {name:'pillo_inteligente',av:'🔥',ciudad:'Concepción',arq:'flaite'},
+  {name:'callao_norte',av:'💀',ciudad:'Antofagasta',arq:'flaite'},
+  {name:'villa_real_cl',av:'🖤',ciudad:'Santiago',arq:'flaite'},
+  {name:'calle_ensena',av:'⚰',ciudad:'Valparaíso',arq:'flaite'},
+  {name:'Cristian_k',av:'😎',ciudad:'Santiago',arq:'flaite'},
+  // DIASPORA
+  {name:'chileno_afuera',av:'✈',ciudad:'Santiago - antes',arq:'diaspora'},
+  {name:'expat_nostalgico',av:'🌍',ciudad:'Valparaíso - antes',arq:'diaspora'},
+  {name:'diaspora_cl',av:'🗺',ciudad:'Concepción - antes',arq:'diaspora'},
+  {name:'stgo_desde_afuera',av:'🧳',ciudad:'Santiago - antes',arq:'diaspora'},
+  // EMPRENDEDORES
+  {name:'startup_cl',av:'🚀',ciudad:'Santiago',arq:'emprendedor'},
+  {name:'pivot_eterno',av:'💡',ciudad:'Concepción',arq:'emprendedor'},
+  {name:'lean_startup_stgo',av:'📱',ciudad:'Santiago',arq:'emprendedor'},
+  {name:'mrr_sonado',av:'🎯',ciudad:'Santiago',arq:'emprendedor'},
+  {name:'Ignacio_startup',av:'⚡',ciudad:'Valparaíso',arq:'emprendedor'},
+  // GEN Z
+  {name:'gen_z_cl',av:'✨',ciudad:'Santiago',arq:'gen_z'},
+  {name:'tiktok_stgo',av:'💅',ciudad:'Santiago',arq:'gen_z'},
+  {name:'npc_moment',av:'🤙',ciudad:'Concepción',arq:'gen_z'},
+  {name:'based_chileno',av:'😭',ciudad:'Valparaíso',arq:'gen_z'},
+  {name:'sigma_del_sur',av:'💀',ciudad:'Temuco',arq:'gen_z'},
+  {name:'Valentina2006',av:'✨',ciudad:'Santiago',arq:'gen_z'},
+  {name:'Matias_z',av:'🤙',ciudad:'Concepción',arq:'gen_z'},
+  {name:'user_random_99',av:'💅',ciudad:'Iquique',arq:'gen_z'},
 ];
+
+
+var BOT_ARQUETIPOS = {
+  nortenio: {
+    ciudades: ['Antofagasta','Iquique','Calama','Arica'],
+    intereses: ['chile','debate','futbol','finanzas'],
+    evita: [],
+    longitud: 'corta',
+    frecuencia: 0.7,
+    pool: [
+      'desde el norte con todo',
+      'el norte existe aunque santiago no lo pesque',
+      'antofagasta poniendo el cobre para que el resto viva bien',
+      'en iquique esto ya se veía venir',
+      'calama a todo evento',
+      'desde arica y con la misma queja de siempre',
+      'el desierto te endurece',
+      'no po','sipo','facts po','exacto wn','acá igual','ya pues','wtf','lol','obvio','literal'
+    ]
+  },
+  portenio: {
+    ciudades: ['Valparaíso','Viña del Mar'],
+    intereses: ['chile','debate','memescl','contingencia'],
+    evita: ['finanzas'],
+    longitud: 'media',
+    frecuencia: 0.8,
+    pool: [
+      'valpo te cambia para siempre',
+      'el cerro tiene su propia lógica',
+      'el puerto tiene humor negro por necesidad histórica',
+      'el ascensor roto igual que el sistema',
+      'el mar pone todo en perspectiva',
+      'valpo caótico pero honesto',
+      'no po','jajaja no','wtf','facts','bruh','eso','o sea sí pero también no'
+    ]
+  },
+  santiaguino: {
+    ciudades: ['Santiago','Providencia','Maipú','La Florida','Puente Alto','Ñuñoa'],
+    intereses: ['chile','debate','contingencia','finanzas','tecnologia'],
+    evita: [],
+    longitud: 'larga',
+    frecuencia: 0.9,
+    pool: [
+      'el metro en hora punta es un experimento no consentido',
+      'santiago diseñado por alguien que odia vivir acá',
+      'providencia ya no es para la clase media',
+      'maipú existe y tiene sus propias reglas',
+      'el tráfico es la única cosa que une a los santiaguinos',
+      'las condes vs el resto de santiago es una pelea de clases disfrazada de estética',
+      'no po','sipo','obvio','literal','facts','wtf','demasiado real','eso mismo pensé'
+    ]
+  },
+  sureno: {
+    ciudades: ['Concepción','Temuco','Valdivia','Osorno','Puerto Montt','Chillán'],
+    intereses: ['chile','futbol','debate','memescl'],
+    evita: ['tecnologia'],
+    longitud: 'media',
+    frecuencia: 0.75,
+    pool: [
+      'desde el sur donde llueve hasta el alma',
+      'acá en conce con el frío de siempre',
+      'temuco tiene sus propias reglas',
+      'los santiaguinos descubrieron que existe el sur y les pareció exótico',
+      'en región esperamos el doble y cobramos la mitad',
+      'el sur tiene humor que se gana con lluvia',
+      'conce tiene el mejor humor negro del país por necesidad',
+      'no po','jajaja','facts po','exacto','eso mismo','brutal','uf heavy'
+    ]
+  },
+  economista: {
+    ciudades: ['Santiago','Concepción','Valparaíso'],
+    intereses: ['finanzas','chile','debate','contingencia'],
+    evita: ['memescl','gaming'],
+    longitud: 'larga',
+    frecuencia: 0.6,
+    pool: [
+      'el problema estructural es que nadie entiende los incentivos',
+      'la UF es la trampa más cara que firmé en mi vida',
+      'el dólar sube y el sueldo se queda quieto, el clásico chileno',
+      'el sistema de pensiones es una apuesta que perdiste antes de nacer',
+      'dato: la inflación real vs la oficial tienen una brecha que da miedo',
+      'la economía chilena explicada: el que tiene plata tiene más plata',
+      'el IPSA refleja lo que pasa en la cima, no lo que vive la gente',
+      'el modelo tiene grietas que llevan décadas siendo ignoradas'
+    ]
+  },
+  gamer_tech: {
+    ciudades: ['Santiago','Iquique','Antofagasta','Concepción'],
+    intereses: ['tecnologia','gaming','memescl','chile'],
+    evita: ['contingencia'],
+    longitud: 'corta',
+    frecuencia: 0.85,
+    pool: [
+      'lag de vida real','npc moment','based','ratio','no cap',
+      'skill issue','gg no re','la ia va a quitarle el trabajo a todos',
+      'chatgpt para redactar lo que antes hacías pensando',
+      'startup chilena = idea gringa con nombre en inglés',
+      'bruh','wtf','lol','no way','omg','jajaja','oof','ok pero','literal'
+    ]
+  },
+  senora_barrio: {
+    ciudades: ['Santiago','Concepción','Valparaíso','Temuco','Iquique','La Serena'],
+    intereses: ['chile','contingencia','finanzas','debate'],
+    evita: ['gaming','tecnologia'],
+    longitud: 'media',
+    frecuencia: 0.7,
+    pool: [
+      'el supermercado este mes fue otro nivel de caro',
+      'yo viví esto en carne propia y es exactamente como lo describen',
+      'la feria libre cada vez más cara y los sueldos los mismos',
+      'el arriendo está imposible para la gente que trabaja honesto',
+      'la lista de espera del fonasa como ejercicio de paciencia budista',
+      'con sacrificio se puede igual',
+      'no todo está mal, hay que ser justa',
+      'sipo','claro po','no po','eso mismo','exacto','facts'
+    ]
+  },
+  profe: {
+    ciudades: ['Temuco','Santiago','Concepción','Valparaíso','La Serena'],
+    intereses: ['chile','debate','contingencia'],
+    evita: ['gaming','memescl'],
+    longitud: 'larga',
+    frecuencia: 0.5,
+    pool: [
+      'históricamente hablando esto ya ocurrió en los 80s con peores consecuencias',
+      'el contexto importa más de lo que la gente está dispuesta a reconocer',
+      'esto ya pasó antes y llegamos a la misma conclusión',
+      'la educación cívica que no tuvimos nos está pasando la cuenta',
+      'los datos no mienten pero la interpretación puede',
+      'el problema no es falta de información, es falta de voluntad política',
+      'la memoria histórica de chile es de 5 años máximo',
+      'cada generación repite los mismos errores con diferente estética'
+    ]
+  },
+  flaite: {
+    ciudades: ['Santiago','Concepción','Valparaíso','Antofagasta'],
+    intereses: ['memescl','chile','futbol','debate'],
+    evita: ['finanzas'],
+    longitud: 'muy_corta',
+    frecuencia: 0.95,
+    pool: [
+      'jajaja no','no way','wtf','bruh','cap','oof',
+      'y todos aplaudieron','spoiler: no va a pasar nada',
+      'nadie preguntó pero aquí está',
+      'revolucionario. nunca antes visto.',
+      'la vida es así no más',
+      'sin palabras','brutal','fuego','top','demasiado real',
+      'esto envejeció mal','el take más tibio del año'
+    ]
+  },
+  diaspora: {
+    ciudades: ['Santiago - antes','Valparaíso - antes','Concepción - antes'],
+    intereses: ['chile','debate','contingencia','finanzas'],
+    evita: [],
+    longitud: 'media',
+    frecuencia: 0.55,
+    pool: [
+      'desde afuera chile se ve diferente',
+      'extraño y no extraño al mismo tiempo',
+      'volver a chile siempre es choque cultural',
+      'uno aprecia chile cuando no está',
+      'la diáspora tiene perspectiva que duele tener',
+      'me fui y entendí por qué la gente se va',
+      'sipo','exacto','facts','no po'
+    ]
+  },
+  emprendedor: {
+    ciudades: ['Santiago','Concepción'],
+    intereses: ['tecnologia','finanzas','chile','debate'],
+    evita: ['memescl'],
+    longitud: 'media',
+    frecuencia: 0.65,
+    pool: [
+      'startup chilena = idea gringa con nombre en inglés y oficina en lastarria',
+      'el ecosistema tech en chile tiene talento pero le falta capital',
+      'el pitch deck listo pero el mercado no está',
+      'el MRR de mis sueños y la realidad de mis ahorros',
+      'el sueldo emocional no paga el arriendo',
+      'disponibilidad inmediata es red flag no virtud',
+      'jajaja','wtf','no cap','oof','literal','sipo'
+    ]
+  },
+  gen_z: {
+    ciudades: ['Santiago','Concepción','Valparaíso','Iquique','Antofagasta'],
+    intereses: ['memescl','chile','gaming','debate'],
+    evita: [],
+    longitud: 'muy_corta',
+    frecuencia: 0.9,
+    pool: [
+      'no cap','based','ratio','slay','rent free',
+      'understood the assignment','main character',
+      'ok boomer energy','no pero sí',
+      'jajajaja','wtf','bruh','oof','lol','omg','ok pero',
+      'la generación de mis papás no entiende por qué estamos agotados',
+      'el mundo que nos entregaron está roto',
+      'literal','ngl','cap','ni ahí'
+    ]
+  }
+};
+
+function getBotPool(bot) {
+  var arq = bot.arq ? BOT_ARQUETIPOS[bot.arq] : null;
+  return arq ? arq.pool : ['no po','sipo','jajaja','exacto','wtf','facts'];
+}
+
+function getBotLength(bot) {
+  var arq = bot.arq ? BOT_ARQUETIPOS[bot.arq] : null;
+  return arq ? arq.longitud : 'media';
+}
+
+function getBotsForTopic(topic) {
+  return BOTS.filter(function(b) {
+    var arq = b.arq ? BOT_ARQUETIPOS[b.arq] : null;
+    if (!arq) return true;
+    if (arq.evita && arq.evita.indexOf(topic) !== -1) return false;
+    if (arq.intereses && arq.intereses.indexOf(topic) !== -1) return Math.random() < arq.frecuencia;
+    return Math.random() < 0.25;
+  });
+}
+
 
 var CHAT_INIT=[
   {bot:BOTS[0],txt:'alguien más viendo el partido?'},
   {bot:BOTS[8],txt:'aquí desde puerto montt, hace frío pero el feed caliente jaja'},
   {bot:BOTS[2],txt:'randomplan era necesario, reddit en español es un desastre'},
-  {bot:BOTS[7],txt:'el post de los ETFs está bueno, aprendo algo cada semana'},
-  {bot:BOTS[4],txt:'oigan alguien sabe si el SII tiene mantenimiento hoy'},
+  {bot:BOTS[36],txt:'el post de finanzas está bueno, aprendo algo cada semana'},
+  {bot:BOTS[55],txt:'oigan alguien sabe si el SII tiene mantenimiento hoy'},
   {bot:BOTS[1],txt:'lol el SII tiene mantenimiento todos los días de facto'},
   {bot:BOTS[5],txt:'jajajaja demasiado real eso'},
-  {bot:BOTS[9],txt:'buen ambiente acá, primera vez que entro'},
+  {bot:BOTS[72],txt:'buen ambiente acá, primera vez que entro'},
   {bot:BOTS[3],txt:'bienvenido! de a poco se va llenando'},
+  {bot:BOTS[16],txt:'desde el norte igual po, buena esta plataforma'},
+  {bot:BOTS[61],txt:'jajaja no pero sí'},
+  {bot:BOTS[17],txt:'por fin algo en español que funciona bien'},
 ];
 
 var POOL=[
@@ -730,7 +1037,8 @@ function showTyping(name){
 function scheduleBot(){
   setTimeout(function(){
     var bot=BOTS[Math.floor(Math.random()*BOTS.length)];
-    var txt=POOL[Math.floor(Math.random()*POOL.length)];
+    var pool=getBotPool(bot);
+    var txt=pool[Math.floor(Math.random()*pool.length)];
     showTyping(bot.name);
     setTimeout(function(){addMsg(bot,txt,false);scheduleBot()},1400);
   },4000+Math.random()*9000);
@@ -1852,7 +2160,8 @@ function showModal(tipo){
       '<div id="m-meme-section" style="display:none">'+
         '<div class="field"><label>tipo de meme</label>'+
           '<div class="meme-type-selector">'+
-            '<button class="meme-type-btn on" style="flex:1">📸 Subir imagen</button>'+
+            '<button class="meme-type-btn on" onclick="setMemeType(\'img\',this)">📸 Imagen</button>'+
+            '<button class="meme-type-btn" onclick="setMemeType(\'gif\',this)">🎞 GIF</button>'+
           '</div>'+
         '</div>'+
         '<div id="m-img-section">'+
@@ -1865,12 +2174,18 @@ function showModal(tipo){
             '<div class="img-upload-progress"><div class="img-upload-progress-bar" id="m-img-progress"></div></div>'+
           '</div>'+
         '</div>'+
-
+        '<div id="m-gif-section" style="display:none">'+
+          '<div class="field">'+
+            '<input type="text" id="m-gif-search" placeholder="buscar GIF... presiona Enter" style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:2px;padding:.48rem .7rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none" onkeydown="if(event.key===\'Enter\')buscarGifModal(this.value)">'+
+            '<div id="m-gif-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:140px;overflow-y:auto;margin-top:.4rem"></div>'+
+          '</div>'+
+        '</div>'+
       '</div>'+
       '<div class="field"><label>título</label><input type="text" id="m-titulo" placeholder="¿de qué trata?"></div>'+
       '<div id="m-normal-section">'+
         '<div class="field"><label>contenido (opcional)</label><textarea id="m-contenido" rows="4" placeholder="más detalles... pega un link https://... para preview" oninput="checkPostUrl(this.value)"></textarea></div>'+
         '<div id="post-preview-container"></div>'+
+        buildMediaBar('m-contenido')+
       '</div>'+
       '<div class="modal-err" id="m-err"></div>'+
       '<button class="modal-sub" id="m-sub" onclick="doPost()">./publicar --exec</button>';
@@ -2186,6 +2501,7 @@ function setMemeType(type, btn){
   document.querySelectorAll('.meme-type-btn').forEach(function(b){ b.classList.remove('on'); });
   btn.classList.add('on');
   document.getElementById('m-img-section').style.display = type === 'img' ? 'block' : 'none';
+  document.getElementById('m-gif-section').style.display = type === 'gif' ? 'block' : 'none';
   _uploadedImgUrl = null;
 }
 
@@ -2293,7 +2609,40 @@ function removeImg(e){
     '<div class="img-upload-progress"><div class="img-upload-progress-bar" id="m-img-progress"></div></div>';
 }
 
-
+async function buscarGifModal(q){
+  var grid = document.getElementById('m-gif-grid');
+  if(!grid) return;
+  grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">// buscando...</span>';
+  try {
+    var key = 'AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';
+    var r = await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q)+'&key='+key+'&limit=9&media_filter=gif');
+    if(!r.ok) throw new Error('tenor '+r.status);
+    var d = await r.json();
+    var results = d.results || [];
+    grid.innerHTML = '';
+    results.forEach(function(item){
+      var formats = item.media_formats || {};
+      var thumb = (formats.tinygif || formats.gif || {}).url || '';
+      var full = (formats.gif || formats.tinygif || {}).url || thumb;
+      if(!thumb) return;
+      var img = document.createElement('img');
+      img.src = thumb;
+      img.className = 'gif-thumb';
+      img.style.cssText = 'width:100%;height:60px;object-fit:cover;border-radius:3px;cursor:pointer;border:1px solid transparent';
+      img.onclick = function(){
+        _uploadedImgUrl = '[gif:'+full+']'; // formato especial para GIFs
+        // mostrar seleccionado
+        grid.querySelectorAll('img').forEach(function(i){ i.style.borderColor='transparent'; });
+        img.style.borderColor = 'var(--green)';
+        toast('// GIF seleccionado ✓');
+      };
+      grid.appendChild(img);
+    });
+    if(!results.length) grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem">// sin resultados</span>';
+  } catch(e){
+    grid.innerHTML = '<span style="color:var(--red);font-size:.7rem;font-family:var(--mono)">// error: '+e.message+'</span>';
+  }
+}
 
 async function doPost(){
   var titulo=document.getElementById('m-titulo').value.trim();
@@ -2796,7 +3145,8 @@ function showModal(tipo){
       '<div id="m-meme-section" style="display:none">'+
         '<div class="field"><label>tipo de meme</label>'+
           '<div class="meme-type-selector">'+
-            '<button class="meme-type-btn on" style="flex:1">📸 Subir imagen</button>'+
+            '<button class="meme-type-btn on" onclick="setMemeType(\'img\',this)">📸 Imagen</button>'+
+            '<button class="meme-type-btn" onclick="setMemeType(\'gif\',this)">🎞 GIF</button>'+
           '</div>'+
         '</div>'+
         '<div id="m-img-section">'+
@@ -2809,12 +3159,18 @@ function showModal(tipo){
             '<div class="img-upload-progress"><div class="img-upload-progress-bar" id="m-img-progress"></div></div>'+
           '</div>'+
         '</div>'+
-
+        '<div id="m-gif-section" style="display:none">'+
+          '<div class="field">'+
+            '<input type="text" id="m-gif-search" placeholder="buscar GIF... presiona Enter" style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:2px;padding:.48rem .7rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none" onkeydown="if(event.key===\'Enter\')buscarGifModal(this.value)">'+
+            '<div id="m-gif-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:140px;overflow-y:auto;margin-top:.4rem"></div>'+
+          '</div>'+
+        '</div>'+
       '</div>'+
       '<div class="field"><label>título</label><input type="text" id="m-titulo" placeholder="¿de qué trata?"></div>'+
       '<div id="m-normal-section">'+
         '<div class="field"><label>contenido (opcional)</label><textarea id="m-contenido" rows="4" placeholder="más detalles... pega un link https://... para preview" oninput="checkPostUrl(this.value)"></textarea></div>'+
         '<div id="post-preview-container"></div>'+
+        buildMediaBar('m-contenido')+
       '</div>'+
       '<div class="modal-err" id="m-err"></div>'+
       '<button class="modal-sub" id="m-sub" onclick="doPost()">./publicar --exec</button>';
@@ -3130,6 +3486,7 @@ function setMemeType(type, btn){
   document.querySelectorAll('.meme-type-btn').forEach(function(b){ b.classList.remove('on'); });
   btn.classList.add('on');
   document.getElementById('m-img-section').style.display = type === 'img' ? 'block' : 'none';
+  document.getElementById('m-gif-section').style.display = type === 'gif' ? 'block' : 'none';
   _uploadedImgUrl = null;
 }
 
@@ -3237,7 +3594,40 @@ function removeImg(e){
     '<div class="img-upload-progress"><div class="img-upload-progress-bar" id="m-img-progress"></div></div>';
 }
 
-
+async function buscarGifModal(q){
+  var grid = document.getElementById('m-gif-grid');
+  if(!grid) return;
+  grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">// buscando...</span>';
+  try {
+    var key = 'AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';
+    var r = await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q)+'&key='+key+'&limit=9&media_filter=gif');
+    if(!r.ok) throw new Error('tenor '+r.status);
+    var d = await r.json();
+    var results = d.results || [];
+    grid.innerHTML = '';
+    results.forEach(function(item){
+      var formats = item.media_formats || {};
+      var thumb = (formats.tinygif || formats.gif || {}).url || '';
+      var full = (formats.gif || formats.tinygif || {}).url || thumb;
+      if(!thumb) return;
+      var img = document.createElement('img');
+      img.src = thumb;
+      img.className = 'gif-thumb';
+      img.style.cssText = 'width:100%;height:60px;object-fit:cover;border-radius:3px;cursor:pointer;border:1px solid transparent';
+      img.onclick = function(){
+        _uploadedImgUrl = '[gif:'+full+']'; // formato especial para GIFs
+        // mostrar seleccionado
+        grid.querySelectorAll('img').forEach(function(i){ i.style.borderColor='transparent'; });
+        img.style.borderColor = 'var(--green)';
+        toast('// GIF seleccionado ✓');
+      };
+      grid.appendChild(img);
+    });
+    if(!results.length) grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem">// sin resultados</span>';
+  } catch(e){
+    grid.innerHTML = '<span style="color:var(--red);font-size:.7rem;font-family:var(--mono)">// error: '+e.message+'</span>';
+  }
+}
 
 async function doPost(){
   var titulo=document.getElementById('m-titulo').value.trim();
@@ -3584,11 +3974,145 @@ document.addEventListener('click', function(e){
   }
 });
 
+var _botCommentedPosts = {};
+var _botPostsToday = 0;
+var _botPostsLastReset = new Date().toDateString();
+
+async function botCommentRealPost(postId, postTitle, postContenido, postSub, fakeId) {
+  var key = postId + '_' + postId;
+  if (_botCommentedPosts[key]) return;
+  _botCommentedPosts[key] = true;
+
+  var candidates = getBotsForTopic(postSub);
+  if (!candidates.length) candidates = BOTS;
+  var botData = candidates[Math.floor(Math.random() * candidates.length)];
+
+  var pool = getBotPool(botData);
+  var shortPool = pool.filter(function(p) { return p.length < 80; });
+  var txt = (shortPool.length ? shortPool : pool)[Math.floor(Math.random() * (shortPool.length || pool.length))];
+
+  try {
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: 'Eres "' + botData.name + '", usuario de RandomPlan.cl de ' + botData.ciudad + '. Escribe un comentario corto y natural sobre el post. Solo el texto, sin comillas.',
+        messages: [{ role: 'user', content: 'Post: "' + postTitle + '". ' + (postContenido || '') }]
+      })
+    });
+    if (resp.ok) {
+      var data = await resp.json();
+      if (data.content && data.content[0]) txt = data.content[0].text.trim();
+    }
+  } catch(e) {}
+
+  try {
+    await db.from('comentarios').insert({
+      texto: txt,
+      user_id: '00000000-0000-0000-0000-000000000001',
+      post_id: postId,
+      votos: Math.floor(Math.random() * 8)
+    });
+    if (fakeId) {
+      var clist = document.getElementById('clist-' + fakeId);
+      if (clist) {
+        clist.innerHTML += renderCommentHTML(
+          'bot-' + Date.now(), botData.name, botData.ciudad,
+          'ahora', linkify(txt), Math.floor(Math.random() * 8), false, null
+        );
+      }
+    }
+  } catch(e) {}
+}
+
+async function botPublishPost(botData, comunidadNombre, comunidadId) {
+  var today = new Date().toDateString();
+  if (_botPostsLastReset !== today) { _botPostsToday = 0; _botPostsLastReset = today; }
+  if (_botPostsToday >= 4) return;
+
+  try {
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: 'Eres "' + botData.name + '" de ' + botData.ciudad + '. Crea un post para p/' + comunidadNombre + '. Responde solo con JSON: {"titulo":"...","contenido":"..."}. Tema chileno 2026, tono natural.',
+        messages: [{ role: 'user', content: 'Genera el post.' }]
+      })
+    });
+    if (!resp.ok) return;
+    var data = await resp.json();
+    if (!data.content || !data.content[0]) return;
+    var raw = data.content[0].text.trim().replace(/```json|```/g, '').trim();
+    var parsed = JSON.parse(raw);
+    if (!parsed.titulo) return;
+    await db.from('posts').insert({
+      titulo: parsed.titulo,
+      contenido: parsed.contenido || '',
+      user_id: '00000000-0000-0000-0000-000000000001',
+      comunidad_id: comunidadId,
+      votos: Math.floor(Math.random() * 15) + 1
+    });
+    _botPostsToday++;
+    setTimeout(function() { loadRealPosts(null); }, 2000);
+  } catch(e) {}
+}
+
+async function botActivityLoop() {
+  try {
+    var hace6h = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+    var r = await db.from('posts')
+      .select('id, titulo, contenido, comunidades(nombre)')
+      .gte('created_at', hace6h)
+      .order('created_at', { ascending: false })
+      .limit(15);
+
+    if (r.data && r.data.length) {
+      r.data.forEach(function(post) {
+        var comunidad = post.comunidades ? post.comunidades.nombre : 'chile';
+        var key = post.id + '_' + post.id;
+        if (_botCommentedPosts[key]) return;
+        if (Math.random() < 0.5) {
+          var delay = 20000 + Math.random() * 160000;
+          var fakeId = window.realPostIdMap ? Object.keys(window.realPostIdMap).find(function(k) {
+            return window.realPostIdMap[k] === post.id;
+          }) : null;
+          setTimeout(function(pid, pt, pc, ps, fi) {
+            return function() { botCommentRealPost(pid, pt, pc, ps, fi); };
+          }(post.id, post.titulo, post.contenido, comunidad, fakeId), delay);
+        }
+      });
+    }
+
+    if (Math.random() < 0.10 && _botPostsToday < 4) {
+      var coms = [
+        { nombre: 'chile', id: 1 }, { nombre: 'futbol', id: 2 },
+        { nombre: 'finanzas', id: 5 }, { nombre: 'debate', id: 8 }
+      ];
+      var com = coms[Math.floor(Math.random() * coms.length)];
+      var botCandidatos = getBotsForTopic(com.nombre);
+      if (botCandidatos.length) {
+        var botPoster = botCandidatos[Math.floor(Math.random() * botCandidatos.length)];
+        var postDelay = 60000 + Math.random() * 300000;
+        setTimeout(function(b, c) {
+          return function() { botPublishPost(b, c.nombre, c.id); };
+        }(botPoster, com), postDelay);
+      }
+    }
+  } catch(e) {}
+  setTimeout(botActivityLoop, 90000);
+}
+
+
 // Init
 addMsg(null,'// chat global activo · randomplan.cl',false,true);
 CHAT_INIT.forEach(function(m){addMsg(m.bot,m.txt,false,false)});
 newMsgCount=0;document.getElementById('chat-badge').textContent='0';
 scheduleBot();
+setTimeout(botActivityLoop, 15000);
 initSeedPostMap();renderFeed(null);renderTrending();renderComms();
 setInterval(tickVotes,8000);
 loadChatHistory();
