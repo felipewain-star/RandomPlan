@@ -1019,29 +1019,17 @@ function renderComSection(postId, sort){
         '<button class="com-sort-btn" onclick="changeSort('+postId+',this,\'old\')">antiguos</button>'+
       '</div>'+
       '<div class="com-write" id="cwrite-'+postId+'">'+
-        '<input type="text" id="'+inputId+'" placeholder="escribe un comentario..." style="flex:1;background:var(--bg0);border:1px solid var(--border);border-radius:3px;padding:.38rem .6rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none">'+
+        '<input type="text" id="'+inputId+'" placeholder="escribe un comentario..." onkeydown="if(event.key===\'Enter\')sendCommentInline('+postId+')" style="flex:1;background:var(--bg0);border:1px solid var(--border);border-radius:3px;padding:.38rem .6rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none">'+
         '<button class="media-btn" data-inp="'+inputId+'" onclick="showEmoji(this)">😊</button>'+
         '<button class="media-btn" data-inp="'+inputId+'" onclick="showGif(this)">GIF</button>'+
         '<button class="com-send-btn" onclick="sendCommentInline('+postId+')">SEND</button>'+
       '</div>'+
       '<div class="com-list" id="clist-'+postId+'"></div>'+
       '<div class="com-load-more" id="cmore-'+postId+'"></div>';
+    // hide old comment box if exists - we use inline input now
     var cbox=cs.querySelector('.comment-box');
-    if(cbox){
-      cs.insertBefore(inner, cbox.nextSibling);
-      // convert static cbox to interactive one
-      cbox.innerHTML='> escribe un comentario...';
-      cbox.onclick=function(){ openCommentBox(postId); };
-    } else {
-      // no cbox exists - create one
-      var newBox=document.createElement('div');
-      newBox.className='comment-box';
-      newBox.id='cbox-'+postId;
-      newBox.innerHTML='> escribe un comentario...';
-      newBox.onclick=function(){ openCommentBox(postId); };
-      cs.insertBefore(newBox, inner);
-      cs.insertBefore(inner, newBox.nextSibling);
-    }
+    if(cbox) cbox.style.display='none';
+    cs.appendChild(inner);
   }
   loadComments(postId, sort, 0);
 }
