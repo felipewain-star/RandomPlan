@@ -2065,53 +2065,56 @@ var tickerAssets=[
 var tickerData={};
 
 async function loadTicker(){
+  // 1. Crypto via CoinGecko (gratis, sin key)
   try {
-    // Crypto: CoinGecko free API
-    var cryptoIds=tickerAssets.filter(function(a){return a.type==='crypto';}).map(function(a){return a.id;}).join(',');
-    var rc=await fetch('https://api.coingecko.com/api/v3/simple/price?ids='+cryptoIds+'&vs_currencies=usd&include_24hr_change=true');
-    if(rc.ok){
-      var cd=await rc.json();
-      tickerAssets.forEach(function(a){
-        if(a.type==='crypto'&&cd[a.id]){
-          tickerData[a.sym]={price:cd[a.id].usd,chg:cd[a.id].usd_24h_change||0};
-        }
-      });
+    var r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true');
+    if(r.ok){
+      var d=await r.json();
+      if(d.bitcoin) tickerData['BTC']={price:d.bitcoin.usd,chg:d.bitcoin.usd_24h_change||0};
+      if(d.ethereum) tickerData['ETH']={price:d.ethereum.usd,chg:d.ethereum.usd_24h_change||0};
     }
   } catch(e){}
 
+  // 2. USD/CLP via mindicador.cl
   try {
-    // USD/CLP: mindicador.cl
-    var rd=await fetch('https://mindicador.cl/api/dolar');
-    if(rd.ok){
-      var dd=await rd.json();
-      if(dd.serie&&dd.serie[0]){
-        tickerData['DOLAR']={price:dd.serie[0].valor,chg:0,isCLP:true};
+    var r2=await fetch('https://mindicador.cl/api/dolar');
+    if(r2.ok){
+      var d2=await r2.json();
+      if(d2.serie&&d2.serie[0]) tickerData['DOLAR']={price:d2.serie[0].valor,chg:0};
+    }
+  } catch(e){}
+
+  // 3. Stocks via Binance (solo crypto) — para stocks usamos Kraken/stooq
+  // Stocks via stooq.com (no requiere key, CORS ok)
+  var stocks=[
+    {sym:'AAPL',stooq:'AAPL.US'},
+    {sym:'TSLA',stooq:'TSLA.US'},
+    {sym:'NVDA',stooq:'NVDA.US'},
+  ];
+  for(var i=0;i<stocks.length;i++){
+    try {
+      var s=stocks[i];
+      var r3=await fetch('https://stooq.com/q/l/?s='+s.stooq+'&f=sd2t2ohlcvn&h&e=json');
+      if(!r3.ok) continue;
+      var d3=await r3.json();
+      var q=d3.symbols&&d3.symbols[0];
+      if(q&&q.close){
+        var price=parseFloat(q.close);
+        var open=parseFloat(q.open)||price;
+        var chg=open>0?((price-open)/open*100):0;
+        tickerData[s.sym]={price:price,chg:chg};
       }
-    }
-  } catch(e){}
+    } catch(e){}
+  }
 
+  // 4. Oro y Plata via metals-api free (frankfurter no tiene metals)
+  // Usamos una aproximacion via CoinGecko con pax-gold y silver tokens
   try {
-    // Stocks + metals via Yahoo Finance (no-cors workaround with allorigins)
-    var symbols=['AAPL','TSLA','NVDA','GC=F','SI=F'];
-    for(var si=0;si<symbols.length;si++){
-      var sym=symbols[si];
-      try {
-        var url='https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=2d';
-        var proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);
-        var ry=await fetch(proxy);
-        if(!ry.ok) continue;
-        var py=await ry.json();
-        var data=JSON.parse(py.contents);
-        var result=data&&data.chart&&data.chart.result&&data.chart.result[0];
-        if(!result) continue;
-        var meta=result.meta;
-        var price=meta.regularMarketPrice||0;
-        var prev=meta.previousClose||price;
-        var chg=prev>0?((price-prev)/prev*100):0;
-        var mapSym={'GC=F':'XAU','SI=F':'XAG'};
-        var key=mapSym[sym]||sym;
-        tickerData[key]={price:price,chg:chg};
-      } catch(e){}
+    var r4=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pax-gold,silver&vs_currencies=usd&include_24hr_change=true');
+    if(r4.ok){
+      var d4=await r4.json();
+      if(d4['pax-gold']) tickerData['XAU']={price:d4['pax-gold'].usd,chg:d4['pax-gold'].usd_24h_change||0};
+      if(d4['silver']) tickerData['XAG']={price:d4['silver'].usd,chg:d4['silver'].usd_24h_change||0};
     }
   } catch(e){}
 
@@ -2831,53 +2834,56 @@ var tickerAssets=[
 var tickerData={};
 
 async function loadTicker(){
+  // 1. Crypto via CoinGecko (gratis, sin key)
   try {
-    // Crypto: CoinGecko free API
-    var cryptoIds=tickerAssets.filter(function(a){return a.type==='crypto';}).map(function(a){return a.id;}).join(',');
-    var rc=await fetch('https://api.coingecko.com/api/v3/simple/price?ids='+cryptoIds+'&vs_currencies=usd&include_24hr_change=true');
-    if(rc.ok){
-      var cd=await rc.json();
-      tickerAssets.forEach(function(a){
-        if(a.type==='crypto'&&cd[a.id]){
-          tickerData[a.sym]={price:cd[a.id].usd,chg:cd[a.id].usd_24h_change||0};
-        }
-      });
+    var r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true');
+    if(r.ok){
+      var d=await r.json();
+      if(d.bitcoin) tickerData['BTC']={price:d.bitcoin.usd,chg:d.bitcoin.usd_24h_change||0};
+      if(d.ethereum) tickerData['ETH']={price:d.ethereum.usd,chg:d.ethereum.usd_24h_change||0};
     }
   } catch(e){}
 
+  // 2. USD/CLP via mindicador.cl
   try {
-    // USD/CLP: mindicador.cl
-    var rd=await fetch('https://mindicador.cl/api/dolar');
-    if(rd.ok){
-      var dd=await rd.json();
-      if(dd.serie&&dd.serie[0]){
-        tickerData['DOLAR']={price:dd.serie[0].valor,chg:0,isCLP:true};
+    var r2=await fetch('https://mindicador.cl/api/dolar');
+    if(r2.ok){
+      var d2=await r2.json();
+      if(d2.serie&&d2.serie[0]) tickerData['DOLAR']={price:d2.serie[0].valor,chg:0};
+    }
+  } catch(e){}
+
+  // 3. Stocks via Binance (solo crypto) — para stocks usamos Kraken/stooq
+  // Stocks via stooq.com (no requiere key, CORS ok)
+  var stocks=[
+    {sym:'AAPL',stooq:'AAPL.US'},
+    {sym:'TSLA',stooq:'TSLA.US'},
+    {sym:'NVDA',stooq:'NVDA.US'},
+  ];
+  for(var i=0;i<stocks.length;i++){
+    try {
+      var s=stocks[i];
+      var r3=await fetch('https://stooq.com/q/l/?s='+s.stooq+'&f=sd2t2ohlcvn&h&e=json');
+      if(!r3.ok) continue;
+      var d3=await r3.json();
+      var q=d3.symbols&&d3.symbols[0];
+      if(q&&q.close){
+        var price=parseFloat(q.close);
+        var open=parseFloat(q.open)||price;
+        var chg=open>0?((price-open)/open*100):0;
+        tickerData[s.sym]={price:price,chg:chg};
       }
-    }
-  } catch(e){}
+    } catch(e){}
+  }
 
+  // 4. Oro y Plata via metals-api free (frankfurter no tiene metals)
+  // Usamos una aproximacion via CoinGecko con pax-gold y silver tokens
   try {
-    // Stocks + metals via Yahoo Finance (no-cors workaround with allorigins)
-    var symbols=['AAPL','TSLA','NVDA','GC=F','SI=F'];
-    for(var si=0;si<symbols.length;si++){
-      var sym=symbols[si];
-      try {
-        var url='https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=2d';
-        var proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);
-        var ry=await fetch(proxy);
-        if(!ry.ok) continue;
-        var py=await ry.json();
-        var data=JSON.parse(py.contents);
-        var result=data&&data.chart&&data.chart.result&&data.chart.result[0];
-        if(!result) continue;
-        var meta=result.meta;
-        var price=meta.regularMarketPrice||0;
-        var prev=meta.previousClose||price;
-        var chg=prev>0?((price-prev)/prev*100):0;
-        var mapSym={'GC=F':'XAU','SI=F':'XAG'};
-        var key=mapSym[sym]||sym;
-        tickerData[key]={price:price,chg:chg};
-      } catch(e){}
+    var r4=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pax-gold,silver&vs_currencies=usd&include_24hr_change=true');
+    if(r4.ok){
+      var d4=await r4.json();
+      if(d4['pax-gold']) tickerData['XAU']={price:d4['pax-gold'].usd,chg:d4['pax-gold'].usd_24h_change||0};
+      if(d4['silver']) tickerData['XAG']={price:d4['silver'].usd,chg:d4['silver'].usd_24h_change||0};
     }
   } catch(e){}
 
