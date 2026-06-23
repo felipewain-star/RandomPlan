@@ -787,7 +787,7 @@ function renderFeed(filter){
 }
 
 async function loadRealPosts(filter){
-  var r=await db.from('posts').select('*, perfiles(username,ciudad), comunidades(nombre,icono)').order('created_at',{ascending:false}).limit(20);
+  var r=await db.from('posts').select('*, perfiles(username,ciudad), comunidades(nombre,icono), comentarios(count)').order('created_at',{ascending:false}).limit(20);
   if(r.error||!r.data||!r.data.length) return;
   var realPosts=r.data.filter(function(p){return p.perfiles&&p.comunidades;});
   if(!realPosts.length) return;
@@ -811,7 +811,7 @@ async function loadRealPosts(filter){
       title: p.titulo,
       prev: p.contenido||null,
       votos: p.votos||0,
-      coms: 0,
+      coms: (p.comentarios&&p.comentarios[0]&&p.comentarios[0].count)||0,
       cd: []
     };
   });
@@ -1011,7 +1011,12 @@ function openCommentBox(postId){
   if(!currentUser){showModal('login');return;}
   var box=document.getElementById('cbox-'+postId);
   if(!box)return;
-  box.innerHTML='<input type="text" id="cinp-'+postId+'" style="flex:1;background:transparent;border:none;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none;width:100%" placeholder="escribe tu comentario..." onkeydown="if(event.key===\'Enter\')sendComment('+postId+')"><button onclick="sendComment('+postId+')" style="background:none;border:1px solid var(--green);color:var(--green);padding:.15rem .5rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;margin-left:.4rem">SEND</button>';
+  box.innerHTML=
+    '<div style="display:flex;flex-direction:column;gap:.4rem;width:100%">'+
+    '<input type="text" id="cinp-'+postId+'" style="flex:1;background:transparent;border:none;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none;width:100%" placeholder="escribe tu comentario o pega un link..." onkeydown="if(event.key===\'Enter\')sendComment('+postId+')" oninput="checkCommentUrl(this.value,'+postId+')">'+
+    '<div id="com-preview-'+postId+'"></div>'+
+    '<button onclick="sendComment('+postId+')" style="background:none;border:1px solid var(--green);color:var(--green);padding:.25rem .6rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;align-self:flex-end">SEND</button>'+
+    '</div>';
   var inp=document.getElementById('cinp-'+postId);
   if(inp)inp.focus();
 }
@@ -1231,17 +1236,35 @@ function makeAvatar(username, size){
 async function fetchLinkPreview(url, container){
   container.innerHTML='<div class="link-preview"><div class="link-preview-loading">// cargando preview...</div></div>';
   try {
-    var proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);
-    var r=await fetch(proxy);
-    var data=await r.json();
-    var html=data.contents||'';
-    var getTag=function(prop){
-      var re1=new RegExp('og:'+prop+'"\s+content="([^"]*)"','i');
-      var re2=new RegExp('content="([^"]*)"\s+property="og:'+prop+'"','i');
-      var re3=new RegExp('og:'+prop+"'\s+content='([^']*)'","i");
-      var m=html.match(re1)||html.match(re2)||html.match(re3);
-      return m?m[1]:'';
-    };
+    // Try jsonlink API first - works well with news sites
+    var apiUrl='https://jsonlink.io/api/extract?url='+encodeURIComponent(url);
+    var r=await fetch(apiUrl);
+    var meta=null;
+    if(r.ok){
+      try{ meta=await r.json(); }catch(e){}
+    }
+    // fallback: microlink
+    if(!meta||!meta.title){
+      var r2=await fetch('https://api.microlink.io?url='+encodeURIComponent(url));
+      if(r2.ok){
+        var ml=await r2.json();
+        if(ml&&ml.data){
+          meta={
+            title:ml.data.title||'',
+            description:ml.data.description||'',
+            images:ml.data.image?[ml.data.image.url]:[],
+            url:url
+          };
+        }
+      }
+    }
+    if(!meta||!meta.title){ container.innerHTML=''; return; }
+    var title=(meta.title||'').slice(0,120);
+    var desc=(meta.description||'').slice(0,200);
+    var img=meta.images&&meta.images[0]?meta.images[0]:(meta.image||'');
+    var domain=url.replace(/^https?:\/\//,'').split('/')[0];
+    if(!title){ container.innerHTML=''; return; }
+    var getTag=function(){ return ''; }; // not needed anymore
     var title=getTag('title')||getTag('title')||(html.match(/<title[^>]*>([^<]*)<\/title>/i)||[])[1]||'';
     var desc=getTag('description')||'';
     var img=getTag('image')||'';
@@ -1609,6 +1632,14 @@ function execSearch(i){
     var feed=document.getElementById('posts-feed');
     if(feed) feed.scrollIntoView({behavior:'smooth',block:'start'});
   },100);
+}
+
+function checkCommentUrl(text, postId){
+  var url=extractUrl(text);
+  var container=document.getElementById('com-preview-'+postId);
+  if(!container) return;
+  if(url) fetchLinkPreview(url, container);
+  else container.innerHTML='';
 }
 
 function checkPostUrl(text){
