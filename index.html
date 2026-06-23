@@ -2008,20 +2008,34 @@ function selectGif(pickerId, fullUrl, thumbUrl){
 }
 
 function buildMediaBar(inputId, emojiPickerId, gifPickerId){
+  // Use data attributes to avoid emoji/quote escaping issues
   var emojisHtml=EMOJIS.map(function(e){
-    return '<button class="emoji-btn" onclick="insertEmoji(\''+inputId+'\',\''+e+'\')" title="'+e+'">'+e+'</button>';
+    return '<button class="emoji-btn" data-input="'+inputId+'" data-emoji="'+encodeURIComponent(e)+'" onclick="insertEmojiFromBtn(this)">'+e+'</button>';
   }).join('');
 
-  return '<div class="media-bar">'+
-    '<button class="media-btn" onclick="toggleEmojiPicker(\''+emojiPickerId+'\')">😊 emoji</button>'+
-    '<button class="media-btn" onclick="toggleGifPicker(\''+gifPickerId+'\')">GIF</button>'+
-  '</div>'+
-  '<div class="emoji-picker" id="'+emojiPickerId+'">'+emojisHtml+'</div>'+
-  '<div class="gif-picker" id="'+gifPickerId+'">'+
-    '<input class="gif-search" placeholder="buscar GIF... (ej: meme, jajaja, wtf)" onkeydown="if(event.key===\'Enter\')searchGifs(\''+gifPickerId+'\',this.value)">'+
-    '<div class="gif-grid" id="'+gifPickerId+'-grid"></div>'+
-    '<img class="gif-preview" id="'+gifPickerId+'-preview" src="">'+
-  '</div>';
+  var html='<div class="media-bar">';
+  html+='<button class="media-btn" data-picker="'+emojiPickerId+'" onclick="togglePickerById(this,\'emoji\')">😊 emoji</button>';
+  html+='<button class="media-btn" data-picker="'+gifPickerId+'" onclick="togglePickerById(this,\'gif\')">GIF</button>';
+  html+='</div>';
+  html+='<div class="emoji-picker" id="'+emojiPickerId+'">'+emojisHtml+'</div>';
+  html+='<div class="gif-picker" id="'+gifPickerId+'" data-input="'+inputId+'">';
+  html+='<input class="gif-search" placeholder="buscar GIF... enter para buscar" data-picker="'+gifPickerId+'" onkeydown="if(event.key===\'Enter\'){searchGifs(this.dataset.picker,this.value)}">';
+  html+='<div class="gif-grid" id="'+gifPickerId+'-grid"></div>';
+  html+='<img class="gif-preview" id="'+gifPickerId+'-preview" src="">';
+  html+='</div>';
+  return html;
+}
+
+function insertEmojiFromBtn(btn){
+  var inputId=btn.getAttribute('data-input');
+  var emoji=decodeURIComponent(btn.getAttribute('data-emoji'));
+  insertEmoji(inputId, emoji);
+}
+
+function togglePickerById(btn, type){
+  var pickerId=btn.getAttribute('data-picker');
+  if(type==='emoji') toggleEmojiPicker(pickerId);
+  else toggleGifPicker(pickerId);
 }
 
 // Init
