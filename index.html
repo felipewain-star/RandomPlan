@@ -390,14 +390,35 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
   </div>
 </div>
 
-<!-- TICKER -->
-<div class="ticker-wrap" id="ticker-wrap">
-  <div class="ticker-live">
-    <span class="ticker-live-dot"></span>
-    <span class="ticker-live-txt">LIVE</span>
+<!-- TICKER TRADINGVIEW -->
+<div style="height:46px;overflow:hidden;position:sticky;top:0;z-index:201;background:#0a0800;border-bottom:1px solid #3a2e00;display:flex;align-items:center">
+  <div style="display:flex;align-items:center;padding:0 .5rem;border-right:1px solid #3a2e00;gap:.3rem;flex-shrink:0">
+    <span style="width:7px;height:7px;border-radius:50%;background:#e8a020;animation:amber-pulse .9s step-end infinite;box-shadow:0 0 6px #e8a020;display:inline-block"></span>
+    <span style="font-family:monospace;font-size:.6rem;font-weight:700;color:#e8a020;letter-spacing:.08em">LIVE</span>
   </div>
-  <div class="ticker-track" id="ticker-track">
-    <span class="ticker-loading">// cargando precios...</span>
+  <div style="flex:1;height:46px;overflow:hidden">
+    <div class="tradingview-widget-container" style="height:46px">
+      <div class="tradingview-widget-container__widget"></div>
+      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+      {
+        "symbols":[
+          {"proName":"BITSTAMP:BTCUSD","title":"BTC"},
+          {"proName":"BITSTAMP:ETHUSD","title":"ETH"},
+          {"proName":"NASDAQ:AAPL","title":"AAPL"},
+          {"proName":"NASDAQ:TSLA","title":"TSLA"},
+          {"proName":"NASDAQ:NVDA","title":"NVDA"},
+          {"proName":"FX_IDC:USDCLP","title":"USD/CLP"},
+          {"proName":"OANDA:XAUUSD","title":"ORO"},
+          {"proName":"OANDA:XAGUSD","title":"PLATA"}
+        ],
+        "showSymbolLogo":false,
+        "isTransparent":true,
+        "displayMode":"compact",
+        "colorTheme":"dark",
+        "locale":"es"
+      }
+      </script>
+    </div>
   </div>
 </div>
 
