@@ -390,35 +390,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
   </div>
 </div>
 
-<!-- TICKER TRADINGVIEW -->
-<div class="ticker-wrap" id="ticker-wrap" style="height:46px;overflow:hidden;padding:0;position:sticky;top:0;z-index:201;background:#0a0800;border-bottom:1px solid #3a2e00">
-  <div class="ticker-live" style="position:absolute;left:0;top:0;bottom:0;z-index:2;display:flex;align-items:center;padding:0 .5rem;background:#0a0800;border-right:1px solid #3a2e00">
+<!-- TICKER -->
+<div class="ticker-wrap" id="ticker-wrap">
+  <div class="ticker-live">
     <span class="ticker-live-dot"></span>
     <span class="ticker-live-txt">LIVE</span>
   </div>
-  <div style="margin-left:64px;height:46px">
-    <div class="tradingview-widget-container" style="height:46px">
-      <div class="tradingview-widget-container__widget"></div>
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-      {
-        "symbols": [
-          {"proName":"BITSTAMP:BTCUSD","title":"BTC"},
-          {"proName":"BITSTAMP:ETHUSD","title":"ETH"},
-          {"proName":"NASDAQ:AAPL","title":"AAPL"},
-          {"proName":"NASDAQ:TSLA","title":"TSLA"},
-          {"proName":"NASDAQ:NVDA","title":"NVDA"},
-          {"proName":"FX_IDC:USDCLP","title":"USD/CLP"},
-          {"proName":"OANDA:XAUUSD","title":"ORO"},
-          {"proName":"OANDA:XAGUSD","title":"PLATA"}
-        ],
-        "showSymbolLogo": false,
-        "isTransparent": true,
-        "displayMode": "compact",
-        "colorTheme": "dark",
-        "locale": "es"
-      }
-      </script>
-    </div>
+  <div class="ticker-track" id="ticker-track">
+    <span class="ticker-loading">// cargando precios...</span>
   </div>
 </div>
 
@@ -515,99 +494,17 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 
 <script>
 var BOTS=[
-  {name:'condor_88',      tipo:'critico',    vota:0.4, subs:['futbol','contingencia','chile','polemicas']},
-  {name:'titi_norte',     tipo:'objetivo',   vota:0.6, subs:['chile','datos','contingencia','finanzas']},
-  {name:'pelao_fome',     tipo:'sarcastico', vota:0.3, subs:['memescl','polemicas','chile','desahogo']},
-  {name:'cachorraCL',     tipo:'emocional',  vota:0.7, subs:['desahogo','chile','memescl','futbol']},
-  {name:'profe_historia', tipo:'objetivo',   vota:0.8, subs:['contingencia','datos','chile','polemicas']},
-  {name:'mirna_conce',    tipo:'emocional',  vota:0.5, subs:['desahogo','chile','memescl','marketplace']},
-  {name:'gamer_iquique',  tipo:'sarcastico', vota:0.2, subs:['tecnologia','memescl','futbol','polemicas']},
-  {name:'economistaRoto', tipo:'critico',    vota:0.9, subs:['finanzas','datos','contingencia','tecnologia']},
-  {name:'vikinga_sur',    tipo:'directo',    vota:0.5, subs:['chile','futbol','desahogo','marketplace']},
-  {name:'flaite_fino',    tipo:'sarcastico', vota:0.3, subs:['memescl','polemicas','futbol','chile']},
-  {name:'macro_pablo',    tipo:'objetivo',   vota:0.7, subs:['finanzas','datos','tecnologia','contingencia']},
-  {name:'roxana_stgo',    tipo:'emocional',  vota:0.6, subs:['desahogo','chile','memescl','polemicas']},
-  {name:'el_roto_mx',     tipo:'directo',    vota:0.4, subs:['polemicas','contingencia','futbol','chile']},
-  {name:'nerdcl',         tipo:'critico',    vota:0.8, subs:['tecnologia','datos','finanzas','contingencia']},
-  {name:'pato_valpo',     tipo:'sarcastico', vota:0.3, subs:['chile','memescl','desahogo','polemicas']},
-  {name:'dona_juanita',   tipo:'emocional',  vota:0.6, subs:['desahogo','chile','marketplace','memescl']},
-  {name:'trader_flaite',  tipo:'directo',    vota:0.7, subs:['finanzas','tecnologia','datos','marketplace']},
-  {name:'anarco_sur',     tipo:'critico',    vota:0.4, subs:['polemicas','contingencia','desahogo','chile']},
-  {name:'futbolero_pc',   tipo:'emocional',  vota:0.8, subs:['futbol','memescl','chile','polemicas']},
-  {name:'ingeniera_kt',   tipo:'objetivo',   vota:0.9, subs:['tecnologia','datos','finanzas','contingencia']},
+  {name:'condor_88',av:'🦅',ciudad:'Santiago'},
+  {name:'titi_norte',av:'🌵',ciudad:'Antofagasta'},
+  {name:'pelao_fome',av:'😐',ciudad:'Valparaíso'},
+  {name:'cachorraCL',av:'🐕',ciudad:'Concepción'},
+  {name:'profe_historia',av:'📚',ciudad:'Temuco'},
+  {name:'mirna_conce',av:'☕',ciudad:'Concepción'},
+  {name:'gamer_iquique',av:'🎮',ciudad:'Iquique'},
+  {name:'economistaRoto',av:'📊',ciudad:'Santiago'},
+  {name:'vikinga_sur',av:'🏔',ciudad:'Puerto Montt'},
+  {name:'flaite_fino',av:'😎',ciudad:'Santiago'},
 ];
-
-var BOT_PHRASES={
-  critico:{
-    largo:[
-      'seamos honestos, esto no va a cambiar nada porque el problema es estructural y nadie quiere tocarlo de verdad',
-      'llevamos décadas con el mismo diagnóstico y cero soluciones. la diferencia entre los partidos es cosmética',
-      'el problema no es falta de información, es que a los que deciden no les conviene que cambie',
-      'esto era predecible. lo dijeron hace años y nadie escuchó porque no era políticamente conveniente',
-      'la crítica fácil es apuntar a los síntomas. el problema de fondo es el modelo y eso nadie lo quiere debatir en serio',
-    ],
-    corto:['predecible','ya sabíamos','lo de siempre','nada nuevo','classic','como siempre','otra vez lo mismo','qué sorpresa','spoiler: no cambia nada'],
-    respuesta:['exactamente ese es el punto que nadie quiere aceptar','discrepo, el análisis es superficial','sí pero eso no explica lo central','eso es síntoma, no causa']
-  },
-  sarcastico:{
-    largo:[
-      'qué innovación. qué originalidad. nunca antes visto en la historia de chile o de ningún país del universo conocido',
-      'genial, otro experto que apareció a explicar lo que todos sabemos hace 10 años. bienvenido a la conversación',
-      'sorpresa sorpresa, el sistema diseñado para beneficiar a los de arriba beneficia a los de arriba. quién lo hubiera dicho',
-      'y todos aplaudieron. y al día siguiente nadie se acordó. y al mes siguiente pasó lo mismo. fin del ciclo',
-      'fascinante perspectiva. nunca lo había pensado de esa manera tan completamente obvia que cualquiera ya sabía',
-    ],
-    corto:['jajaja obvio','claro que sí','qué descubrimiento','wow increíble','notable aporte','nadie lo vio venir','histórico','💀','jajajaja','no puede ser real'],
-    respuesta:['gracias por el aporte tan necesario','jajaja sí claro','notable observación','y con eso resolviste todo']
-  },
-  emocional:{
-    largo:[
-      'esto me llegó profundo porque yo lo viví en carne propia y sé exactamente de lo que hablan. no es fácil pero hay que seguir',
-      'lloré un poco leyendo esto. hay algo en esta comunidad que no encuentro en ningún otro lado',
-      'mi familia pasó por algo muy similar y el impacto en la vida diaria es brutal. ojalá más gente entendiera esto',
-      'necesitaba leer esto hoy. en serio. gracias a quien lo escribió porque hay días que uno necesita saber que no está solo',
-      'me identifico tanto con esto que no sé ni por dónde empezar. hay cosas que cuesta mucho decir en voz alta',
-    ],
-    corto:['me llegó','uff pesado','heavy esto','me representa','lo mismo me pasó','necesitaba leer esto','uf','me pegó fuerte','exacto'],
-    respuesta:['te entiendo perfectamente','ánimo, se sale','oye qué difícil lo que describes','gracias por contarlo']
-  },
-  objetivo:{
-    largo:[
-      'hay que ver los dos lados. la evidencia que señalan es real pero hay factores contextuales que no se mencionan',
-      'los datos que citan son reales pero incompletos. para tener visión precisa habría que incluir el período anterior',
-      'el análisis es correcto en lo central pero le falta matiz. la causalidad no es tan directa como se presenta',
-      'esto hay que leerlo con cuidado porque mezcla correlación con causalidad y lleva a conclusiones que no se sostienen',
-      'interesante punto pero habría que contrastarlo con otros países en contextos similares antes de sacar conclusiones',
-    ],
-    corto:['depende del contexto','hay matices','no es tan simple','falta información','parcialmente correcto','correcto pero incompleto','válido el punto'],
-    respuesta:['buen punto, aunque habría que agregar que...','cierto, pero el contexto importa','de acuerdo en lo central','los datos dicen otra cosa igual']
-  },
-  directo:{
-    largo:[
-      'voy al punto: esto es un problema real y la solución existe pero nadie la implementa porque políticamente no conviene',
-      'sin rodeos: la gente que toma decisiones sabe lo que está pasando y elige no actuar. no es ignorancia, es cálculo',
-      'la verdad es que en chile nos gusta diagnosticar pero no actuar. llevamos años sabiendo el problema',
-      'seré directo: esto va a seguir igual porque los que sufren no tienen poder y los que tienen poder no sufren',
-      'sin adornos: el modelo está roto, todos lo saben, y el que diga que no está mintiendo o en su burbuja',
-    ],
-    corto:['simple y claro','al punto','directo','sin vueltas','la verdad es esa','exacto','correcto','así es','la realidad'],
-    respuesta:['exactamente eso','al punto','correcto','sin vueltas: sí']
-  }
-};
-
-function getBotPhrase(bot, ctx){
-  var tipo=bot.tipo||'directo';
-  var frases=BOT_PHRASES[tipo];
-  if(!frases) return 'ok';
-  var pool=frases[ctx]||frases.corto;
-  return pool[Math.floor(Math.random()*pool.length)];
-}
-function botCanPost(bot, sub){
-  return !sub || !bot.subs || bot.subs.indexOf(sub)!==-1;
-}
-function botVotes(bot){
-  return Math.random()<(bot.vota||0.5);
-}
 
 var CHAT_INIT=[
   {bot:BOTS[0],txt:'alguien más viendo el partido?'},
@@ -791,7 +688,7 @@ var POSTS=[
   {id:1,sub:'futbol',ic:'⚽',user:BOTS[0],t:'2h',flair:'Mundial 2026',fc:'r',
    title:'Chile afuera del mundial y España goleando: la noche más larga del fútbol latinoamericano',
    prev:'España aplastó a Arabia Saudita con Lamine Yamal y Oyarzabal. Mientras tanto acá mirando el mundial ajeno como siempre. Igual es entretenido cuando no te duele.',
-   votos:63,coms:74,
+   votos:47,coms:18,
    cd:[
     {bot:BOTS[1],txt:'verlo sin sufrir tiene su encanto igual',v:8,t:'1h'},
     {bot:BOTS[4],txt:'japón eliminó a túnez en el partido 1000 de los mundiales y chile ni ahí',v:5,t:'45min'},
@@ -815,7 +712,7 @@ var POSTS=[
    ]},
   {id:3,sub:'memescl',ic:'😂',user:BOTS[2],t:'1h',flair:'Meme',fc:'p',
    title:'El chileno mirando el mundial ajeno con camiseta de la roja igual',
-   prev:null,votos:81,coms:58,
+   prev:null,votos:63,coms:21,
    cd:[
     {bot:BOTS[3],txt:'jajaja exacto, la camiseta puesta para ver jugar a japón',v:8,t:'55min'},
     {bot:BOTS[0],txt:'el orgullo no entiende de clasificaciones',v:6,t:'50min'},
@@ -827,7 +724,7 @@ var POSTS=[
   {id:4,sub:'chile',ic:'🇨🇱',user:BOTS[5],t:'5h',flair:'Invierno',fc:'g',
    title:'22 de junio en Chile: ¿dónde está nevando y cómo viene el invierno 2026?',
    prev:'Hoy primer día oficial de invierno y las temperaturas ya se sintieron toda la semana. Las cumbres de los Andes con nieve y el sur bajo cero. ¿Cómo están en sus ciudades?',
-   votos:51,coms:43,
+   votos:38,coms:14,
    cd:[
     {bot:BOTS[8],txt:'acá en el sur llueve sin parar desde hace una semana, novedad cero',v:7,t:'4h'},
     {bot:BOTS[2],txt:'valpo con viento polar, el microcentro es un experimento de supervivencia',v:5,t:'3h'},
@@ -863,7 +760,7 @@ var POSTS=[
    ]},
   {id:7,sub:'memescl',ic:'😂',user:BOTS[9],t:'30min',flair:'Actualidad',fc:'p',
    title:'Mia Khalifa y Lana Rhoades aparecieron en el partido EEUU vs Paraguay del mundial y nadie habla de fútbol',
-   prev:null,votos:74,coms:62,
+   prev:null,votos:74,coms:28,
    cd:[
     {bot:BOTS[3],txt:'el mundial 2026 tiene un casting muy particular',v:9,t:'25min'},
     {bot:BOTS[2],txt:'el partido quedó en segundo plano completamente',v:7,t:'20min'},
@@ -913,27 +810,64 @@ function renderComs(cd){
   }).join('');
 }
 
-
-function generateBotComments(count, existingCd, sub){
+function generateBotComments(count, existingCd){
   var all=existingCd.slice();
-  var needed=Math.min(count, 30) - all.length;
-  if(needed<=0) return all;
-  var eligible=BOTS.filter(function(b){return botCanPost(b,sub);});
-  if(!eligible.length) eligible=BOTS.slice();
-  eligible=eligible.sort(function(){return Math.random()-0.5;});
+  var needed=Math.min(count, 50) - all.length;
+  // shuffle BOTS to avoid repetition
+  var availBots=BOTS.slice().sort(function(){return Math.random()-0.5;});
+  var usedBots={};
+  var phrases=[
+    "si","no","jajaja","exacto","wtf","claro po","obvio","mentira","facts","no way",
+    "ajá","oof","lol","bruh","cap","ni ahí","ya pues","ntp","uff","q","bro...",
+    "literal","ngl","ok pero","espera qué","a ver...","no po","sipo","depende",
+    "ni idea","no sé po","eso","concuerdo","discrepo igual","difícil decir",
+    "ni siquiera la vio!","en serio??","no me digas","eso mismo pensé","claro po wn",
+    "jajajajaja","no lo puedo creer","esto es real?","yo también","me la mandaron al grupo jaja",
+    "no lo había pensado","100%","facts po","momento momento","yo creo que sí","yo creo que no",
+    "no cap esto es verdad","deja de tener razón po","llegué tarde pero sí",
+    "lo mismo nos pasó en la pega","típico de la capital","qué sorpresa que pase esto",
+    "para nada de acuerdo pero respeto","interesante perspectiva igual",
+    "hay que ver los dos lados","fuego este post","guardado esto","compartido al tiro",
+    "esto necesita más upvotes","gracias por decirlo","alguien tenía que decirlo",
+    "primera vez que comento y tenía que ser en este post","por fin alguien lo dice",
+    "no todo es negativo igual","seamos justos con el análisis",
+    "al final uno hace lo que puede","la vida es así no más",
+    "oye pero qué bueno este post","necesitaba leer esto hoy",
+    "alguien más o soy yo solo?","jajaja no pero sí","en realidad tiene sentido",
+    "lo pensé pero no lo iba a decir","esto merece más atención",
+    "las 3am y leyendo esto","procrastinando con esto en vez de estudiar",
+    "fuego","top","guardado","compartido","sin palabras","uf heavy","brutal",
+    "no me lo esperaba","qué level","demasiado real","me pegó fuerte esto",
+    "mira yo llevo años diciéndole esto a mis amigos y nadie me pescaba, al final resulta que tenía razón en todo. ojalá la gente leyera más antes de opinar.",
+    "no puedo creer que estemos discutiendo esto en 2024 como si fuera algo nuevo. esto pasa en chile hace décadas y nadie hace nada porque a los que mandan les conviene.",
+    "yo viví esto en carne propia y les juro que es exactamente como lo describen. perdí trabajo, amigos, plata. no es fácil pero se sale. ánimo a los que estén pasando lo mismo.",
+    "llevo tres años trabajando en esto y puedo decirles con certeza que el problema es más profundo de lo que parece. no es solo lo que se ve en la superficie.",
+    "mi abuelo decía que chile era un país de extremos: o todo bien o todo mal, nunca hay término medio. cuánta razón tenía el viejo. aquí no existe la escala de grises.",
+    "me encanta este espacio porque por fin se puede hablar con gente que piensa distinto sin que se vuelva una pelea. en twitter esto sería una guerra de insultos.",
+    "desde el sur y con todo el respeto: los santiaguinos no tienen idea de lo que pasa en el resto del país. hablan de chile como si fuera solo la capital.",
+    "estudié esto en la u y lo que describen acá coincide con lo que vimos en clases. el problema no es falta de información, es falta de voluntad política.",
+    "llevo una hora leyendo este hilo y es la primera vez en mucho tiempo que siento que la gente realmente está pensando y no solo reaccionando. da esperanza.",
+    "el problema con chile es que tenemos cultura del trabajo duro sin cultura del descanso. nos enseñaron a trabajar más que todos pero nadie nos enseñó a vivir bien.",
+    "seré honesto: al principio no estaba de acuerdo con este post. lo leí de nuevo y cambié de opinión. eso casi nunca me pasa en internet.",
+    "la generación de mis papás no entiende por qué los jóvenes estamos agotados. creen que es flojera. no es flojera, es que el mundo que nos entregaron está roto.",
+    "no voy a mentir, lloré un poco leyendo los comentarios. ver que hay gente que pasó por lo mismo y salió adelante da una fuerza que no sabía que necesitaba.",
+    "llevo mucho tiempo pensando en esto y nunca encontré el espacio para decirlo. el problema es que en chile no sabemos escuchar. hablamos todos al mismo tiempo."
+  ];
   var tiempos=["1min","5min","12min","23min","45min","1h","2h","3h","5h","8h","12h","1d"];
   for(var i=0;i<needed;i++){
-    var bot=eligible[i%eligible.length];
-    var r=Math.random();
-    var ctx=r<0.35?'corto':r<0.65?'largo':'respuesta';
-    var txt=getBotPhrase(bot,ctx);
-    var v=0;
-    if(botVotes(bot)){
-      var maxV=ctx==='largo'?9:ctx==='respuesta'?5:3;
-      v=Math.floor(Math.random()*maxV);
-      if(Math.random()<0.2) v=-Math.floor(Math.random()*3);
-    }
-    all.push({bot:bot,txt:txt,v:v,t:tiempos[Math.floor(Math.random()*tiempos.length)]});
+    // pick bot not already used in this section
+    var bot=availBots[i % availBots.length];
+    var txt=phrases[Math.floor(Math.random()*phrases.length)];
+    // votes realistic - max 9, some negative
+    var maxV = txt.length < 20 ? 4 : txt.length < 60 ? 7 : 9;
+    var v = Math.floor(Math.random()*maxV);
+    if(Math.random()<0.25) v = -Math.floor(Math.random()*3);
+    all.push({
+      bot:bot,
+      txt:txt,
+      v:v,
+      t:tiempos[Math.floor(Math.random()*tiempos.length)]
+    });
   }
   return all;
 }
