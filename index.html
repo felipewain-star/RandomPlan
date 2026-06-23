@@ -1852,8 +1852,7 @@ function showModal(tipo){
       '<div id="m-meme-section" style="display:none">'+
         '<div class="field"><label>tipo de meme</label>'+
           '<div class="meme-type-selector">'+
-            '<button class="meme-type-btn on" onclick="setMemeType(\'img\',this)">📸 Imagen</button>'+
-            '<button class="meme-type-btn" onclick="setMemeType(\'gif\',this)">🎞 GIF</button>'+
+            '<button class="meme-type-btn on" style="flex:1">📸 Subir imagen</button>'+
           '</div>'+
         '</div>'+
         '<div id="m-img-section">'+
@@ -1866,18 +1865,12 @@ function showModal(tipo){
             '<div class="img-upload-progress"><div class="img-upload-progress-bar" id="m-img-progress"></div></div>'+
           '</div>'+
         '</div>'+
-        '<div id="m-gif-section" style="display:none">'+
-          '<div class="field">'+
-            '<input type="text" id="m-gif-search" placeholder="buscar GIF... presiona Enter" style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:2px;padding:.48rem .7rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none" onkeydown="if(event.key===\'Enter\')buscarGifModal(this.value)">'+
-            '<div id="m-gif-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:140px;overflow-y:auto;margin-top:.4rem"></div>'+
-          '</div>'+
-        '</div>'+
+
       '</div>'+
       '<div class="field"><label>título</label><input type="text" id="m-titulo" placeholder="¿de qué trata?"></div>'+
       '<div id="m-normal-section">'+
         '<div class="field"><label>contenido (opcional)</label><textarea id="m-contenido" rows="4" placeholder="más detalles... pega un link https://... para preview" oninput="checkPostUrl(this.value)"></textarea></div>'+
         '<div id="post-preview-container"></div>'+
-        buildMediaBar('m-contenido')+
       '</div>'+
       '<div class="modal-err" id="m-err"></div>'+
       '<button class="modal-sub" id="m-sub" onclick="doPost()">./publicar --exec</button>';
@@ -2193,7 +2186,6 @@ function setMemeType(type, btn){
   document.querySelectorAll('.meme-type-btn').forEach(function(b){ b.classList.remove('on'); });
   btn.classList.add('on');
   document.getElementById('m-img-section').style.display = type === 'img' ? 'block' : 'none';
-  document.getElementById('m-gif-section').style.display = type === 'gif' ? 'block' : 'none';
   _uploadedImgUrl = null;
 }
 
@@ -2301,40 +2293,7 @@ function removeImg(e){
     '<div class="img-upload-progress"><div class="img-upload-progress-bar" id="m-img-progress"></div></div>';
 }
 
-async function buscarGifModal(q){
-  var grid = document.getElementById('m-gif-grid');
-  if(!grid) return;
-  grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">// buscando...</span>';
-  try {
-    var key = 'AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';
-    var r = await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q)+'&key='+key+'&limit=9&media_filter=gif');
-    if(!r.ok) throw new Error('tenor '+r.status);
-    var d = await r.json();
-    var results = d.results || [];
-    grid.innerHTML = '';
-    results.forEach(function(item){
-      var formats = item.media_formats || {};
-      var thumb = (formats.tinygif || formats.gif || {}).url || '';
-      var full = (formats.gif || formats.tinygif || {}).url || thumb;
-      if(!thumb) return;
-      var img = document.createElement('img');
-      img.src = thumb;
-      img.className = 'gif-thumb';
-      img.style.cssText = 'width:100%;height:60px;object-fit:cover;border-radius:3px;cursor:pointer;border:1px solid transparent';
-      img.onclick = function(){
-        _uploadedImgUrl = '[gif:'+full+']'; // formato especial para GIFs
-        // mostrar seleccionado
-        grid.querySelectorAll('img').forEach(function(i){ i.style.borderColor='transparent'; });
-        img.style.borderColor = 'var(--green)';
-        toast('// GIF seleccionado ✓');
-      };
-      grid.appendChild(img);
-    });
-    if(!results.length) grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem">// sin resultados</span>';
-  } catch(e){
-    grid.innerHTML = '<span style="color:var(--red);font-size:.7rem;font-family:var(--mono)">// error: '+e.message+'</span>';
-  }
-}
+
 
 async function doPost(){
   var titulo=document.getElementById('m-titulo').value.trim();
@@ -2837,8 +2796,7 @@ function showModal(tipo){
       '<div id="m-meme-section" style="display:none">'+
         '<div class="field"><label>tipo de meme</label>'+
           '<div class="meme-type-selector">'+
-            '<button class="meme-type-btn on" onclick="setMemeType(\'img\',this)">📸 Imagen</button>'+
-            '<button class="meme-type-btn" onclick="setMemeType(\'gif\',this)">🎞 GIF</button>'+
+            '<button class="meme-type-btn on" style="flex:1">📸 Subir imagen</button>'+
           '</div>'+
         '</div>'+
         '<div id="m-img-section">'+
@@ -2851,18 +2809,12 @@ function showModal(tipo){
             '<div class="img-upload-progress"><div class="img-upload-progress-bar" id="m-img-progress"></div></div>'+
           '</div>'+
         '</div>'+
-        '<div id="m-gif-section" style="display:none">'+
-          '<div class="field">'+
-            '<input type="text" id="m-gif-search" placeholder="buscar GIF... presiona Enter" style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:2px;padding:.48rem .7rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none" onkeydown="if(event.key===\'Enter\')buscarGifModal(this.value)">'+
-            '<div id="m-gif-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:140px;overflow-y:auto;margin-top:.4rem"></div>'+
-          '</div>'+
-        '</div>'+
+
       '</div>'+
       '<div class="field"><label>título</label><input type="text" id="m-titulo" placeholder="¿de qué trata?"></div>'+
       '<div id="m-normal-section">'+
         '<div class="field"><label>contenido (opcional)</label><textarea id="m-contenido" rows="4" placeholder="más detalles... pega un link https://... para preview" oninput="checkPostUrl(this.value)"></textarea></div>'+
         '<div id="post-preview-container"></div>'+
-        buildMediaBar('m-contenido')+
       '</div>'+
       '<div class="modal-err" id="m-err"></div>'+
       '<button class="modal-sub" id="m-sub" onclick="doPost()">./publicar --exec</button>';
@@ -3178,7 +3130,6 @@ function setMemeType(type, btn){
   document.querySelectorAll('.meme-type-btn').forEach(function(b){ b.classList.remove('on'); });
   btn.classList.add('on');
   document.getElementById('m-img-section').style.display = type === 'img' ? 'block' : 'none';
-  document.getElementById('m-gif-section').style.display = type === 'gif' ? 'block' : 'none';
   _uploadedImgUrl = null;
 }
 
@@ -3286,40 +3237,7 @@ function removeImg(e){
     '<div class="img-upload-progress"><div class="img-upload-progress-bar" id="m-img-progress"></div></div>';
 }
 
-async function buscarGifModal(q){
-  var grid = document.getElementById('m-gif-grid');
-  if(!grid) return;
-  grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">// buscando...</span>';
-  try {
-    var key = 'AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';
-    var r = await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q)+'&key='+key+'&limit=9&media_filter=gif');
-    if(!r.ok) throw new Error('tenor '+r.status);
-    var d = await r.json();
-    var results = d.results || [];
-    grid.innerHTML = '';
-    results.forEach(function(item){
-      var formats = item.media_formats || {};
-      var thumb = (formats.tinygif || formats.gif || {}).url || '';
-      var full = (formats.gif || formats.tinygif || {}).url || thumb;
-      if(!thumb) return;
-      var img = document.createElement('img');
-      img.src = thumb;
-      img.className = 'gif-thumb';
-      img.style.cssText = 'width:100%;height:60px;object-fit:cover;border-radius:3px;cursor:pointer;border:1px solid transparent';
-      img.onclick = function(){
-        _uploadedImgUrl = '[gif:'+full+']'; // formato especial para GIFs
-        // mostrar seleccionado
-        grid.querySelectorAll('img').forEach(function(i){ i.style.borderColor='transparent'; });
-        img.style.borderColor = 'var(--green)';
-        toast('// GIF seleccionado ✓');
-      };
-      grid.appendChild(img);
-    });
-    if(!results.length) grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem">// sin resultados</span>';
-  } catch(e){
-    grid.innerHTML = '<span style="color:var(--red);font-size:.7rem;font-family:var(--mono)">// error: '+e.message+'</span>';
-  }
-}
+
 
 async function doPost(){
   var titulo=document.getElementById('m-titulo').value.trim();
