@@ -115,7 +115,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .content{flex:1;display:flex;gap:.9rem;max-width:1060px;margin:0 auto;padding:.9rem;width:100%}
 
 /* SIDEBAR L */
-.sidebar-l{width:185px;flex-shrink:0;position:sticky;top:94px;height:fit-content}
+.sidebar-l{width:185px;flex-shrink:0;position:sticky;top:94px;max-height:calc(100vh - 94px);overflow-y:auto;padding-bottom:1.5rem;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 .sf-label{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);padding:.35rem .5rem .2rem;border-left:2px solid var(--border);margin-bottom:.2rem}
 .sf-item{display:flex;align-items:center;gap:.5rem;padding:.4rem .5rem;cursor:pointer;font-size:.83rem;color:var(--text2);transition:all .12s;border-left:2px solid transparent;margin-bottom:1px}
 .sf-item:hover{color:var(--text1);border-left-color:var(--border2);background:var(--bg1)}
@@ -1012,6 +1012,20 @@ function renderFeed(filter){
   var html=list.map(renderPost).join('');
   if(!html)html='<div style="text-align:center;padding:2.5rem;color:var(--text3);font-size:.75rem;font-family:var(--mono)">// no hay posts aquí todavía<br><br>🌵</div>';
   document.getElementById('posts-feed').innerHTML=html;
+}
+
+// Mapeo permanente de posts semilla (ids JS) → IDs reales en Supabase
+// Actualizar aquí si se agregan nuevos posts semilla
+function initSeedPostMap(){
+  window.realPostIdMap = window.realPostIdMap || {};
+  // id_js: id_supabase
+  window.realPostIdMap[1]  = 21; // La Roja convocó
+  window.realPostIdMap[2]  = 22; // El dólar $960
+  window.realPostIdMap[3]  = 23; // Camiseta roja igual
+  window.realPostIdMap[4]  = 24; // Invierno Chile
+  window.realPostIdMap[5]  = 25; // Dólar análisis semana
+  window.realPostIdMap[6]  = 26; // SpaceX ETF
+  window.realPostIdMap[7]  = 27; // Mia Khalifa mundial
 }
 
 async function loadRealPosts(filter){
@@ -3163,7 +3177,7 @@ addMsg(null,'// chat global activo · randomplan.cl',false,true);
 CHAT_INIT.forEach(function(m){addMsg(m.bot,m.txt,false,false)});
 newMsgCount=0;document.getElementById('chat-badge').textContent='0';
 scheduleBot();
-renderFeed(null);renderTrending();renderComms();
+initSeedPostMap();renderFeed(null);renderTrending();renderComms();
 setInterval(tickVotes,8000);
 loadChatHistory();
 setInterval(pollChat,3000);
