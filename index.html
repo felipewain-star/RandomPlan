@@ -188,9 +188,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .com-more-btn:hover{border-color:var(--green);color:var(--green)}
 .com-del{color:var(--red)!important}
 .com-del:hover{color:var(--red)!important;background:var(--reddim)!important}
-.global-picker{display:none;position:fixed;z-index:9999;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:.5rem;box-shadow:0 4px 24px rgba(0,0,0,.7);max-height:200px;overflow-y:auto}
-.global-picker.on{display:flex}
-#global-gif-picker.on{display:block}
 .inline-link{color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(121,192,255,.3);word-break:break-all}
 .inline-link:hover{color:var(--green);border-bottom-color:var(--green)}
 .link-preview{margin-top:.5rem;border:1px solid var(--border2);border-radius:4px;overflow:hidden;cursor:pointer;transition:border-color .15s;max-width:100%}
@@ -479,11 +476,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 </div>
 
 <!-- GLOBAL EMOJI/GIF PICKERS -->
-<div id="global-emoji-picker" class="global-picker" style="flex-wrap:wrap;gap:.1rem;width:270px">
-<button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('😂')">😂</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🔥')">🔥</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('💀')">💀</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🤣')">🤣</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('😭')">😭</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🤯')">🤯</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('👀')">👀</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('😤')">😤</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🫡')">🫡</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🤔')">🤔</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('💯')">💯</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🎯')">🎯</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🤙')">🤙</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('👊')">👊</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('😎')">😎</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🥲')">🥲</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('😬')">😬</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🤦')">🤦</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🙄')">🙄</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('👏')">👏</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🫠')">🫠</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('😅')">😅</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🤡')">🤡</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('💪')">💪</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🫶')">🫶</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('❤️')">❤️</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🖤')">🖤</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('⚡')">⚡</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🌊')">🌊</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🏔')">🏔</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🐍')">🐍</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🦅')">🦅</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🦁')">🦁</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🐺')">🐺</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('💻')">💻</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('📱')">📱</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🎮')">🎮</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🏆')">🏆</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('💰')">💰</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('📈')">📈</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('📉')">📉</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🔑')">🔑</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('⚠️')">⚠️</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('❌')">❌</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('✅')">✅</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🚀')">🚀</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🌙')">🌙</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('☀️')">☀️</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🌧')">🌧</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('❄️')">❄️</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🍺')">🍺</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🍕')">🍕</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🌮')">🌮</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('☕')">☕</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🤝')">🤝</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🙏')">🙏</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('👋')">👋</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('✌️')">✌️</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🤞')">🤞</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🧠')">🧠</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('💬')">💬</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🔊')">🔊</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🎵')">🎵</button><button style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px" onmouseover="this.style.background='#1c2733'" onmouseout="this.style.background='none'" onclick="insertGlobalEmoji('🎶')">🎶</button>
-</div>
-<div id="global-gif-picker" class="global-picker" style="width:280px">
-  <input id="gif-search-global" placeholder="buscar GIF + Enter" style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:3px;padding:.38rem .6rem;font-family:var(--mono);font-size:.75rem;color:var(--text1);outline:none;margin-bottom:.4rem;box-sizing:border-box" onkeydown="if(event.key==='Enter'){document.getElementById('gif-grid-global').dataset.loaded='1';buscarGif(this.value)}">
+<div id="global-emoji-picker" style="display:none;position:fixed;z-index:9999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;max-width:270px;flex-wrap:wrap;gap:.1rem;max-height:190px;overflow-y:auto;box-shadow:0 4px 24px rgba(0,0,0,.8)"></div>
+<div id="global-gif-picker" style="display:none;position:fixed;z-index:9999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;width:280px;box-shadow:0 4px 24px rgba(0,0,0,.8)">
+  <input id="gif-search-global" placeholder="buscar GIF + Enter" style="width:100%;background:#0d1117;border:1px solid #2a3f55;border-radius:3px;padding:.38rem .6rem;font-family:monospace;font-size:.75rem;color:#e6edf3;outline:none;margin-bottom:.4rem;box-sizing:border-box" onkeydown="if(event.key==='Enter'){document.getElementById('gif-grid-global').dataset.loaded='1';buscarGif(this.value)}">
   <div id="gif-grid-global" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:165px;overflow-y:auto"></div>
 </div>
 
@@ -2128,98 +2123,124 @@ function selectGif(pickerId, fullUrl, thumbUrl){
   if(picker) picker.dataset.selectedGif=fullUrl;
 }
 
-// ── EMOJI / GIF GLOBAL PICKER ──
-var _activeInput = null;
+// ── EMOJI / GIF ──
+var EMOJIS=['😂','🔥','💀','🤣','😭','🤯','👀','😤','🫡','🤔','💯','🎯','🤙','👊','😎','🥲','😬','🤦','🙄','👏','🫠','😅','🤡','💪','🫶','❤️','🖤','⚡','🌊','🏔','🐍','🦅','🦁','🐺','💻','📱','🎮','🏆','💰','📈','📉','🔑','⚠️','❌','✅','🚀','🌙','☀️','🌧','❄️','🍺','🍕','🌮','☕','🤝','🙏','👋','✌️','🤞','🧠','💬','🔊','🎵','🎶'];
+var _activeInput=null;
+var _pickerShowing=false;
+var _gifShowing=false;
+
+function _initPickers(){
+  var ep=document.getElementById('global-emoji-picker');
+  if(!ep||ep.dataset.init) return;
+  ep.dataset.init='1';
+  EMOJIS.forEach(function(e){
+    var b=document.createElement('button');
+    b.textContent=e;
+    b.style.cssText='background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px';
+    b.onmouseover=function(){this.style.background='#1c2733'};
+    b.onmouseout=function(){this.style.background='none'};
+    b.onclick=function(ev){
+      ev.stopPropagation();
+      if(!_activeInput)return;
+      var inp=document.getElementById(_activeInput);
+      if(!inp)return;
+      var s=inp.selectionStart||inp.value.length;
+      inp.value=inp.value.slice(0,s)+e+inp.value.slice(s);
+      inp.focus();
+      try{inp.selectionStart=inp.selectionEnd=s+e.length;}catch(x){}
+      document.getElementById('global-emoji-picker').style.display='none';
+      _pickerShowing=false;
+    };
+    ep.appendChild(b);
+  });
+}
 
 function showEmoji(btn){
-  _activeInput = btn.getAttribute('data-inp');
-  var ep = document.getElementById('global-emoji-picker');
-  var gp = document.getElementById('global-gif-picker');
-  gp.style.display='none';
-  var rect = btn.getBoundingClientRect();
-  ep.style.top = (rect.bottom + window.scrollY + 4) + 'px';
-  ep.style.left = Math.max(4, rect.left) + 'px';
-  ep.style.display = ep.style.display==='flex' ? 'none' : 'flex';
+  _activeInput=btn.getAttribute('data-inp');
+  _initPickers();
+  var ep=document.getElementById('global-emoji-picker');
+  var gp=document.getElementById('global-gif-picker');
+  if(gp) gp.style.display='none';
+  _gifShowing=false;
+  _pickerShowing=!_pickerShowing;
+  ep.style.display=_pickerShowing?'flex':'none';
+  if(_pickerShowing){
+    var r=btn.getBoundingClientRect();
+    ep.style.top=(r.bottom+window.scrollY+4)+'px';
+    ep.style.left=Math.max(4,r.left)+'px';
+  }
 }
 
 function showGif(btn){
-  _activeInput = btn.getAttribute('data-inp');
-  var ep = document.getElementById('global-emoji-picker');
-  var gp = document.getElementById('global-gif-picker');
-  ep.style.display='none';
-  var rect = btn.getBoundingClientRect();
-  gp.style.top = (rect.bottom + window.scrollY + 4) + 'px';
-  gp.style.left = Math.max(4, rect.left) + 'px';
-  var wasHidden = gp.style.display!=='block';
-  gp.style.display = wasHidden ? 'block' : 'none';
-  if(wasHidden){
-    var grid = document.getElementById('gif-grid-global');
-    if(grid && !grid.dataset.loaded){
+  _activeInput=btn.getAttribute('data-inp');
+  var ep=document.getElementById('global-emoji-picker');
+  var gp=document.getElementById('global-gif-picker');
+  if(ep) ep.style.display='none';
+  _pickerShowing=false;
+  _gifShowing=!_gifShowing;
+  gp.style.display=_gifShowing?'block':'none';
+  if(_gifShowing){
+    var r=btn.getBoundingClientRect();
+    gp.style.top=(r.bottom+window.scrollY+4)+'px';
+    gp.style.left=Math.max(4,r.left)+'px';
+    var grid=document.getElementById('gif-grid-global');
+    if(grid&&!grid.dataset.loaded){
       grid.dataset.loaded='1';
       buscarGif('meme chile');
     }
   }
 }
 
-function insertGlobalEmoji(e){
-  if(!_activeInput) return;
-  var inp = document.getElementById(_activeInput);
-  if(!inp) return;
-  var s = inp.selectionStart || inp.value.length;
-  inp.value = inp.value.slice(0,s) + e + inp.value.slice(s);
-  inp.focus();
-  try{ inp.selectionStart = inp.selectionEnd = s + e.length; }catch(ex){}
-  document.getElementById('global-emoji-picker').classList.remove('on');
-}
-
 async function buscarGif(q){
-  var grid = document.getElementById('gif-grid-global');
-  if(!grid) return;
-  grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem;padding:.3rem">buscando...</span>';
-  try {
-    var r = await fetch('https://api.tenor.com/v1/search?q='+encodeURIComponent(q)+'&key=LIVDSRZULELA&limit=9&media_filter=minimal');
-    if(!r.ok) throw new Error('tenor error '+r.status);
-    var d = await r.json();
-    grid.innerHTML = '';
+  var grid=document.getElementById('gif-grid-global');
+  if(!grid)return;
+  grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem">buscando...</span>';
+  try{
+    var r=await fetch('https://api.tenor.com/v1/search?q='+encodeURIComponent(q)+'&key=LIVDSRZULELA&limit=9&media_filter=minimal');
+    if(!r.ok)throw new Error('tenor '+r.status);
+    var d=await r.json();
+    grid.innerHTML='';
     (d.results||[]).forEach(function(item){
-      var m = item.media&&item.media[0];
-      var thumb = m&&m.tinygif ? m.tinygif.url : '';
-      var full = m&&m.gif ? m.gif.url : thumb;
-      if(!thumb) return;
-      var img = document.createElement('img');
-      img.src = thumb;
-      img.className = 'gif-thumb';
-      img.onclick = function(){
-        if(!_activeInput) return;
-        var inp = document.getElementById(_activeInput);
-        if(inp){ inp.value += ' [gif:'+full+']'; inp.focus(); }
-        document.getElementById('global-gif-picker').classList.remove('on');
+      var m=item.media&&item.media[0];
+      var thumb=m&&m.tinygif?m.tinygif.url:'';
+      var full=m&&m.gif?m.gif.url:thumb;
+      if(!thumb)return;
+      var img=document.createElement('img');
+      img.src=thumb;
+      img.className='gif-thumb';
+      img.onclick=function(){
+        if(!_activeInput)return;
+        var inp=document.getElementById(_activeInput);
+        if(inp){inp.value+=' [gif:'+full+']';inp.focus();}
+        document.getElementById('global-gif-picker').style.display='none';
+        _gifShowing=false;
       };
       grid.appendChild(img);
     });
     if(!d.results||!d.results.length) grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem">sin resultados</span>';
-  } catch(e){
-    grid.innerHTML = '<span style="color:var(--red);font-size:.7rem;padding:.3rem">// error: '+e.message+'</span>';
+  }catch(e){
+    grid.innerHTML='<span style="color:var(--red);font-size:.7rem;padding:.3rem">error: '+e.message+'</span>';
   }
 }
 
 function buildMediaBar(inputId){
   return '<div class="media-bar">'+
-    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmoji(this)">😊 emoji</button>'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmoji(this)">😊</button>'+
     '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGif(this)">GIF</button>'+
   '</div>';
 }
 
-document.addEventListener('click', function(e){
-  var ep = document.getElementById('global-emoji-picker');
-  var gp = document.getElementById('global-gif-picker');
-  if(!e.target.closest('#global-emoji-picker') && !e.target.classList.contains('media-btn')){
-    if(ep) ep.style.display='none';
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#global-emoji-picker')&&!e.target.classList.contains('media-btn')){
+    var ep=document.getElementById('global-emoji-picker');
+    if(ep){ep.style.display='none';_pickerShowing=false;}
   }
-  if(!e.target.closest('#global-gif-picker') && !e.target.classList.contains('media-btn')){
-    if(gp) gp.style.display='none';
+  if(!e.target.closest('#global-gif-picker')&&!e.target.classList.contains('media-btn')){
+    var gp=document.getElementById('global-gif-picker');
+    if(gp){gp.style.display='none';_gifShowing=false;}
   }
 });
+
 
 
 function linkify(text){
