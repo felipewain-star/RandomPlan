@@ -1001,6 +1001,9 @@ function toggleComs(id){
 function renderComSection(postId, sort){
   var cs=document.getElementById('cs-'+postId);
   if(!cs)return;
+  // hide old cbox always
+  var cbox=cs.querySelector('.comment-box');
+  if(cbox) cbox.style.display='none';
   var existing=cs.querySelector('.com-section-inner');
   if(!existing){
     var inputId='cinp-'+postId;
@@ -1015,16 +1018,28 @@ function renderComSection(postId, sort){
       '</div>'+
       '<div class="com-write" id="cwrite-'+postId+'">'+
         '<input type="text" id="'+inputId+'" placeholder="escribe un comentario..." onkeydown="if(event.key===\'Enter\')sendCommentInline('+postId+')" style="flex:1;background:var(--bg0);border:1px solid var(--border);border-radius:3px;padding:.38rem .6rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none">'+
-        '<button class="media-btn" data-inp="'+inputId+'" onclick="showEmoji(this)">😊</button>'+
-        '<button class="media-btn" data-inp="'+inputId+'" onclick="showGif(this)">GIF</button>'+
+        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmoji(this)">😊</button>'+
+        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGif(this)">GIF</button>'+
         '<button class="com-send-btn" onclick="sendCommentInline('+postId+')">SEND</button>'+
       '</div>'+
       '<div class="com-list" id="clist-'+postId+'"></div>'+
       '<div class="com-load-more" id="cmore-'+postId+'"></div>';
-    // hide old comment box if exists - we use inline input now
-    var cbox=cs.querySelector('.comment-box');
-    if(cbox) cbox.style.display='none';
     cs.appendChild(inner);
+  } else {
+    // ensure com-write buttons exist even if section was created before
+    var cwrite=cs.querySelector('.com-write');
+    if(!cwrite){
+      var inputId='cinp-'+postId;
+      var writeDiv=document.createElement('div');
+      writeDiv.className='com-write';
+      writeDiv.id='cwrite-'+postId;
+      writeDiv.innerHTML=
+        '<input type="text" id="'+inputId+'" placeholder="escribe un comentario..." onkeydown="if(event.key===\'Enter\')sendCommentInline('+postId+')" style="flex:1;background:var(--bg0);border:1px solid var(--border);border-radius:3px;padding:.38rem .6rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none">'+
+        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmoji(this)">😊</button>'+
+        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGif(this)">GIF</button>'+
+        '<button class="com-send-btn" onclick="sendCommentInline('+postId+')">SEND</button>';
+      existing.insertBefore(writeDiv, existing.querySelector('.com-list'));
+    }
   }
   loadComments(postId, sort, 0);
 }
@@ -1160,12 +1175,17 @@ async function deletePost(fakeId, realId, btn){
   if(!confirm('¿Borrar este post?'))return;
   var r=await db.from('posts').delete().eq('id',realId).eq('user_id',currentUser.id);
   if(r.error){toast('error: '+r.error.message);return;}
+  // remove from DOM
   var card=document.getElementById('post-'+fakeId);
   if(card){
     card.style.opacity='0';
     card.style.transition='opacity .3s';
     setTimeout(function(){card.remove();},300);
   }
+  // remove from POSTS array so re-render doesn't bring it back
+  POSTS=POSTS.filter(function(p){return p.id!==fakeId;});
+  // remove from realPostIdMap
+  if(window.realPostIdMap) delete window.realPostIdMap[fakeId];
   toast('post borrado');
 }
 
