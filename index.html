@@ -1079,6 +1079,10 @@ async function loadComments(postId, sort, offset){
   });
   if(offset===0) list.innerHTML=html;
   else list.innerHTML+=html;
+  // attach delete buttons
+  (r.data||[]).forEach(function(c){
+    attachDelBtn('rc-'+c.id);
+  });
   if(more){
     if(r.data&&r.data.length===LIMIT){
       more.innerHTML='<button class="com-more-btn" onclick="loadComments('+postId+',\''+sort+'\','+(offset+LIMIT)+')">ver más comentarios</button>';
@@ -1089,27 +1093,51 @@ async function loadComments(postId, sort, offset){
 }
 
 function renderCommentHTML(cid, username, ciudad, tiempo, texto, votos, isMe, realComId){
-  var del='';
-  if(isMe){
-    if(realComId){
-      del='<button class="ccact com-del" onclick="deleteComment('+realComId+',this)">// borrar</button>';
-    } else {
-      // newly sent comment - just remove from DOM
-      del='<button class="ccact com-del" onclick="this.closest(\'.comment\').remove();toast(\'comentario borrado\')">// borrar</button>';
-    }
-  }
   var safeUser=username||'anon';
-  return '<div class="comment" id="'+cid+'">'+
-    '<div class="cava" style="flex-shrink:0;width:28px">'+makeAvatar(safeUser)+'</div>'+
-    '<div class="ccont">'+
-    '<div class="ccmeta"><span class="u">u/'+username+'</span> · '+tiempo+' · <span class="ci">['+ciudad+']</span></div>'+
-    '<div class="cctext">'+texto+'</div>'+
-    '<div class="ccacts">'+
-      '<button class="ccact ccvote-up" data-v="'+votos+'" onclick="vc(this,1)">▲ '+votos+'</button>'+
-      '<button class="ccact ccvote-down" onclick="vc(this,-1)">▼</button>'+
-      del+
-    '</div></div></div>';
+  var delBtn='';
+  if(isMe){
+    delBtn='<button class="ccact com-del" id="del-'+cid+'">// borrar</button>';
+  }
+  var html='<div class="comment" id="'+cid+'">';
+  html+='<div class="cava" style="flex-shrink:0;width:28px">'+makeAvatar(safeUser)+'</div>';
+  html+='<div class="ccont">';
+  html+='<div class="ccmeta"><span class="u">u/'+safeUser+'</span> · '+tiempo+' · <span class="ci">['+ciudad+']</span></div>';
+  html+='<div class="cctext">'+texto+'</div>';
+  html+='<div class="ccacts">';
+  html+='<button class="ccact ccvote-up" data-v="'+votos+'" onclick="vc(this,1)">▲ '+votos+'</button>';
+  html+='<button class="ccact ccvote-down" onclick="vc(this,-1)">▼</button>';
+  html+=delBtn;
+  html+='</div></div></div>';
+  // attach delete after DOM insert via registry
+  if(isMe){
+    window._delRegistry=window._delRegistry||{};
+    window._delRegistry[cid]={realComId:realComId};
+  }
+  return html;
 }
+
+function attachDelBtn(cid){
+  var btn=document.getElementById('del-'+cid);
+  if(!btn)return;
+  btn.addEventListener('click',function(){
+    var reg=window._delRegistry&&window._delRegistry[cid];
+    var realComId=reg?reg.realComId:null;
+    if(!confirm('¿Borrar este comentario?'))return;
+    if(realComId&&currentUser){
+      db.from('comentarios').delete().eq('id',realComId).eq('user_id',currentUser.id).then(function(r){
+        if(r.error){toast('error al borrar');return;}
+        var card=document.getElementById(cid);
+        if(card)card.remove();
+        toast('comentario borrado');
+      });
+    } else {
+      var card=document.getElementById(cid);
+      if(card)card.remove();
+      toast('comentario borrado');
+    }
+  });
+}
+
 
 async function deleteComment(comId, btn){
   if(!currentUser)return;
@@ -1201,8 +1229,10 @@ async function sendComment(postId){
   if(list){
     var safeUsername=currentPerfil?currentPerfil.username:(username||'anon');
     var safeCiudad=currentPerfil?currentPerfil.ciudad:(ciudad||'Chile');
-    var newHtml=renderCommentHTML('new-'+Date.now(), safeUsername, safeCiudad, 'ahora', linkify(texto), 0, true, null);
+    var newCid='new-'+Date.now();
+    var newHtml=renderCommentHTML(newCid, safeUsername, safeCiudad, 'ahora', linkify(texto), 0, true, null);
     list.innerHTML=newHtml+list.innerHTML;
+    setTimeout(function(){attachDelBtn(newCid);},0);
   }
   var box=document.getElementById('cbox-'+postId);
   if(box)box.innerHTML='escribe un comentario...';
