@@ -899,8 +899,13 @@ async function loadRealPosts(filter){
   var converted=realPosts.map(function(p,i){
     var com=p.comunidades||{nombre:'chile',icono:'🇨🇱'};
     var user=p.perfiles||{username:'anon',ciudad:'Chile'};
+    var fakeId=9000+i;
+    // map fake id to real supabase id for comment loading
+    window.realPostIdMap=window.realPostIdMap||{};
+    window.realPostIdMap[fakeId]=p.id;
     return {
-      id: 9000+i,
+      id: fakeId,
+      realId: p.id,
       sub: com.nombre,
       ic: com.icono,
       user: {name:user.username, av:'👤', ciudad:user.ciudad||'Chile'},
@@ -984,7 +989,9 @@ function getComs(id){
   return p?p.coms:0;
 }
 async function loadRealComments(postId){
-  var r=await db.from('comentarios').select('*, perfiles(username,ciudad)').eq('post_id',postId).order('created_at',{ascending:false}).limit(30);
+  // resolve real supabase id if this is a fake id
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||postId;
+  var r=await db.from('comentarios').select('*, perfiles(username,ciudad)').eq('post_id',realId).order('created_at',{ascending:false}).limit(30);
   if(r.error||!r.data||!r.data.length) return;
   var list=document.getElementById('clist-'+postId);
   if(!list) return;
@@ -1234,10 +1241,12 @@ async function sendComment(postId){
   if(!sess.data||!sess.data.session){showModal('login');return;}
   var rp=await db.from('perfiles').select('*').eq('id',sess.data.session.user.id).single();
   var username=rp.data?rp.data.username:'anon';
+  // use real supabase post id
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||postId;
   await db.from('comentarios').insert({
     texto:texto,
     user_id:sess.data.session.user.id,
-    post_id:postId,
+    post_id:realId,
     votos:0
   });
   // show comment inline
