@@ -962,13 +962,39 @@ function toggleComs(id){
   var el=document.getElementById('cs-'+id);
   if(!el)return;
   el.classList.toggle('open',openComs[id]);
-  // update button text
   var btns=document.querySelectorAll('#post-'+id+' .cact');
   if(btns[0]) btns[0].textContent=openComs[id]?'// cerrar comentarios':'// '+getComs(id)+' comentarios';
+  // load real comments from supabase when opening
+  if(openComs[id]){
+    loadRealComments(id);
+  }
 }
 function getComs(id){
   var p=POSTS.find(function(x){return x.id===id;});
   return p?p.coms:0;
+}
+async function loadRealComments(postId){
+  var r=await db.from('comentarios').select('*, perfiles(username,ciudad)').eq('post_id',postId).order('created_at',{ascending:false}).limit(30);
+  if(r.error||!r.data||!r.data.length) return;
+  var list=document.getElementById('clist-'+postId);
+  if(!list) return;
+  var html='';
+  r.data.forEach(function(c){
+    var user=c.perfiles||{username:'anon',ciudad:'Chile'};
+    var cid='rc-'+c.id;
+    html+='<div class="comment" id="'+cid+'">';
+    html+='<div class="cava">👤</div>';
+    html+='<div class="ccont">';
+    html+='<div class="ccmeta"><span class="u">u/'+user.username+'</span> · ahora · <span class="ci">['+user.ciudad+']</span></div>';
+    html+='<div class="cctext">'+c.texto+'</div>';
+    html+='<div class="ccacts">';
+    html+='<button class="ccact ccvote-up" onclick="voteComment(this,1)">▲ '+(c.votos||0)+'</button>';
+    html+='<button class="ccact ccvote-down" onclick="voteComment(this,-1)">▼</button>';
+    html+='</div>';
+    html+='</div></div>';
+  });
+  // prepend real comments before bot comments
+  list.innerHTML=html+list.innerHTML;
 }
 function filterFeed(sub,el){
   document.querySelectorAll('.sf-item').forEach(function(i){i.classList.remove('on')});
@@ -1057,10 +1083,9 @@ function showModal(tipo){
       '<div class="modal-sw">¿no tienes cuenta? <a onclick="showModal(\'register\')">registrar</a></div>';
   } else if(tipo==='register'){
     c='<h2>$ crear_cuenta</h2><p class="sub">// únete a RandomPlan</p>'+
-      '<div class="field"><label>username</label><input type="text" id="m-user" placeholder="condor_veloz_42"></div>'+
-      '<div class="field"><label>email</label><input type="email" id="m-email" placeholder="tu@email.cl"></div>'+
+      '<div class="field"><label>usuario</label><input type="text" id="m-user" placeholder="condor_veloz_42" autocomplete="off"></div>'+
+      '<div class="field"><label>correo</label><input type="email" id="m-email" placeholder="tu@email.cl" autocomplete="off"></div>'+
       '<div class="field"><label>contraseña</label><input type="password" id="m-pass" placeholder="mínimo 6 caracteres"></div>'+
-      '<div class="field"><label>ciudad (opcional)</label><input type="text" id="m-ciudad" placeholder="Santiago, Valparaíso..."></div>'+
       '<div class="modal-err" id="m-err"></div>'+
       '<button class="modal-sub" id="m-sub" onclick="doRegister()">./register --exec</button>'+
       '<div class="modal-sw">¿ya tienes cuenta? <a onclick="showModal(\'login\')">login</a></div>';
@@ -1101,14 +1126,18 @@ async function doRegister(){
   var username=document.getElementById('m-user').value.trim();
   var email=document.getElementById('m-email').value.trim();
   var pass=document.getElementById('m-pass').value;
-  var ciudad=document.getElementById('m-ciudad').value.trim();
   var btn=document.getElementById('m-sub');
   var err=document.getElementById('m-err');
   if(!username){err.textContent='// error: username requerido';return;}
+  if(username.length < 3){err.textContent='// error: username mínimo 3 caracteres';return;}
+  if(!email){err.textContent='// error: email requerido';return;}
+  if(pass.length < 6){err.textContent='// error: contraseña mínimo 6 caracteres';return;}
   btn.disabled=true;btn.textContent='// creando cuenta...';
   var r=await db.auth.signUp({email:email,password:pass});
   if(r.error){err.textContent='// error: '+r.error.message;btn.disabled=false;btn.textContent='./register --exec';return;}
-  await db.from('perfiles').insert({id:r.data.user.id,username:username,ciudad:ciudad||'Chile'});
+  // upsert perfil con username correcto (overrides trigger)
+  var rp=await db.from('perfiles').upsert({id:r.data.user.id,username:username,ciudad:'Chile',karma:0},{onConflict:'id'});
+  if(rp.error){err.textContent='// error guardando perfil: '+rp.error.message;btn.disabled=false;btn.textContent='./register --exec';return;}
   currentUser=r.data.user;
   await loadPerfil();
   closeModal();
