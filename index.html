@@ -115,6 +115,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .ccact{background:none;border:none;font-size:.64rem;color:var(--text3);cursor:pointer;padding:.1rem .26rem;border-radius:2px;font-family:var(--mono);transition:all .1s}
 .ccact:hover{background:var(--bg2);color:var(--green)}
 .ccvotes{font-size:.64rem;color:var(--green);font-weight:700}
+.ccvote-up.on{color:var(--green);font-weight:700}
+.ccvote-down.on{color:var(--purple)}
 
 /* SIDEBAR R */
 .sidebar-r{width:255px;flex-shrink:0;position:sticky;top:56px;height:fit-content}
@@ -739,10 +741,109 @@ var votes={},openComs={},joined={};
 function fmtV(n){return n>=1000?(n/1000).toFixed(1)+'k':n}
 
 function renderComs(cd){
-  return cd.map(function(c){
-    return '<div class="comment"><div class="cava">'+c.bot.av+'</div><div class="ccont"><div class="ccmeta"><span class="u">u/'+c.bot.name+'</span> · '+c.t+' · <span class="ci">['+c.bot.ciudad+']</span></div><div class="cctext">'+c.txt+'</div><div class="ccacts"><span class="ccvotes">▲ '+c.v+'</span><button class="ccact">reply</button><button class="ccact">share</button></div></div></div>';
+  return cd.map(function(c,i){
+    var cid='c'+Math.random().toString(36).slice(2);
+    var html='<div class="comment" id="'+cid+'">';
+    html+='<div class="cava">'+c.bot.av+'</div>';
+    html+='<div class="ccont">';
+    html+='<div class="ccmeta"><span class="u">u/'+c.bot.name+'</span> · '+c.t+' · <span class="ci">['+c.bot.ciudad+']</span></div>';
+    html+='<div class="cctext">'+c.txt+'</div>';
+    html+='<div class="ccacts">';
+    html+='<button class="ccact ccvote-up" onclick="voteComment(this,1)">▲ '+c.v+'</button>';
+    html+='<button class="ccact ccvote-down" onclick="voteComment(this,-1)">▼</button>';
+    html+='</div>';
+    html+='</div></div>';
+    return html;
   }).join('');
 }
+
+function generateBotComments(count, existingCd){
+  // start with existing comments
+  var all=existingCd.slice();
+  var needed=Math.min(count, 50) - all.length; // max 50 visible
+  var phrases=[
+    'totalmente de acuerdo con esto',
+    'no puedo creer que nadie hablaba de esto antes',
+    'llegué tarde pero coincido 100%',
+    'esto me pasó exactamente igual po',
+    'fuego este post, compartido',
+    'el que escribió esto tiene razón en todo',
+    'oye y nadie más piensa lo mismo?',
+    'llevo pensando esto hace tiempo y nadie lo decía',
+    'primera vez que comento pero tenía que decirlo',
+    'esto es exactamente lo que necesitaba leer hoy',
+    'no cap, esto es un 10/10',
+    'me alegra que alguien lo diga finalmente',
+    'en chile nadie habla de esto y es grave',
+    'comparto esto con todo mi grupo familiar jajaja',
+    'mi vieja siempre decía lo mismo y tenía razón',
+    'esto deberíamos discutirlo más en serio',
+    'demasiado real lo que dice acá',
+    'el que no está de acuerdo que explique por qué',
+    'igual hay puntos que se pueden debatir',
+    'yo lo veo diferente pero entiendo el punto',
+    'interesante perspectiva, no lo había visto así',
+    'habría que ver los dos lados igual',
+    'depende mucho del contexto en cada caso',
+    'en región esto se siente distinto que en santiago',
+    'desde valpo y confirmo todo lo que dice',
+    'en concepción tenemos el mismo problema',
+    'el sur de chile no existe para los santiaguinos',
+    'alguien de antofagasta? acá es peor',
+    'iquique tiene sus propios dramas aparte',
+    'la capital siempre se lleva toda la atención',
+    'oye pero igual hay cosas positivas que rescatar',
+    'no todo es malo tampoco seamos justos',
+    'hay que ser más optimistas igual',
+    'esto va a mejorar, estoy convencido',
+    'la gente joven está cambiando las cosas',
+    'la gen z tiene más consciencia que las anteriores',
+    'mis papás no entienden estas cosas y cuesta explicarlo',
+    'igual hay brecha generacional en todo esto',
+    'el cambio es lento pero va llegando',
+    'paciencia que todo pasa',
+    'mientras tanto vivamos el día a día no más',
+    'al final uno hace lo que puede con lo que tiene',
+    'la vida es cara pero hay que seguir igual',
+    'ánimo a todos los que están leyendo esto',
+    'un abrazo virtual al que lo necesite',
+    'buena vibra para todos acá',
+    'gracias por compartir esto, sirve mucho',
+    'esto me ayudó a ver las cosas diferente',
+    'volvería a leer esto en un mal día',
+    'guardado para cuando necesite ánimo',
+  ];
+  var tiempos=['1min','5min','12min','23min','45min','1h','2h','3h','5h','8h','12h','1d'];
+  for(var i=0;i<needed;i++){
+    var bot=BOTS[Math.floor(Math.random()*BOTS.length)];
+    all.push({
+      bot:bot,
+      txt:phrases[Math.floor(Math.random()*phrases.length)],
+      v:Math.floor(Math.random()*500),
+      t:tiempos[Math.floor(Math.random()*tiempos.length)]
+    });
+  }
+  return all;
+}
+
+function voteComment(btn, dir){
+  var acts=btn.parentElement;
+  var upBtn=acts.querySelector('.ccvote-up');
+  var downBtn=acts.querySelector('.ccvote-down');
+  var current=parseInt(upBtn.textContent.replace('▲ ',''))||0;
+  if(btn.classList.contains('on')){
+    btn.classList.remove('on');
+    if(dir===1) upBtn.textContent='▲ '+(current-1);
+  } else {
+    // remove other
+    upBtn.classList.remove('on');
+    downBtn.classList.remove('on');
+    btn.classList.add('on');
+    if(dir===1) upBtn.textContent='▲ '+(current+1);
+    else upBtn.textContent='▲ '+(current-1);
+  }
+}
+
 function renderPost(p){
   var voto=votes[p.id]||0;
   var v=p.votos+voto;
@@ -771,7 +872,8 @@ function renderPost(p){
   html+='<div class="comments-section" id="cs-'+p.id+'">';
   html+='<div class="comment-box" id="cbox-'+p.id+'" onclick="openCommentBox('+p.id+')">escribe un comentario...</div>';
   html+='<div id="clist-'+p.id+'"></div>';
-  html+=renderComs(p.cd);
+  var allComs=generateBotComments(p.coms, p.cd||[]);
+  html+=renderComs(allComs);
   html+='</div>';
   html+='</div></div>';
   return html;
