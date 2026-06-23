@@ -52,6 +52,34 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 @keyframes badge-pulse{0%,100%{opacity:1}50%{opacity:.5}}
 
 /* LAYOUT */
+/* TICKER */
+.ticker-wrap{
+  background:var(--bg1);border-bottom:1px solid var(--border);
+  height:28px;overflow:hidden;position:sticky;top:48px;z-index:199;
+  display:flex;align-items:center;
+}
+.ticker-track{
+  display:flex;align-items:center;gap:0;
+  animation:ticker-scroll 60s linear infinite;
+  white-space:nowrap;
+}
+.ticker-wrap:hover .ticker-track{animation-play-state:paused}
+@keyframes ticker-scroll{
+  0%{transform:translateX(0)}
+  100%{transform:translateX(-50%)}
+}
+.ticker-item{
+  display:inline-flex;align-items:center;gap:.35rem;
+  padding:0 1.2rem;border-right:1px solid var(--border);
+  font-family:var(--mono);font-size:.68rem;color:var(--text2);
+  cursor:default;
+}
+.ticker-sym{color:var(--text3);font-weight:700;font-size:.65rem}
+.ticker-price{color:var(--text1);font-weight:700}
+.ticker-chg.up{color:var(--green)}
+.ticker-chg.down{color:var(--red)}
+.ticker-loading{font-family:var(--mono);font-size:.65rem;color:var(--text3);padding:0 1rem}
+
 .main-wrap{display:flex;transition:padding-right .25s}
 .main-wrap.chat-open{padding-right:var(--chat-w)}
 .content{flex:1;display:flex;gap:.9rem;max-width:1060px;margin:0 auto;padding:.9rem;width:100%}
@@ -141,7 +169,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .u-avatar-sm{width:22px;height:22px;font-size:.6rem}
 
 /* SIDEBAR R */
-.sidebar-r{width:255px;flex-shrink:0;position:sticky;top:56px;height:fit-content}
+.sidebar-r{width:255px;flex-shrink:0;position:sticky;top:84px;height:fit-content}
 .widget{background:var(--bg1);border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:.6rem}
 .whead{padding:.42rem .75rem;font-family:var(--mono);font-size:.65rem;font-weight:700;color:var(--green);letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg0);display:flex;align-items:center;gap:.35rem}
 .whead::before{content:'//';color:var(--text3);font-weight:400}
@@ -323,6 +351,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
       <button class="nav-btn" onclick="doLogout()">salir</button>
     </div>
     <button class="chat-toggle" id="chat-toggle-btn" onclick="toggleChat()">▮ CHAT <span class="chat-badge" id="chat-badge">0</span></button>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker-wrap" id="ticker-wrap">
+  <div class="ticker-track" id="ticker-track">
+    <span class="ticker-loading">// cargando precios...</span>
   </div>
 </div>
 
@@ -1734,6 +1769,105 @@ async function doPost(){
     setTimeout(function(){loadRealPosts(null);},500);
   }
 }
+
+// ── TICKER ──
+var tickerAssets=[
+  {sym:'BTC',label:'₿ BTC',type:'crypto',id:'bitcoin'},
+  {sym:'ETH',label:'Ξ ETH',type:'crypto',id:'ethereum'},
+  {sym:'AAPL',label:'AAPL',type:'stock'},
+  {sym:'TSLA',label:'TSLA',type:'stock'},
+  {sym:'NVDA',label:'NVDA',type:'stock'},
+  {sym:'DOLAR',label:'USD/CLP',type:'clp'},
+  {sym:'XAU',label:'ORO',type:'metal',id:'gold'},
+  {sym:'XAG',label:'PLATA',type:'metal',id:'silver'},
+];
+
+var tickerData={};
+
+async function loadTicker(){
+  try {
+    // Crypto: CoinGecko free API
+    var cryptoIds=tickerAssets.filter(function(a){return a.type==='crypto';}).map(function(a){return a.id;}).join(',');
+    var rc=await fetch('https://api.coingecko.com/api/v3/simple/price?ids='+cryptoIds+'&vs_currencies=usd&include_24hr_change=true');
+    if(rc.ok){
+      var cd=await rc.json();
+      tickerAssets.forEach(function(a){
+        if(a.type==='crypto'&&cd[a.id]){
+          tickerData[a.sym]={price:cd[a.id].usd,chg:cd[a.id].usd_24h_change||0};
+        }
+      });
+    }
+  } catch(e){}
+
+  try {
+    // USD/CLP: mindicador.cl
+    var rd=await fetch('https://mindicador.cl/api/dolar');
+    if(rd.ok){
+      var dd=await rd.json();
+      if(dd.serie&&dd.serie[0]){
+        tickerData['DOLAR']={price:dd.serie[0].valor,chg:0,isCLP:true};
+      }
+    }
+  } catch(e){}
+
+  try {
+    // Stocks + metals via Yahoo Finance (no-cors workaround with allorigins)
+    var symbols=['AAPL','TSLA','NVDA','GC=F','SI=F'];
+    for(var si=0;si<symbols.length;si++){
+      var sym=symbols[si];
+      try {
+        var url='https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=2d';
+        var proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);
+        var ry=await fetch(proxy);
+        if(!ry.ok) continue;
+        var py=await ry.json();
+        var data=JSON.parse(py.contents);
+        var result=data&&data.chart&&data.chart.result&&data.chart.result[0];
+        if(!result) continue;
+        var meta=result.meta;
+        var price=meta.regularMarketPrice||0;
+        var prev=meta.previousClose||price;
+        var chg=prev>0?((price-prev)/prev*100):0;
+        var mapSym={'GC=F':'XAU','SI=F':'XAG'};
+        var key=mapSym[sym]||sym;
+        tickerData[key]={price:price,chg:chg};
+      } catch(e){}
+    }
+  } catch(e){}
+
+  renderTicker();
+}
+
+function renderTicker(){
+  var items='';
+  tickerAssets.forEach(function(a){
+    var d=tickerData[a.sym];
+    if(!d) return;
+    var priceStr=a.sym==='DOLAR'?
+      '$'+Math.round(d.price).toLocaleString('es-CL')+' CLP':
+      '$'+d.price.toLocaleString('en-US',{minimumFractionDigits:d.price>100?2:4,maximumFractionDigits:d.price>100?2:4});
+    var chgStr=d.chg!==0?(d.chg>0?'+':'')+d.chg.toFixed(2)+'%':'';
+    var chgClass=d.chg>0?'up':d.chg<0?'down':'';
+    var arrow=d.chg>0?'▲':d.chg<0?'▼':'';
+    items+='<span class="ticker-item">'+
+      '<span class="ticker-sym">'+a.label+'</span>'+
+      '<span class="ticker-price">'+priceStr+'</span>'+
+      (chgStr?'<span class="ticker-chg '+chgClass+'">'+arrow+' '+chgStr+'</span>':'')+
+    '</span>';
+  });
+  if(!items){ document.getElementById('ticker-track').innerHTML='<span class="ticker-loading">// error cargando precios</span>'; return; }
+  // duplicate for seamless loop
+  var track=document.getElementById('ticker-track');
+  track.innerHTML=items+items;
+  // adjust animation duration based on content width
+  var totalW=track.scrollWidth/2;
+  var duration=Math.max(30, totalW/80);
+  track.style.animationDuration=duration+'s';
+}
+
+// Load ticker and refresh every 60s
+loadTicker();
+setInterval(loadTicker, 60000);
 
 // Init
 addMsg(null,'// chat global activo · randomplan.cl',false,true);
