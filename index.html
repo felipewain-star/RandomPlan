@@ -3147,7 +3147,18 @@ async function loadProfile(username){
   }
   try{
     var rp=await db.from('perfiles').select('*').eq('username',username).single();
-    if(rp.error||!rp.data){body.innerHTML='<div class="profile-empty">// usuario no encontrado</div>';return;}
+    if(rp.error||!rp.data){
+      // usuario desconocido - mostrar perfil genérico
+      var karma2=hashNum(username,500)+5;
+      var lvlg=getKarmaLevel(karma2);
+      body.innerHTML='<div class="profile-card">'+makeAvatar(username,'lg')+'<div>'+
+        '<div style="font-size:1.1rem;font-weight:700;color:var(--text1);font-family:var(--mono)">u/'+username+'</div>'+
+        '<div style="margin:.3rem 0">'+karmaTag(karma2)+'</div>'+
+        '<div style="font-size:.65rem;color:var(--text3);font-family:var(--mono)">usuario de RandomPlan</div>'+
+        '</div></div>'+
+        '<div class="profile-empty">// sin historial público disponible</div>';
+      return;
+    }
     var u=rp.data;
     var lvl2=getKarmaLevel(u.karma||0);
     var rpo=await db.from('posts').select('*,comunidades(nombre,icono)').eq('user_id',u.id).order('created_at',{ascending:false}).limit(8);
