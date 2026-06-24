@@ -211,6 +211,22 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .link-preview-title{font-size:.82rem;font-weight:700;color:var(--text1);line-height:1.3;margin-bottom:.2rem;font-family:var(--sans)}
 .link-preview-desc{font-size:.75rem;color:var(--text2);line-height:1.4;font-family:var(--sans)}
 .link-preview-loading{padding:.6rem .7rem;font-size:.72rem;color:var(--text3);font-family:var(--mono)}
+/* PERFIL */
+.profile-wrap{display:none;position:fixed;inset:0;z-index:500;background:var(--bg0);overflow-y:auto}
+.profile-wrap.on{display:block}
+.profile-header{background:var(--bg1);border-bottom:1px solid var(--border);padding:1.2rem 1.5rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:10}
+.profile-back{background:none;border:1px solid var(--border2);color:var(--text3);padding:.3rem .7rem;border-radius:3px;font-family:var(--mono);font-size:.72rem;cursor:pointer}
+.profile-back:hover{border-color:var(--green);color:var(--green)}
+.profile-body{max-width:740px;margin:0 auto;padding:1.5rem 1rem}
+.profile-card{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:1.5rem;margin-bottom:1rem;display:flex;gap:1.2rem;align-items:center}
+.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:1rem 0}
+.profile-stat{background:var(--bg0);border:1px solid var(--border);border-radius:4px;padding:.7rem;text-align:center}
+.profile-stat-n{font-size:1.4rem;font-weight:700;font-family:var(--mono);color:var(--green)}
+.profile-stat-l{font-size:.62rem;color:var(--text3);font-family:var(--mono);margin-top:.2rem}
+.profile-section{margin-top:1.2rem}
+.profile-section-title{font-family:var(--mono);font-size:.72rem;color:var(--text3);margin-bottom:.6rem;padding-bottom:.3rem;border-bottom:1px solid var(--border)}
+.profile-empty{font-family:var(--mono);font-size:.72rem;color:var(--text3);padding:1rem;text-align:center}
+.karma-tag{font-size:.6rem;font-family:var(--mono);border:1px solid;border-radius:2px;padding:.05rem .35rem;white-space:nowrap;opacity:.85}
 .u-avatar{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;font-family:var(--mono);border:1.5px solid transparent}
 .u-avatar-lg{width:36px;height:36px;font-size:.85rem}
 .u-avatar-sm{width:22px;height:22px;font-size:.6rem}
@@ -557,6 +573,15 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 <div id="global-gif-picker" style="display:none;position:fixed;z-index:99999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;width:280px;box-shadow:0 4px 24px rgba(0,0,0,.8)">
   <input id="gif-search-global" placeholder="buscar GIF + Enter" style="width:100%;background:#0d1117;border:1px solid #2a3f55;border-radius:3px;padding:.38rem .6rem;font-family:monospace;font-size:.75rem;color:#e6edf3;outline:none;margin-bottom:.4rem;box-sizing:border-box" onkeydown="if(event.key==='Enter'){document.getElementById('gif-grid-global').dataset.loaded='1';buscarGif(this.value)}">
   <div id="gif-grid-global" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:165px;overflow-y:auto"></div>
+</div>
+
+<!-- PERFIL -->
+<div class="profile-wrap" id="profile-wrap">
+  <div class="profile-header">
+    <button class="profile-back" onclick="closeProfile()">← volver</button>
+    <span id="profile-title" style="font-family:var(--mono);font-size:.82rem;color:var(--text2)"></span>
+  </div>
+  <div class="profile-body" id="profile-body"></div>
 </div>
 
 <div class="modal-wrap" id="modal-wrap" onclick="closeMBg(event)">
@@ -1328,7 +1353,7 @@ function renderPost(p){
   html+='<div class="cmeta">';
   html+='<span class="csub" onclick="filterFeedSub(this.dataset.sub)" data-sub="'+p.sub+'">'+p.ic+' '+p.sub+'</span>';
   html+='<span class="dot">::</span>';
-  html+='<span class="cuser">'+makeAvatar(p.user.name,'sm')+' u/'+p.user.name+'</span>';
+  html+='<span class="cuser" data-user="'+p.user.name+'" onclick="showProfile(this.dataset.user)" style="cursor:pointer">'+makeAvatar(p.user.name,'sm')+' u/'+p.user.name+(p.userKarma?' '+karmaTag(p.userKarma):'')+'</span>';
   html+='<span class="dot">::</span>';
   html+='<span>'+p.t+'</span>';
   html+='<span class="flair '+p.fc+'">'+p.flair+'</span>';
@@ -1407,6 +1432,7 @@ async function loadRealPosts(filter){
       sub: com.nombre,
       ic: com.icono,
       user: {name:user.username, av:'👤', ciudad:user.ciudad||'Chile'},
+      userKarma: user.karma||0,
       t: p.created_at ? calcTime(p.created_at) : 'ahora',
       flair: com.nombre,
       fc: 'g',
@@ -1605,7 +1631,7 @@ function renderCommentHTML(cid, username, ciudad, tiempo, texto, votos, isMe, re
   var html='<div class="comment" id="'+cid+'">';
   html+='<div class="cava" style="flex-shrink:0;width:28px">'+makeAvatar(safeUser)+'</div>';
   html+='<div class="ccont">';
-  html+='<div class="ccmeta"><span class="u">u/'+safeUser+'</span> · '+tiempo+'</div>';
+  html+='<div class="ccmeta"><span class="u" data-user="'+safeUser+'" onclick="showProfile(this.dataset.user)" style="cursor:pointer">u/'+safeUser+'</span> · '+tiempo+'</div>';
   html+='<div class="cctext">'+texto+'</div>';
   html+='<div class="ccacts">';
   html+='<button class="ccact ccvote-up" data-v="'+votos+'" onclick="vc(this,1)">▲ '+votos+'</button>';
@@ -1738,6 +1764,13 @@ async function sendCommentInline(postId){
     list.innerHTML=newHtml+list.innerHTML;
     setTimeout(function(){attachDelBtn(newCid);},0);
   }
+  // increment own karma for activity
+  if(currentPerfil){
+    currentPerfil.karma=(currentPerfil.karma||0)+1;
+    db.from('perfiles').update({karma:currentPerfil.karma}).eq('id',currentUser.id);
+    var un=document.getElementById('user-name');
+    if(un) un.innerHTML=makeAvatar(currentPerfil.username,'sm')+' <span style="color:var(--green);font-size:.78rem">u/'+currentPerfil.username+'</span> '+karmaTag(currentPerfil.karma);
+  }
   toast('comentario publicado');
 }
 
@@ -1770,6 +1803,13 @@ async function sendComment(postId){
   }
   var box=document.getElementById('cbox-'+postId);
   if(box)box.innerHTML='escribe un comentario...';
+  // increment own karma for activity
+  if(currentPerfil){
+    currentPerfil.karma=(currentPerfil.karma||0)+1;
+    db.from('perfiles').update({karma:currentPerfil.karma}).eq('id',currentUser.id);
+    var un=document.getElementById('user-name');
+    if(un) un.innerHTML=makeAvatar(currentPerfil.username,'sm')+' <span style="color:var(--green);font-size:.78rem">u/'+currentPerfil.username+'</span> '+karmaTag(currentPerfil.karma);
+  }
   toast('comentario publicado');
 }
 
@@ -1823,6 +1863,148 @@ function togglePrev(btn, pid){
 }
 
 function tickVotes(){POSTS.forEach(function(p){if(Math.random()<.2){p.votos+=Math.floor(Math.random()*3);var el=document.getElementById('vc-'+p.id);if(el)el.textContent=fmtV(p.votos+(votes[p.id]||0))}})}
+
+// ── PERFIL ──
+function showProfile(username){
+  var wrap=document.getElementById('profile-wrap');
+  var body=document.getElementById('profile-body');
+  var title=document.getElementById('profile-title');
+  if(!wrap||!body) return;
+  title.textContent='u/'+username;
+  body.innerHTML='<div style="text-align:center;padding:2rem;font-family:var(--mono);font-size:.75rem;color:var(--text3)">// cargando perfil...</div>';
+  wrap.classList.add('on');
+  document.body.style.overflow='hidden';
+  loadProfile(username);
+}
+
+function closeProfile(){
+  var wrap=document.getElementById('profile-wrap');
+  if(wrap) wrap.classList.remove('on');
+  document.body.style.overflow='';
+}
+
+async function loadProfile(username){
+  var body=document.getElementById('profile-body');
+  try {
+    // fetch perfil
+    var rp=await db.from('perfiles').select('*').eq('username',username).single();
+    if(rp.error||!rp.data){
+      body.innerHTML='<div class="profile-empty">// usuario no encontrado</div>';
+      return;
+    }
+    var u=rp.data;
+    var lvl=getKarmaLevel(u.karma||0);
+
+    // fetch posts del usuario
+    var rpo=await db.from('posts')
+      .select('*, comunidades(nombre,icono)')
+      .eq('user_id',u.id)
+      .order('created_at',{ascending:false})
+      .limit(10);
+
+    // fetch comentarios del usuario
+    var rc=await db.from('comentarios')
+      .select('*, posts(titulo)')
+      .eq('user_id',u.id)
+      .order('created_at',{ascending:false})
+      .limit(10);
+
+    var posts=rpo.data||[];
+    var coms=rc.data||[];
+
+    var html='';
+
+    // card principal
+    html+='<div class="profile-card">';
+    html+=makeAvatar(username,'lg');
+    html+='<div>';
+    html+='<div style="font-size:1.1rem;font-weight:700;color:var(--text1);font-family:var(--mono)">u/'+username+'</div>';
+    html+='<div style="margin:.3rem 0">'+karmaTag(u.karma)+'</div>';
+    html+='<div style="font-size:.65rem;color:var(--text3);font-family:var(--mono)">miembro desde '+new Date(u.created_at||Date.now()).toLocaleDateString('es-CL',{timeZone:'America/Santiago'})+'</div>';
+    html+='</div></div>';
+
+    // stats
+    html+='<div class="profile-stats">';
+    html+='<div class="profile-stat"><div class="profile-stat-n" style="color:var(--green)">'+(u.karma||0)+'</div><div class="profile-stat-l">karma</div></div>';
+    html+='<div class="profile-stat"><div class="profile-stat-n" style="color:var(--blue)">'+posts.length+'</div><div class="profile-stat-l">posts</div></div>';
+    html+='<div class="profile-stat"><div class="profile-stat-n" style="color:var(--purple)">'+coms.length+'</div><div class="profile-stat-l">comentarios</div></div>';
+    html+='</div>';
+
+    // nivel progress
+    html+='<div style="background:var(--bg0);border:1px solid var(--border);border-radius:4px;padding:.7rem;margin-bottom:.8rem">';
+    html+='<div style="font-size:.65rem;font-family:var(--mono);color:var(--text3);margin-bottom:.4rem">// nivel: <span style="color:'+lvl.color+'">'+lvl.label+'</span></div>';
+    var nextLevels=[10,100,500,1000,5000,10000];
+    var next=nextLevels.find(function(n){return n>(u.karma||0);});
+    if(next){
+      var prev=nextLevels[nextLevels.indexOf(next)-1]||0;
+      var pct=Math.min(100,Math.floor(((u.karma||0)-prev)/(next-prev)*100));
+      html+='<div style="background:var(--bg2);border-radius:2px;height:4px;margin-top:.4rem">';
+      html+='<div style="background:'+lvl.color+';width:'+pct+'%;height:4px;border-radius:2px;transition:width .5s"></div>';
+      html+='</div>';
+      html+='<div style="font-size:.6rem;color:var(--text3);font-family:var(--mono);margin-top:.3rem">'+pct+'% hacia el siguiente nivel ('+next+' karma)</div>';
+    }
+    html+='</div>';
+
+    // posts
+    html+='<div class="profile-section">';
+    html+='<div class="profile-section-title">// posts recientes</div>';
+    if(!posts.length){
+      html+='<div class="profile-empty">// sin posts aún</div>';
+    } else {
+      posts.forEach(function(p){
+        var com=p.comunidades||{nombre:'chile',icono:'🇨🇱'};
+        html+='<div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:.6rem .8rem;margin-bottom:.4rem;cursor:pointer" onclick="closeProfile()">';
+        html+='<div style="font-size:.65rem;color:var(--text3);font-family:var(--mono);margin-bottom:.3rem">'+com.icono+' p/'+com.nombre+' · '+new Date(p.created_at).toLocaleDateString('es-CL',{timeZone:'America/Santiago'})+'</div>';
+        html+='<div style="font-size:.85rem;font-weight:700;color:var(--text1)">'+p.titulo+'</div>';
+        html+='<div style="font-size:.7rem;color:var(--text3);font-family:var(--mono);margin-top:.3rem">▲ '+(p.votos||0)+' votos</div>';
+        html+='</div>';
+      });
+    }
+    html+='</div>';
+
+    // comentarios
+    html+='<div class="profile-section">';
+    html+='<div class="profile-section-title">// comentarios recientes</div>';
+    if(!coms.length){
+      html+='<div class="profile-empty">// sin comentarios aún</div>';
+    } else {
+      coms.forEach(function(c){
+        var postTitle=c.posts?c.posts.titulo:'post eliminado';
+        html+='<div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:.6rem .8rem;margin-bottom:.4rem">';
+        html+='<div style="font-size:.65rem;color:var(--text3);font-family:var(--mono);margin-bottom:.3rem">en: '+postTitle.slice(0,60)+'...</div>';
+        html+='<div style="font-size:.82rem;color:var(--text2)">'+c.texto+'</div>';
+        html+='<div style="font-size:.7rem;color:var(--text3);font-family:var(--mono);margin-top:.3rem">▲ '+(c.votos||0)+'</div>';
+        html+='</div>';
+      });
+    }
+    html+='</div>';
+
+    body.innerHTML=html;
+  } catch(e){
+    body.innerHTML='<div class="profile-empty">// error cargando perfil: '+e.message+'</div>';
+  }
+}
+
+// ── KARMA ──
+function getKarmaLevel(karma){
+  if(karma>=10000) return {label:'⚡ leyenda',color:'#ffd700'};
+  if(karma>=5000)  return {label:'🔥 élite',color:'#ff6b35'};
+  if(karma>=1000)  return {label:'💎 veterano',color:'#79c0ff'};
+  if(karma>=500)   return {label:'⭐ activo',color:'#00ff88'};
+  if(karma>=100)   return {label:'📈 regular',color:'#a5d6ff'};
+  if(karma>=10)    return {label:'🌱 nuevo',color:'#8b949e'};
+  return {label:'👾 anon',color:'#484f58'};
+}
+
+function karmaTag(karma){
+  var lvl=getKarmaLevel(karma||0);
+  return '<span class="karma-tag" style="color:'+lvl.color+';border-color:'+lvl.color+'40">'+lvl.label+' · '+formatKarma(karma||0)+'</span>';
+}
+
+function formatKarma(k){
+  if(k>=1000) return (k/1000).toFixed(1)+'k';
+  return k+'';
+}
 
 // ── AVATARES ──
 function hashN(str, mod){
@@ -2106,9 +2288,9 @@ async function loadPerfil(){
   if(r.data){
     currentPerfil = r.data;
     var un=document.getElementById('user-name');
-    if(un) un.innerHTML=makeAvatar(r.data.username,'sm')+' <span style="color:var(--green);font-size:.78rem">u/'+r.data.username+'</span>';
+    if(un) un.innerHTML=makeAvatar(r.data.username,'sm')+' <span style="color:var(--green);font-size:.78rem">u/'+r.data.username+'</span> '+karmaTag(r.data.karma);
     var uk=document.getElementById('user-karma');
-    if(uk) uk.textContent='· '+r.data.karma+' karma';
+    if(uk) uk.textContent='';
     var cp=document.getElementById('comp-prompt');
     if(cp) cp.textContent=r.data.username+'@randomplan:~$';
   } else {
@@ -2127,6 +2309,28 @@ async function doLogout(){
 // Real modal with Supabase auth
 function showModal(tipo){
   var c='';
+  if(tipo==='perfil'){
+    if(!currentPerfil){showModal('login');return;}
+    var u=currentPerfil;
+    var lvl=getKarmaLevel(u.karma||0);
+    c='<h2>'+makeAvatar(u.username,'lg')+' u/'+u.username+'</h2>'+
+      '<div style="margin:.5rem 0">'+karmaTag(u.karma)+'</div>'+
+      '<div style="font-size:.72rem;color:var(--text3);font-family:var(--mono);margin-bottom:1rem">// miembro desde '+new Date(u.created_at||Date.now()).toLocaleDateString('es-CL')+'</div>'+
+      '<div class="field" style="background:var(--bg0);border-radius:4px;padding:.8rem">'+
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">'+
+          '<div style="text-align:center"><div style="font-size:1.4rem;font-weight:700;color:var(--green)">'+(u.karma||0)+'</div><div style="font-size:.65rem;color:var(--text3);font-family:var(--mono)">karma total</div></div>'+
+          '<div style="text-align:center"><div style="font-size:1.4rem;font-weight:700;color:var(--blue)">'+(u.posts_count||0)+'</div><div style="font-size:.65rem;color:var(--text3);font-family:var(--mono)">posts</div></div>'+
+        '</div>'+
+      '</div>'+
+      '<div style="margin-top:1rem;font-size:.72rem;color:var(--text3);font-family:var(--mono)">// nivel: <span style="color:'+lvl.color+'">'+lvl.label+'</span></div>'+
+      '<div style="margin-top:.5rem;font-size:.7rem;color:var(--text3);font-family:var(--mono)">'+
+        (u.karma<10?'// gana karma publicando y recibiendo upvotes':
+         u.karma<100?'// próximo nivel a los 100 karma':
+         u.karma<500?'// próximo nivel a los 500 karma':
+         u.karma<1000?'// próximo nivel a los 1000 karma':'// nivel máximo — leyenda de RandomPlan')+
+      '</div>';
+    return;
+  }
   if(tipo==='login'){
     c='<h2>$ login</h2><p class="sub">// ingresa a tu cuenta</p>'+
       '<div class="field"><label>email</label><input type="email" id="m-email" placeholder="tu@email.cl"></div>'+
@@ -2324,6 +2528,13 @@ async function sendCommentInline(postId){
     list.innerHTML=newHtml+list.innerHTML;
     setTimeout(function(){attachDelBtn(newCid);},0);
   }
+  // increment own karma for activity
+  if(currentPerfil){
+    currentPerfil.karma=(currentPerfil.karma||0)+1;
+    db.from('perfiles').update({karma:currentPerfil.karma}).eq('id',currentUser.id);
+    var un=document.getElementById('user-name');
+    if(un) un.innerHTML=makeAvatar(currentPerfil.username,'sm')+' <span style="color:var(--green);font-size:.78rem">u/'+currentPerfil.username+'</span> '+karmaTag(currentPerfil.karma);
+  }
   toast('comentario publicado');
 }
 
@@ -2354,6 +2565,13 @@ async function sendComment(postId){
   }
   var box=document.getElementById('cbox-'+postId);
   if(box)box.innerHTML='escribe un comentario...';
+  // increment own karma for activity
+  if(currentPerfil){
+    currentPerfil.karma=(currentPerfil.karma||0)+1;
+    db.from('perfiles').update({karma:currentPerfil.karma}).eq('id',currentUser.id);
+    var un=document.getElementById('user-name');
+    if(un) un.innerHTML=makeAvatar(currentPerfil.username,'sm')+' <span style="color:var(--green);font-size:.78rem">u/'+currentPerfil.username+'</span> '+karmaTag(currentPerfil.karma);
+  }
   toast('comentario publicado');
 }
 
