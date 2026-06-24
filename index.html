@@ -3127,10 +3127,7 @@ function openPostView(postId){
     html+='<div style="font-size:.88rem;color:var(--text2);line-height:1.6;word-break:break-word;'+(p.img?'margin-top:.8rem':'')+'">'+linkify(p.prev)+'</div>';
   }
   if(p.isNews&&p.url){
-    if(p.url){
-    var safeUrl=p.url;
-    html+='<button class="post-view-link" onclick="openNewsLink(this)" data-url="'+safeUrl+'">↗ leer nota completa</button>';
-  }
+    
   }
   html+='</div>';
 
