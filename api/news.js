@@ -1,26 +1,27 @@
-// v2
+// v3
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Cache-Control', 's-maxage=300');
+  res.setHeader('Cache-Control', 'no-cache, no-store');
 
   const sources = [
     { url: 'https://news.google.com/rss/search?q=chile+noticias&hl=es-CL&gl=CL&ceid=CL:es', sub: 'chile', ic: '🇨🇱', max: 4 },
     { url: 'https://news.google.com/rss/search?q=futbol+chile+mundial&hl=es-CL&gl=CL&ceid=CL:es', sub: 'futbol', ic: '⚽', max: 4 },
     { url: 'https://news.google.com/rss/search?q=economia+chile+dolar&hl=es-CL&gl=CL&ceid=CL:es', sub: 'finanzas', ic: '💰', max: 3 },
     { url: 'https://news.google.com/rss/search?q=mundial+2026&hl=es-CL&gl=CL&ceid=CL:es', sub: 'futbol', ic: '⚽', max: 3 },
-    { url: 'https://news.google.com/rss/search?q=tecnologia+inteligencia+artificial+chile&hl=es-CL&gl=CL&ceid=CL:es', sub: 'tecnologia', ic: '💻', max: 2 },
+    { url: 'https://news.google.com/rss/search?q=tecnologia+chile&hl=es-CL&gl=CL&ceid=CL:es', sub: 'tecnologia', ic: '💻', max: 2 },
   ];
 
   function cleanText(str) {
     if (!str) return '';
     return str
-      .replace(/<[^>]+>/g, '')        // remove HTML tags
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&nbsp;/g, ' ')
+      .replace(/<[^>]+>/gi, '')
+      .replace(/&lt;/gi, '')
+      .replace(/&gt;/gi, '')
+      .replace(/&amp;/gi, '&')
+      .replace(/&quot;/gi, '"')
+      .replace(/&#39;/gi, "'")
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/https?:\/\/[^\s]*/g, '')
       .replace(/\s+/g, ' ')
       .trim();
   }
@@ -44,10 +45,9 @@ export default async function handler(req, res) {
 
       const title = cleanText(tMatch ? tMatch[1] : '');
       const link = lMatch ? lMatch[1].trim() : '';
-      const desc = cleanText(dMatch ? dMatch[1] : '').slice(0, 200);
+      const desc = cleanText(dMatch ? dMatch[1] : '').slice(0, 180);
 
       if (!title || title.length < 10 || !isSpanish(title)) continue;
-      if (/^(sigue|en directo|live)/i.test(desc)) continue;
 
       items.push({ title, link, desc, sub, ic });
       if (items.length >= max) break;
