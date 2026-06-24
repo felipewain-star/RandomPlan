@@ -215,15 +215,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .post-view{display:none;position:fixed;inset:0;z-index:400;background:var(--bg0);overflow-y:auto}
 .post-view.on{display:block}
 .post-view-header{background:var(--bg1);border-bottom:1px solid var(--border);padding:.8rem 1.2rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:10}
-.post-view-back{background:none;border:1px solid var(--border2);color:var(--text3);padding:.3rem .7rem;border-radius:3px;font-family:var(--mono);font-size:.72rem;cursor:pointer;transition:all .15s}
+.post-view-back{background:none;border:1px solid var(--border2);color:var(--text3);padding:.3rem .7rem;border-radius:3px;font-family:var(--mono);font-size:.72rem;cursor:pointer}
 .post-view-back:hover{border-color:var(--green);color:var(--green)}
 .post-view-body{max-width:740px;margin:0 auto;padding:1.2rem 1rem}
-.post-view-title{font-size:1.3rem;font-weight:700;color:var(--text1);margin:1rem 0 .5rem;line-height:1.35}
+.post-view-title{font-size:1.3rem;font-weight:700;color:var(--text1);margin:1rem 0 .5rem;line-height:1.35;word-break:break-word}
 .post-view-meta{font-size:.7rem;color:var(--text3);font-family:var(--mono);margin-bottom:.8rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
 .post-view-content{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:1rem;margin-bottom:1rem}
 .post-view-img{width:100%;max-height:500px;object-fit:contain;border-radius:4px;display:block}
-.post-view-link{display:inline-flex;align-items:center;gap:.4rem;color:var(--green);font-family:var(--mono);font-size:.75rem;text-decoration:none;border:1px solid var(--green);padding:.3rem .7rem;border-radius:3px;margin-top:.5rem}
-.post-view-link:hover{background:var(--green);color:#000}
 .post-view-divider{border:none;border-top:1px solid var(--border);margin:1rem 0}
 .post-view-comment-box{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:.8rem;margin-bottom:1.2rem}
 .post-view-comments-title{font-family:var(--mono);font-size:.72rem;color:var(--text3);margin-bottom:.8rem}
@@ -589,7 +587,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
   <div id="gif-grid-global" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:165px;overflow-y:auto"></div>
 </div>
 
-<!-- VISTA DE POST -->
 <div class="post-view" id="post-view">
   <div class="post-view-header">
     <button class="post-view-back" onclick="closePostView()">← volver</button>
@@ -597,8 +594,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
   </div>
   <div class="post-view-body" id="post-view-body"></div>
 </div>
-
-<!-- PERFIL -->
 <div class="profile-wrap" id="profile-wrap">
   <div class="profile-header">
     <button class="profile-back" onclick="closeProfile()">← volver</button>
@@ -615,11 +610,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 <div class="toast" id="toast"></div>
 
 <script>
-// ── PICKER STATE ──
-var _activeInput=null;
-var _pickerShowing=false;
-var _gifShowing=false;
-
 var BOTS=[
   // NORTEÑOS
   {name:'titi_norte',av:'🌵',ciudad:'Antofagasta',arq:'nortenio'},
@@ -1383,8 +1373,7 @@ function renderPost(p){
   html+='<span>'+p.t+'</span>';
   html+='<span class="flair '+p.fc+'">'+p.flair+'</span>';
   html+='</div>';
-  // todos los posts abren vista interna
-  html+='<div class="ctitle" onclick="openPostView('+p.id+')" style="cursor:pointer">'+p.title+(p.isNews&&p.url?' <span style="display:inline-block;font-size:.58rem;font-family:var(--mono);background:#1a3a2a;color:#00ff88;border:1px solid #00ff8840;border-radius:2px;padding:.05rem .3rem;vertical-align:middle">↗ nota</span>':'')+'</div>';
+  html+='<div class="ctitle" onclick="openPostView('+p.id+')" style="cursor:pointer">'+p.title+(p.isNews?' <span style="display:inline-block;font-size:.58rem;font-family:var(--mono);background:#1a3a2a;color:#00ff88;border:1px solid #00ff8840;border-radius:2px;padding:.05rem .3rem;vertical-align:middle">↗ nota</span>':'')+'</div>';
 
   // En memes no mostramos el texto prev (ya está la imagen)
   if(p.prev && !isMeme){
@@ -1834,6 +1823,7 @@ function voteComment(btn,dir){ vc(btn,dir); }
 
 
 function filterFeed(sub,el){
+  window._currentFilter=sub||null;
   document.querySelectorAll('.sf-item').forEach(function(i){i.classList.remove('on')});
   if(el)el.classList.add('on');
   var f=(!sub||sub==='inicio')?null:sub;
@@ -2220,7 +2210,7 @@ function showModal(tipo){
         '<div class="field"><label>tipo de meme</label>'+
           '<div class="meme-type-selector">'+
             '<button class="meme-type-btn on" onclick="setMemeType(\'img\',this)">📸 Imagen</button>'+
-
+            '<button class="meme-type-btn" onclick="setMemeType(\'gif\',this)">🎞 GIF</button>'+
           '</div>'+
         '</div>'+
         '<div id="m-img-section">'+
@@ -2233,7 +2223,12 @@ function showModal(tipo){
             '<div class="img-upload-progress"><div class="img-upload-progress-bar" id="m-img-progress"></div></div>'+
           '</div>'+
         '</div>'+
-
+        '<div id="m-gif-section" style="display:none">'+
+          '<div class="field">'+
+            '<input type="text" id="m-gif-search" placeholder="buscar GIF... presiona Enter" style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:2px;padding:.48rem .7rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none" onkeydown="if(event.key===\'Enter\')buscarGifModal(this.value)">'+
+            '<div id="m-gif-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:140px;overflow-y:auto;margin-top:.4rem"></div>'+
+          '</div>'+
+        '</div>'+
       '</div>'+
       '<div class="field"><label>título</label><input type="text" id="m-titulo" placeholder="¿de qué trata?"></div>'+
       '<div id="m-normal-section">'+
@@ -2665,63 +2660,303 @@ function removeImg(e){
     '<div class="img-upload-progress"><div class="img-upload-progress-bar" id="m-img-progress"></div></div>';
 }
 
-async function buscarGif(q){
-  var grid=document.getElementById('gif-grid-global');
-  if(!grid)return;
-  grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// buscando...</span>';
-  try{
-    var r=await fetch('https://api.tenor.com/v1/search?q='+encodeURIComponent(q)+'&key=LIVDSRZULELA&limit=9&media_filter=minimal');
-    if(!r.ok)throw new Error('tenor '+r.status);
-    var d=await r.json();
-    var results=d.results||[];
-    grid.innerHTML='';
+async function buscarGifModal(q){
+  var grid = document.getElementById('m-gif-grid');
+  if(!grid) return;
+  grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">// buscando...</span>';
+  try {
+    var key = 'AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';
+    var r = await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q)+'&key='+key+'&limit=9&media_filter=gif');
+    if(!r.ok) throw new Error('tenor '+r.status);
+    var d = await r.json();
+    var results = d.results || [];
+    grid.innerHTML = '';
     results.forEach(function(item){
-      var m=item.media&&item.media[0]||{};
-      var thumb=(m.tinygif||m.gif||{}).url||'';
-      var full=(m.gif||m.tinygif||{}).url||thumb;
-      if(!thumb)return;
-      var img=document.createElement('img');
-      img.src=thumb;
-      img.className='gif-thumb';
-      img.onclick=function(){
-        if(!_activeInput)return;
-        var inp=document.getElementById(_activeInput);
-        if(inp){inp.value+=' [gif:'+full+']';inp.focus();}
-        var gp=document.getElementById('global-gif-picker');
-        if(gp)gp.style.display='none';
-        _gifShowing=false;
+      var formats = item.media_formats || {};
+      var thumb = (formats.tinygif || formats.gif || {}).url || '';
+      var full = (formats.gif || formats.tinygif || {}).url || thumb;
+      if(!thumb) return;
+      var img = document.createElement('img');
+      img.src = thumb;
+      img.className = 'gif-thumb';
+      img.style.cssText = 'width:100%;height:60px;object-fit:cover;border-radius:3px;cursor:pointer;border:1px solid transparent';
+      img.onclick = function(){
+        _uploadedImgUrl = '[gif:'+full+']'; // formato especial para GIFs
+        // mostrar seleccionado
+        grid.querySelectorAll('img').forEach(function(i){ i.style.borderColor='transparent'; });
+        img.style.borderColor = 'var(--green)';
+        toast('// GIF seleccionado ✓');
       };
       grid.appendChild(img);
     });
-    if(!results.length)grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// sin resultados</span>';
-  }catch(e){
-    grid.innerHTML='<span style="color:var(--red);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// error: '+e.message+'</span>';
+    if(!results.length) grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem">// sin resultados</span>';
+  } catch(e){
+    grid.innerHTML = '<span style="color:var(--red);font-size:.7rem;font-family:var(--mono)">// error: '+e.message+'</span>';
   }
 }
 
-function _initPickers(){
-  var ep=document.getElementById('global-emoji-picker');
-  if(!ep||ep.dataset.init)return;
-  ep.dataset.init='1';
-  var emojis=['😂','🤣','😊','😍','🔥','👍','💯','🤔','😎','🙄','😅','😭','🤦','🤷','💀','❤️','🎉','👀','🤯','😤','🥲','😡','🤡','💪','🙏','✅','❌','🚀','💰','⚽','🇨🇱','😏','🥴','💩','🤮','👏','🫡','🤌','💬','📢'];
-  ep.innerHTML='';
-  var emojiGrid=document.createElement('div');
-  emojiGrid.id='emoji-grid';
-  emojiGrid.style.cssText='display:flex;flex-wrap:wrap;gap:.1rem';
-  emojis.forEach(function(e){
-    var btn=document.createElement('button');
-    btn.style.cssText='background:none;border:none;font-size:1.2rem;cursor:pointer;padding:.15rem;border-radius:3px;line-height:1';
-    btn.textContent=e;
-    btn.onclick=function(){insertEmojiGlobal(e);};
-    emojiGrid.appendChild(btn);
+async function doPost(){
+  var titulo=document.getElementById('m-titulo').value.trim();
+  var comunidad_id=parseInt(document.getElementById('m-com').value);
+  var btn=document.getElementById('m-sub');
+  var err=document.getElementById('m-err');
+  if(!titulo){err.textContent='// error: el título es requerido';return;}
+
+  // Determinar contenido según tipo de comunidad
+  var isMeme = (comunidad_id === 4); // memescl
+  var contenido = '';
+
+  if(isMeme){
+    if(!_uploadedImgUrl){
+      err.textContent='// error: debes subir una imagen o seleccionar un GIF';
+      return;
+    }
+    // Si es GIF del modal, _uploadedImgUrl ya tiene formato [gif:url]
+    // Si es imagen subida a Storage, la guardamos como [img:url]
+    if(_uploadedImgUrl.startsWith('[gif:')){
+      contenido = _uploadedImgUrl; // ya tiene el formato correcto
+    } else {
+      contenido = '[img:'+_uploadedImgUrl+']';
+    }
+  } else {
+    var mcEl = document.getElementById('m-contenido');
+    contenido = mcEl ? mcEl.value.trim() : '';
+  }
+
+  // Validar sesión
+  var sess=await db.auth.getSession();
+  if(!sess.data||!sess.data.session){err.textContent='// error: debes estar logueado';return;}
+  currentUser=sess.data.session.user;
+  var rp=await db.from('perfiles').select('*').eq('id',currentUser.id).single();
+  if(rp.data) currentPerfil=rp.data;
+
+  btn.disabled=true;
+  btn.textContent = isMeme ? '// publicando meme...' : '// publicando...';
+
+  var r=await db.from('posts').insert({
+    titulo:titulo,
+    contenido:contenido,
+    user_id:currentUser.id,
+    comunidad_id:comunidad_id,
+    votos:0
   });
-  ep.appendChild(emojiGrid);
+
+  if(r.error){
+    err.textContent='// error: '+r.error.message;
+    btn.disabled=false;
+    btn.textContent='./publicar --exec';
+  } else {
+    _uploadedImgUrl = null; // reset
+    closeModal();
+    toast(isMeme ? 'meme publicado 🔥' : 'post publicado');
+    setTimeout(function(){loadRealPosts(null);},500);
+  }
 }
 
-function filterEmoji(q){
-  var btns=document.querySelectorAll('#emoji-grid button');
-  btns.forEach(function(b){
-    b.style.display=!q||b.textContent.includes(q)?'':'none';
+// ── TICKER ──
+var tickerAssets=[
+  {sym:'BTC',label:'₿ BTC',type:'crypto',id:'bitcoin'},
+  {sym:'ETH',label:'Ξ ETH',type:'crypto',id:'ethereum'},
+  {sym:'AAPL',label:'AAPL',type:'stock'},
+  {sym:'TSLA',label:'TSLA',type:'stock'},
+  {sym:'NVDA',label:'NVDA',type:'stock'},
+  {sym:'DOLAR',label:'USD/CLP',type:'clp'},
+  {sym:'XAU',label:'ORO',type:'metal',id:'gold'},
+  {sym:'XAG',label:'PLATA',type:'metal',id:'silver'},
+];
+
+var tickerData={};
+
+async function loadTicker(){
+  try {
+    // Crypto: CoinGecko free API
+    var cryptoIds=tickerAssets.filter(function(a){return a.type==='crypto';}).map(function(a){return a.id;}).join(',');
+    var rc=await fetch('https://api.coingecko.com/api/v3/simple/price?ids='+cryptoIds+'&vs_currencies=usd&include_24hr_change=true');
+    if(rc.ok){
+      var cd=await rc.json();
+      tickerAssets.forEach(function(a){
+        if(a.type==='crypto'&&cd[a.id]){
+          tickerData[a.sym]={price:cd[a.id].usd,chg:cd[a.id].usd_24h_change||0};
+        }
+      });
+    }
+  } catch(e){}
+
+  try {
+    // USD/CLP: mindicador.cl
+    var rd=await fetch('https://mindicador.cl/api/dolar');
+    if(rd.ok){
+      var dd=await rd.json();
+      if(dd.serie&&dd.serie[0]){
+        tickerData['DOLAR']={price:dd.serie[0].valor,chg:0,isCLP:true};
+      }
+    }
+  } catch(e){}
+
+  try {
+    // Stocks + metals via Yahoo Finance (no-cors workaround with allorigins)
+    var symbols=['AAPL','TSLA','NVDA','GC=F','SI=F'];
+    for(var si=0;si<symbols.length;si++){
+      var sym=symbols[si];
+      try {
+        var url='https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=2d';
+        var proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);
+        var ry=await fetch(proxy);
+        if(!ry.ok) continue;
+        var py=await ry.json();
+        var data=JSON.parse(py.contents);
+        var result=data&&data.chart&&data.chart.result&&data.chart.result[0];
+        if(!result) continue;
+        var meta=result.meta;
+        var price=meta.regularMarketPrice||0;
+        var prev=meta.previousClose||price;
+        var chg=prev>0?((price-prev)/prev*100):0;
+        var mapSym={'GC=F':'XAU','SI=F':'XAG'};
+        var key=mapSym[sym]||sym;
+        tickerData[key]={price:price,chg:chg};
+      } catch(e){}
+    }
+  } catch(e){}
+
+  renderTicker();
+}
+
+function renderTicker(){
+  var items='';
+  tickerAssets.forEach(function(a){
+    var d=tickerData[a.sym];
+    if(!d) return;
+    var priceStr=a.sym==='DOLAR'?
+      '$'+Math.round(d.price).toLocaleString('es-CL')+' CLP':
+      '$'+d.price.toLocaleString('en-US',{minimumFractionDigits:d.price>100?2:4,maximumFractionDigits:d.price>100?2:4});
+    var chgStr=d.chg!==0?(d.chg>0?'+':'')+d.chg.toFixed(2)+'%':'';
+    var chgClass=d.chg>0?'up':d.chg<0?'down':'';
+    var arrow=d.chg>0?'▲':d.chg<0?'▼':'';
+    items+='<span class="ticker-item">'+
+      '<span class="ticker-sym">'+a.label+'</span>'+
+      '<span class="ticker-price">'+priceStr+'</span>'+
+      (chgStr?'<span class="ticker-chg '+chgClass+'">'+arrow+' '+chgStr+'</span>':'')+
+    '</span>';
+  });
+  if(!items){ document.getElementById('ticker-track').innerHTML='<span class="ticker-loading">// error cargando precios</span>'; return; }
+  // duplicate for seamless loop
+  var track=document.getElementById('ticker-track');
+  track.innerHTML=items+items;
+  // adjust animation duration based on content width
+  var totalW=track.scrollWidth/2;
+  var duration=Math.max(30, totalW/80);
+  track.style.animationDuration=duration+'s';
+}
+
+// Load ticker and refresh every 60s
+loadTicker();
+setInterval(loadTicker, 60000);
+
+// ── EMOJI & GIF ──
+var EMOJIS='😂,🔥,💀,🤣,😭,🤯,👀,😤,🫡,🤔,💯,🎯,🤙,👊,😎,🥲,😬,🤦,🙄,👏,🫠,😅,🤡,💪,🫶,❤️,🖤,⚡,🌊,🏔,🐍,🦅,🦁,🐺,💻,📱,🎮,🏆,🎯,💰,📈,📉,🔑,⚠️,❌,✅,🚀,🌙,☀️,🌧,❄️,🍺,🍕,🌮,☕,🤝,🙏,👋,✌️,🤞,💪,🫵,🧠,👁️,💬,🔊,📢,🗣️,⏰,📅,🔗,📎,✏️,🗑️,🔍,💡,🎵,🎶'.split(',');
+
+function toggleEmojiPicker(pickerId){
+  var el=document.getElementById(pickerId);
+  if(!el)return;
+  el.classList.toggle('on');
+  var gp=document.getElementById(pickerId.replace('emoji','gif'));
+  if(gp)gp.classList.remove('on');
+}
+
+function toggleGifPicker(pickerId){
+  var el=document.getElementById(pickerId);
+  if(!el)return;
+  el.classList.toggle('on');
+  var ep=document.getElementById(pickerId.replace('gif','emoji'));
+  if(ep)ep.classList.remove('on');
+  if(el.classList.contains('on')&&!el.dataset.loaded){
+    el.dataset.loaded='1';
+    searchGifs(pickerId,'meme chile');
+  }
+}
+
+function insertEmoji(targetId, emoji){
+  var inp=document.getElementById(targetId);
+  if(!inp)return;
+  var pos=inp.selectionStart||inp.value.length;
+  inp.value=inp.value.slice(0,pos)+emoji+inp.value.slice(pos);
+  inp.focus();
+  inp.selectionStart=inp.selectionEnd=pos+emoji.length;
+}
+
+var gifCache={};
+async function searchGifs(pickerId, query){
+  var grid=document.getElementById(pickerId+'-grid');
+  if(!grid)return;
+  grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">// buscando...</span>';
+  try {
+    // Tenor API v2 - free
+    var key='AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY'; // demo key
+    var url='https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(query)+'&key='+key+'&limit=9&media_filter=gif';
+    var r=await fetch(url);
+    if(!r.ok) throw new Error('tenor error');
+    var data=await r.json();
+    var results=data.results||[];
+    if(!results.length){grid.innerHTML='<span style="color:var(--text3);font-size:.7rem">// sin resultados</span>';return;}
+    grid.innerHTML='';
+    results.forEach(function(item){
+      var gif=item.media_formats&&item.media_formats.tinygif?item.media_formats.tinygif.url:'';
+      var full=item.media_formats&&item.media_formats.gif?item.media_formats.gif.url:gif;
+      if(!gif)return;
+      var img=document.createElement('img');
+      img.className='gif-thumb';
+      img.src=gif;
+      img.alt=item.content_description||'gif';
+      img.onclick=function(){selectGif(pickerId,full,gif);};
+      grid.appendChild(img);
+    });
+  } catch(e){
+    // fallback - show message
+    grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">// conecta internet para ver GIFs</span>';
+  }
+}
+
+function selectGif(pickerId, fullUrl, thumbUrl){
+  var preview=document.getElementById(pickerId+'-preview');
+  if(preview){
+    preview.src=thumbUrl;
+    preview.classList.add('on');
+    preview.dataset.full=fullUrl;
+  }
+  // store selected gif for send
+  var picker=document.getElementById(pickerId);
+  if(picker) picker.dataset.selectedGif=fullUrl;
+}
+
+// ── EMOJI / GIF ──
+var EMOJIS=['😂','🔥','💀','🤣','😭','🤯','👀','😤','🫡','🤔','💯','🎯','🤙','👊','😎','🥲','😬','🤦','🙄','👏','🫠','😅','🤡','💪','🫶','❤️','🖤','⚡','🌊','🏔','🐍','🦅','🦁','🐺','💻','📱','🎮','🏆','💰','📈','📉','🔑','⚠️','❌','✅','🚀','🌙','☀️','🌧','❄️','🍺','🍕','🌮','☕','🤝','🙏','👋','✌️','🤞','🧠','💬','🔊','🎵','🎶'];
+var _activeInput=null;
+var _pickerShowing=false;
+var _gifShowing=false;
+
+function _initPickers(){
+  var ep=document.getElementById('global-emoji-picker');
+  if(!ep||ep.dataset.init) return;
+  ep.dataset.init='1';
+  EMOJIS.forEach(function(e){
+    var b=document.createElement('button');
+    b.textContent=e;
+    b.style.cssText='background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px';
+    b.onmouseover=function(){this.style.background='#1c2733'};
+    b.onmouseout=function(){this.style.background='none'};
+    b.onclick=function(ev){
+      ev.stopPropagation();
+      if(!_activeInput)return;
+      var inp=document.getElementById(_activeInput);
+      if(!inp)return;
+      var s=inp.selectionStart||inp.value.length;
+      inp.value=inp.value.slice(0,s)+e+inp.value.slice(s);
+      inp.focus();
+      try{inp.selectionStart=inp.selectionEnd=s+e.length;}catch(x){}
+      document.getElementById('global-emoji-picker').style.display='none';
+      _pickerShowing=false;
+    };
+    ep.appendChild(b);
   });
 }
 
@@ -2729,17 +2964,19 @@ function showEmoji(btn){
   var newInput=btn.getAttribute('data-inp');
   var ep=document.getElementById('global-emoji-picker');
   var gp=document.getElementById('global-gif-picker');
+  // cerrar gif siempre
   if(gp){gp.style.display='none';_gifShowing=false;}
+  // si ya está abierto para ESTE mismo input → cerrar (toggle)
   if(_pickerShowing && _activeInput===newInput){
     ep.style.display='none';
     _pickerShowing=false;
     return;
   }
+  // nuevo input o estaba cerrado → abrir
   _activeInput=newInput;
   _initPickers();
   _pickerShowing=true;
   ep.style.display='flex';
-  ep.style.flexDirection='column';
   var r=btn.getBoundingClientRect();
   ep.style.top=(r.bottom+6)+'px';
   ep.style.left=Math.max(4,Math.min(r.left, window.innerWidth-280))+'px';
@@ -2776,6 +3013,7 @@ async function buscarGif(q){
   if(!grid)return;
   grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// buscando...</span>';
   try{
+    // Tenor API v2 — v1 está deprecada y puede fallar
     var r=await fetch('https://api.tenor.com/v1/search?q='+encodeURIComponent(q)+'&key=LIVDSRZULELA&limit=9&media_filter=minimal');
     if(!r.ok)throw new Error('tenor '+r.status);
     var d=await r.json();
@@ -2789,21 +3027,897 @@ async function buscarGif(q){
       var img=document.createElement('img');
       img.src=thumb;
       img.className='gif-thumb';
+      img.alt=item.content_description||'gif';
       img.onclick=function(){
         if(!_activeInput)return;
         var inp=document.getElementById(_activeInput);
         if(inp){inp.value+=' [gif:'+full+']';inp.focus();}
         var gp=document.getElementById('global-gif-picker');
-        if(gp)gp.style.display='none';
+        if(gp){gp.style.display='none';}
         _gifShowing=false;
       };
       grid.appendChild(img);
     });
-    if(!results.length)grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// sin resultados</span>';
+    if(!results.length)
+      grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// sin resultados</span>';
   }catch(e){
     grid.innerHTML='<span style="color:var(--red);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// error: '+e.message+'</span>';
   }
 }
+
+function buildMediaBar(inputId){
+  return '<div class="media-bar">'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmoji(this)">😊</button>'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGif(this)">GIF</button>'+
+  '</div>';
+}
+
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#global-emoji-picker')&&!e.target.closest('.media-btn')){
+    var ep=document.getElementById('global-emoji-picker');
+    if(ep){ep.style.display='none';_pickerShowing=false;}
+  }
+  if(!e.target.closest('#global-gif-picker')&&!e.target.closest('.media-btn')){
+    var gp=document.getElementById('global-gif-picker');
+    if(gp){gp.style.display='none';_gifShowing=false;}
+  }
+});
+
+
+
+function linkify(text){
+  if(!text) return text;
+  // 1. extract gifs first before any escaping
+  var parts=[];
+  var gifRegex=/\[gif:(https?[^\]]+)\]/g;
+  var lastIdx=0, m;
+  while((m=gifRegex.exec(text))!==null){
+    // push text before gif (escaped)
+    parts.push({type:'text',val:text.slice(lastIdx,m.index)});
+    // push gif url
+    parts.push({type:'gif',val:m[1]});
+    lastIdx=m.index+m[0].length;
+  }
+  parts.push({type:'text',val:text.slice(lastIdx)});
+  // 2. process each part
+  var out='';
+  parts.forEach(function(p){
+    if(p.type==='gif'){
+      out+='<img src="'+p.val+'" class="inserted-gif" loading="lazy">';
+    } else {
+      // escape then linkify text
+      var s=p.val.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      s=s.replace(/(https?:\/\/[^\s<>"]+)/g,function(url){
+        if(/\.(gif|mp4|webp)(\?|$)/i.test(url)||url.indexOf('media.tenor.com')!==-1||url.indexOf('c.tenor.com')!==-1){
+          return '<img src="'+url+'" class="inserted-gif" loading="lazy">';
+        }
+        var d=url.length>50?url.slice(0,50)+'...':url;
+        return '<a href="'+url+'" target="_blank" rel="noopener noreferrer" class="inline-link">'+d+'</a>';
+      });
+      out+=s;
+    }
+  });
+  return out;
+}
+
+function extractUrl(text){
+  var m=text.match(/(https?:\/\/[^\s]+)/);
+  return m?m[1]:null;
+}
+
+// ── SUPABASE ──
+var SUPA_URL = 'https://jquycrzqspdwciwvmuse.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxdXljcnpxc3Bkd2Npd3ZtdXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTA4MDcsImV4cCI6MjA5NzcyNjgwN30.ThqHOnX-bdro7CbGAe3PLDgM3O-RiK8NHhDuDufULs4';
+var db = supabase.createClient(SUPA_URL, SUPA_KEY);
+var currentUser = null;
+var currentPerfil = null;
+var lastChatId = 0;
+
+// Auth state
+db.auth.onAuthStateChange(function(event, session){
+  if(session && session.user){
+    currentUser = session.user;
+    document.getElementById('auth-btns').style.display='none';
+    document.getElementById('user-btns').style.display='flex';
+    loadPerfil();
+  } else {
+    currentUser = null;
+    currentPerfil = null;
+    document.getElementById('auth-btns').style.display='flex';
+    document.getElementById('user-btns').style.display='none';
+    var un=document.getElementById('user-name');
+    if(un) un.innerHTML='';
+    var uk=document.getElementById('user-karma');
+    if(uk) uk.textContent='';
+    var cp=document.getElementById('comp-prompt');
+    if(cp) cp.textContent='user@randomplan:~$';
+  }
+});
+
+async function loadPerfil(){
+  if(!currentUser) return;
+  var r = await db.from('perfiles').select('*').eq('id', currentUser.id).single();
+  if(r.data){
+    currentPerfil = r.data;
+    var un=document.getElementById('user-name');
+    if(un) un.innerHTML=makeAvatar(r.data.username,'sm')+' <span style="color:var(--green);font-size:.78rem">u/'+r.data.username+'</span>';
+    var uk=document.getElementById('user-karma');
+    if(uk) uk.textContent='· '+r.data.karma+' karma';
+    var cp=document.getElementById('comp-prompt');
+    if(cp) cp.textContent=r.data.username+'@randomplan:~$';
+  } else {
+    // perfil no existe — crear con email prefix
+    var username=currentUser.email.split('@')[0];
+    await db.from('perfiles').upsert({id:currentUser.id,username:username,ciudad:'Chile',karma:0},{onConflict:'id'});
+    await loadPerfil();
+  }
+}
+
+async function doLogout(){
+  await db.auth.signOut();
+  toast('hasta luego');
+}
+
+// Real modal with Supabase auth
+function showModal(tipo){
+  var c='';
+  if(tipo==='login'){
+    c='<h2>$ login</h2><p class="sub">// ingresa a tu cuenta</p>'+
+      '<div class="field"><label>email</label><input type="email" id="m-email" placeholder="tu@email.cl"></div>'+
+      '<div class="field"><label>contraseña</label><input type="password" id="m-pass" placeholder="••••••••"></div>'+
+      '<div class="modal-err" id="m-err"></div>'+
+      '<button class="modal-sub" id="m-sub" onclick="doLogin()">./login --exec</button>'+
+      '<div class="modal-sw">¿no tienes cuenta? <a onclick="showModal(\'register\')">registrar</a></div>';
+  } else if(tipo==='register'){
+    c='<h2>$ crear_cuenta</h2><p class="sub">// únete a RandomPlan</p>'+
+      '<div class="field"><label>usuario</label><input type="text" id="m-user" placeholder="condor_veloz_42" autocomplete="off"></div>'+
+      '<div class="field"><label>correo</label><input type="email" id="m-email" placeholder="tu@email.cl" autocomplete="off"></div>'+
+      '<div class="field"><label>contraseña</label><input type="password" id="m-pass" placeholder="mínimo 6 caracteres"></div>'+
+      '<div class="modal-err" id="m-err"></div>'+
+      '<button class="modal-sub" id="m-sub" onclick="doRegister()">./register --exec</button>'+
+      '<div class="modal-sw">¿ya tienes cuenta? <a onclick="showModal(\'login\')">login</a></div>';
+  } else if(tipo==='post'){
+    if(!currentUser){showModal('login');return;}
+    var comunidades_list=[
+      {id:1,nombre:'chile',icono:'🇨🇱'},
+      {id:2,nombre:'futbol',icono:'⚽'},
+      {id:3,nombre:'contingencia',icono:'📰'},
+      {id:4,nombre:'memescl',icono:'😂'},
+      {id:5,nombre:'finanzas',icono:'💰'},
+      {id:6,nombre:'tecnologia',icono:'💻'},
+      {id:7,nombre:'marketplace',icono:'🛒'},
+      {id:8,nombre:'debate',icono:'🔥'},
+      {id:9,nombre:'desahogo',icono:'😤'},
+      {id:10,nombre:'datos',icono:'📊'},
+    ];
+    var opts=comunidades_list.map(function(c){return '<option value="'+c.id+'">'+c.icono+' p/'+c.nombre+'</option>';}).join('');
+    c='<h2>$ nuevo_post</h2><p class="sub">// comparte algo con RandomPlan</p>'+
+      '<div class="field"><label>comunidad</label><select id="m-com" onchange="onComChange(this)">'+opts+'</select></div>'+
+      '<div id="m-meme-section" style="display:none">'+
+        '<div class="field"><label>tipo de meme</label>'+
+          '<div class="meme-type-selector">'+
+            '<button class="meme-type-btn on" onclick="setMemeType(\'img\',this)">📸 Imagen</button>'+
+            '<button class="meme-type-btn" onclick="setMemeType(\'gif\',this)">🎞 GIF</button>'+
+          '</div>'+
+        '</div>'+
+        '<div id="m-img-section">'+
+          '<div class="img-upload-area" id="m-img-drop" onclick="document.getElementById(\'m-img-file\').click()" ondragover="imgDragOver(event)" ondragleave="imgDragLeave(event)" ondrop="imgDrop(event)">'+
+            '<input type="file" id="m-img-file" accept="image/*" style="display:none" onchange="imgSelected(this)">'+
+            '<div id="m-img-placeholder">'+
+              '<div class="img-upload-icon">🖼</div>'+
+              '<div class="img-upload-txt">Click para subir o arrastra tu meme acá<br><span>JPG, PNG, GIF, WEBP — máx 5MB</span></div>'+
+            '</div>'+
+            '<div class="img-upload-progress"><div class="img-upload-progress-bar" id="m-img-progress"></div></div>'+
+          '</div>'+
+        '</div>'+
+        '<div id="m-gif-section" style="display:none">'+
+          '<div class="field">'+
+            '<input type="text" id="m-gif-search" placeholder="buscar GIF... presiona Enter" style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:2px;padding:.48rem .7rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none" onkeydown="if(event.key===\'Enter\')buscarGifModal(this.value)">'+
+            '<div id="m-gif-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:140px;overflow-y:auto;margin-top:.4rem"></div>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="field"><label>título</label><input type="text" id="m-titulo" placeholder="¿de qué trata?"></div>'+
+      '<div id="m-normal-section">'+
+        '<div class="field"><label>contenido (opcional)</label><textarea id="m-contenido" rows="4" placeholder="más detalles... pega un link https://... para preview" oninput="checkPostUrl(this.value)"></textarea></div>'+
+        '<div id="post-preview-container"></div>'+
+        buildMediaBar('m-contenido')+
+      '</div>'+
+      '<div class="modal-err" id="m-err"></div>'+
+      '<button class="modal-sub" id="m-sub" onclick="doPost()">./publicar --exec</button>';
+  }
+  document.getElementById('modal-content').innerHTML=c;
+  document.getElementById('modal-wrap').classList.add('on');
+
+}
+
+async function doLogin(){
+  var email=document.getElementById('m-email').value.trim();
+  var pass=document.getElementById('m-pass').value;
+  var btn=document.getElementById('m-sub');
+  var err=document.getElementById('m-err');
+  btn.disabled=true;btn.textContent='// conectando...';
+  var r=await db.auth.signInWithPassword({email:email,password:pass});
+  if(r.error){err.textContent='// error: '+r.error.message;btn.disabled=false;btn.textContent='./login --exec';}
+  else{closeModal();toast('bienvenido de vuelta');currentUser=r.data.user;await loadPerfil();}
+}
+
+async function doRegister(){
+  var username=document.getElementById('m-user').value.trim();
+  var email=document.getElementById('m-email').value.trim();
+  var pass=document.getElementById('m-pass').value;
+  var btn=document.getElementById('m-sub');
+  var err=document.getElementById('m-err');
+  if(!username){err.textContent='// error: username requerido';return;}
+  if(username.length < 3){err.textContent='// error: username mínimo 3 caracteres';return;}
+  if(!email){err.textContent='// error: email requerido';return;}
+  if(pass.length < 6){err.textContent='// error: contraseña mínimo 6 caracteres';return;}
+  btn.disabled=true;btn.textContent='// creando cuenta...';
+  var r=await db.auth.signUp({email:email,password:pass});
+  if(r.error){err.textContent='// error: '+r.error.message;btn.disabled=false;btn.textContent='./register --exec';return;}
+  // upsert perfil con username correcto (overrides trigger)
+  var rp=await db.from('perfiles').upsert({id:r.data.user.id,username:username,ciudad:'Chile',karma:0},{onConflict:'id'});
+  if(rp.error){err.textContent='// error guardando perfil: '+rp.error.message;btn.disabled=false;btn.textContent='./register --exec';return;}
+  currentUser=r.data.user;
+  await loadPerfil();
+  closeModal();
+  toast('cuenta creada. bienvenido a RandomPlan');
+}
+
+// Real chat with Supabase + bots mixed
+async function loadChatHistory(){
+  var r=await db.from('chat_mensajes').select('*').order('created_at',{ascending:false}).limit(20);
+  if(r.data && r.data.length){
+    r.data.reverse().forEach(function(m){
+      var isMe=currentUser && m.user_id===currentUser.id;
+      addMsg({name:m.username,ciudad:m.ciudad||'?'},m.texto,isMe,false);
+      if(m.id>lastChatId)lastChatId=m.id;
+    });
+  }
+  document.getElementById('chat-msgs').scrollTop=9999;
+}
+
+async function pollChat(){
+  if(!lastChatId)return;
+  var r=await db.from('chat_mensajes').select('*').gt('id',lastChatId).order('created_at',{ascending:true});
+  if(!r.data||!r.data.length)return;
+  r.data.forEach(function(m){
+    var isMe=currentUser && m.user_id===currentUser.id;
+    addMsg({name:m.username,ciudad:m.ciudad||'?'},m.texto,isMe,false);
+    if(m.id>lastChatId)lastChatId=m.id;
+  });
+}
+
+// Override sendMsg to use Supabase when logged in
+function sendMsg(){
+  var inp=document.getElementById('chat-inp');
+  var txt=inp.value.trim();
+  if(!txt)return;
+  inp.value='';
+  if(currentUser && currentPerfil){
+    // real message
+    db.from('chat_mensajes').insert({
+      user_id:currentUser.id,
+      username:currentPerfil.username,
+      ciudad:currentPerfil.ciudad||'Chile',
+      texto:txt
+    });
+    // show immediately
+    addMsg({name:currentPerfil.username,ciudad:currentPerfil.ciudad||'Chile'},txt,true,false);
+  } else if(currentUser){
+    // logged in but no perfil loaded yet
+    loadPerfil().then(function(){
+      var name=currentPerfil?currentPerfil.username:currentUser.email.split('@')[0];
+      db.from('chat_mensajes').insert({user_id:currentUser.id,username:name,ciudad:'Chile',texto:txt});
+      addMsg({name:name,ciudad:'Chile'},txt,true,false);
+    });
+  } else {
+    // not logged in - show as guest + prompt login
+    addMsg({name:'tú',ciudad:'aquí'},txt,true,false);
+    setTimeout(function(){toast('regístrate para que tu mensaje se guarde')},1000);
+    // bot reply
+    setTimeout(function(){
+      var bot=BOTS[Math.floor(Math.random()*BOTS.length)];
+      var replies=['jajaja exacto','totalmente de acuerdo','buena esa','100% po','verdad eso'];
+      showTyping(bot.name);
+      setTimeout(function(){addMsg(bot,replies[Math.floor(Math.random()*replies.length)],false,false)},1200);
+    },600+Math.random()*1800);
+  }
+}
+
+function openCommentBox(postId){
+  if(!currentUser){showModal('login');return;}
+  var box=document.getElementById('cbox-'+postId);
+  if(!box)return;
+  box.innerHTML='<input type="text" id="cinp-'+postId+'" style="flex:1;background:transparent;border:none;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none;width:100%" placeholder="escribe tu comentario..." onkeydown="if(event.key===\'Enter\')sendComment('+postId+')">'+
+    '<button onclick="sendComment('+postId+')" style="background:none;border:1px solid var(--green);color:var(--green);padding:.15rem .5rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;margin-left:.4rem">SEND</button>';
+  var inp=document.getElementById('cinp-'+postId);
+  if(inp)inp.focus();
+}
+
+async function sendCommentInline(postId){
+  var inputId='cinp-'+postId;
+  var inp=document.getElementById(inputId);
+  if(!inp)return;
+  var texto=inp.value.trim();
+  if(!texto)return;
+  inp.value='';
+  var sess=await db.auth.getSession();
+  if(!sess.data||!sess.data.session){showModal('login');return;}
+  var uid=sess.data.session.user.id;
+  if(!currentPerfil) await loadPerfil();
+  var username=currentPerfil?currentPerfil.username:'anon';
+  var ciudad=currentPerfil?currentPerfil.ciudad:'Chile';
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
+  if(realId){
+    var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
+    if(r.error){toast('error: '+r.error.message);return;}
+  }
+  var list=document.getElementById('clist-'+postId);
+  if(list){
+    var newCid='new-'+Date.now();
+    var newHtml=renderCommentHTML(newCid, username, ciudad, 'ahora', linkify(texto), 0, true, null);
+    list.innerHTML=newHtml+list.innerHTML;
+    setTimeout(function(){attachDelBtn(newCid);},0);
+  }
+  toast('comentario publicado');
+}
+
+async function sendComment(postId){
+  var inp=document.getElementById('cinp-'+postId);
+  if(!inp)return;
+  var texto=inp.value.trim();
+  if(!texto)return;
+  var sess=await db.auth.getSession();
+  if(!sess.data||!sess.data.session){showModal('login');return;}
+  var rp=await db.from('perfiles').select('*').eq('id',sess.data.session.user.id).single();
+  var username=rp.data?rp.data.username:'anon';
+  // use real supabase post id
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||postId;
+  await db.from('comentarios').insert({
+    texto:texto,
+    user_id:sess.data.session.user.id,
+    post_id:realId,
+    votos:0
+  });
+  // show comment inline
+  var list=document.getElementById('clist-'+postId);
+  if(list){
+    var div=document.createElement('div');
+    div.className='comment';
+    div.innerHTML='<div class="cava">👤</div><div class="ccont"><div class="ccmeta"><span class="u">u/'+username+'</span> · ahora</div><div class="cctext">'+texto+'</div></div>';
+    list.appendChild(div);
+  }
+  var box=document.getElementById('cbox-'+postId);
+  if(box)box.innerHTML='escribe un comentario...';
+  toast('comentario publicado');
+}
+
+var searchTimer=null;
+function handleSearch(q){
+  clearTimeout(searchTimer);
+  if(!q||q.length<2){closeSearch();return;}
+  searchTimer=setTimeout(function(){doSearch(q);},300);
+}
+
+function closeSearch(){
+  document.getElementById('search-results').classList.remove('on');
+}
+
+async function doSearch(q){
+  var ql=q.toLowerCase();
+  var results=[];
+
+  // search bot posts
+  var postMatches=POSTS.filter(function(p){
+    return p.title.toLowerCase().includes(ql)||(p.prev&&p.prev.toLowerCase().includes(ql));
+  }).slice(0,3);
+  postMatches.forEach(function(p){
+    results.push({type:'post',icon:p.ic,label:p.title,sub:p.sub,action:(function(pid){return function(){
+      closeSearch();
+      filterFeed(null, document.querySelector('.sf-item'));
+      setTimeout(function(){
+        var el=document.getElementById('post-'+pid);
+        if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+      },200);
+    };})(p.id)});
+  });
+
+  // search real posts from supabase
+  var r=await db.from('posts').select('titulo,comunidades(nombre,icono)').ilike('titulo','%'+q+'%').limit(3);
+  if(r.data){
+    r.data.forEach(function(p){
+      results.push({type:'post',icon:(p.comunidades&&p.comunidades.icono)||'💬',label:p.titulo,sub:(p.comunidades&&p.comunidades.nombre)||'',action:function(){closeSearch();}});
+    });
+  }
+
+  // search comunidades
+  var comMatches=['chile','futbol','contingencia','memescl','finanzas','tecnologia'].filter(function(c){return c.includes(ql);});
+  comMatches.forEach(function(c){
+    results.push({type:'comunidad',icon:'🏘',label:'p/'+c,sub:'comunidad',action:(function(csub){return function(){
+      // find and click the sidebar item
+      var items=document.querySelectorAll('.sf-item');
+      var found=false;
+      items.forEach(function(item){
+        if(item.textContent.indexOf(csub)!==-1){
+          filterFeed(csub,item);
+          found=true;
+        }
+      });
+      if(!found) filterFeedSub(csub);
+    };})(c)});
+  });
+
+  // search users from supabase
+  var ru=await db.from('perfiles').select('username,ciudad').ilike('username','%'+q+'%').limit(3);
+  if(ru.data){
+    ru.data.forEach(function(u){
+      results.push({type:'usuario',icon:'👤',label:'u/'+u.username,sub:'usuario',action:function(){closeSearch();}});
+    });
+  }
+
+  if(!results.length){
+    document.getElementById('search-results').innerHTML='<div class="sr-item" style="color:var(--text3)">// sin resultados para "'+q+'"</div>';
+    document.getElementById('search-results').classList.add('on');
+    return;
+  }
+
+  var html='';
+  var types={post:'Posts',comunidad:'Comunidades',usuario:'Usuarios'};
+  var shown={};
+  results.forEach(function(r,i){
+    if(!shown[r.type]){shown[r.type]=true;html+='<div class="sr-section">'+types[r.type]+'</div>';}
+    html+='<div class="sr-item" onclick="execSearch('+i+')">'+
+      '<span>'+r.icon+'</span>'+
+      '<span style="flex:1">'+r.label+'</span>'+
+      '<span class="sr-tag">'+r.sub+'</span>'+
+    '</div>';
+  });
+
+  window.searchResults=results;
+  document.getElementById('search-results').innerHTML=html;
+  document.getElementById('search-results').classList.add('on');
+}
+
+function execSearch(i){
+  var r=window.searchResults[i];
+  if(!r)return;
+  // close dropdown and clear input
+  closeSearch();
+  document.getElementById('search-inp').value='';
+  // execute action
+  r.action();
+  // scroll feed into view
+  setTimeout(function(){
+    var feed=document.getElementById('posts-feed');
+    if(feed) feed.scrollIntoView({behavior:'smooth',block:'start'});
+  },100);
+}
+
+function checkCommentUrl(text, postId){
+  var url=extractUrl(text);
+  var container=document.getElementById('com-preview-'+postId);
+  if(!container) return;
+  if(url) fetchLinkPreview(url, container);
+  else container.innerHTML='';
+}
+
+function checkPostUrl(text){
+  var url=extractUrl(text);
+  var container=document.getElementById('post-preview-container');
+  if(!container) return;
+  if(url){
+    fetchLinkPreview(url, container);
+  } else {
+    container.innerHTML='';
+  }
+}
+
+// ── IMAGE UPLOADER FUNCTIONS ──
+var _uploadedImgUrl = null; // URL de la imagen subida al bucket
+var _memeType = 'img'; // 'img' o 'gif'
+
+function onComChange(sel){
+  var isMeme = sel.value === '4'; // comunidad_id 4 = memescl
+  document.getElementById('m-meme-section').style.display = isMeme ? 'block' : 'none';
+  document.getElementById('m-normal-section').style.display = isMeme ? 'none' : 'block';
+  if(isMeme){
+    // asegurarse que el campo contenido exista aunque esté oculto
+    var mc = document.getElementById('m-contenido');
+    if(!mc){
+      var hidden = document.createElement('textarea');
+      hidden.id = 'm-contenido';
+      hidden.style.display = 'none';
+      document.getElementById('m-meme-section').appendChild(hidden);
+    }
+  }
+  _uploadedImgUrl = null;
+}
+
+function setMemeType(type, btn){
+  _memeType = type;
+  document.querySelectorAll('.meme-type-btn').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+  document.getElementById('m-img-section').style.display = type === 'img' ? 'block' : 'none';
+  document.getElementById('m-gif-section').style.display = type === 'gif' ? 'block' : 'none';
+  _uploadedImgUrl = null;
+}
+
+function imgDragOver(e){
+  e.preventDefault();
+  document.getElementById('m-img-drop').classList.add('dragging');
+}
+
+function imgDragLeave(e){
+  document.getElementById('m-img-drop').classList.remove('dragging');
+}
+
+function imgDrop(e){
+  e.preventDefault();
+  imgDragLeave(e);
+  var file = e.dataTransfer.files[0];
+  if(file) processImgFile(file);
+}
+
+function imgSelected(input){
+  var file = input.files[0];
+  if(file) processImgFile(file);
+}
+
+async function processImgFile(file){
+  // Validar tipo y tamaño
+  var allowed = ['image/jpeg','image/png','image/gif','image/webp'];
+  if(!allowed.includes(file.type)){
+    toast('// solo JPG, PNG, GIF o WEBP');
+    return;
+  }
+  if(file.size > 5 * 1024 * 1024){
+    toast('// imagen muy pesada, máx 5MB');
+    return;
+  }
+
+  // Mostrar preview local inmediatamente
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var drop = document.getElementById('m-img-drop');
+    drop.classList.add('has-img');
+    drop.innerHTML =
+      '<img class="img-preview" src="'+e.target.result+'" alt="preview">'+
+      '<button class="img-remove-btn" onclick="removeImg(event)">✕ quitar</button>'+
+      '<div class="img-upload-progress"><div class="img-upload-progress-bar" id="m-img-progress" style="width:0%"></div></div>';
+  };
+  reader.readAsDataURL(file);
+
+  // Subir a Supabase Storage
+  await uploadImgToSupabase(file);
+}
+
+async function uploadImgToSupabase(file){
+  var progress = document.getElementById('m-img-progress');
+  if(progress) progress.style.width = '30%';
+
+  // Generar nombre único
+  var ext = file.name.split('.').pop().toLowerCase();
+  var filename = 'meme_' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.' + ext;
+  var path = 'public/' + filename;
+
+  try {
+    if(progress) progress.style.width = '60%';
+    var r = await db.storage.from('memes').upload(path, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type
+    });
+
+    if(r.error){
+      toast('// error subiendo imagen: ' + r.error.message);
+      if(progress) progress.style.width = '0%';
+      return;
+    }
+
+    if(progress) progress.style.width = '90%';
+
+    // Obtener URL pública
+    var urlData = db.storage.from('memes').getPublicUrl(path);
+    _uploadedImgUrl = urlData.data.publicUrl;
+
+    if(progress) progress.style.width = '100%';
+    setTimeout(function(){
+      if(progress) progress.style.background = 'var(--green)';
+    }, 200);
+
+    toast('// imagen subida ✓');
+  } catch(e){
+    toast('// error: ' + e.message);
+    if(progress) progress.style.width = '0%';
+  }
+}
+
+function removeImg(e){
+  e.stopPropagation();
+  _uploadedImgUrl = null;
+  var drop = document.getElementById('m-img-drop');
+  drop.classList.remove('has-img');
+  drop.innerHTML =
+    '<input type="file" id="m-img-file" accept="image/*" style="display:none" onchange="imgSelected(this)">'+
+    '<div id="m-img-placeholder">'+
+      '<div class="img-upload-icon">🖼</div>'+
+      '<div class="img-upload-txt">Click para subir o arrastra tu meme acá<br><span>JPG, PNG, GIF, WEBP — máx 5MB</span></div>'+
+    '</div>'+
+    '<div class="img-upload-progress"><div class="img-upload-progress-bar" id="m-img-progress"></div></div>';
+}
+
+async function buscarGifModal(q){
+  var grid = document.getElementById('m-gif-grid');
+  if(!grid) return;
+  grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">// buscando...</span>';
+  try {
+    var key = 'AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';
+    var r = await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q)+'&key='+key+'&limit=9&media_filter=gif');
+    if(!r.ok) throw new Error('tenor '+r.status);
+    var d = await r.json();
+    var results = d.results || [];
+    grid.innerHTML = '';
+    results.forEach(function(item){
+      var formats = item.media_formats || {};
+      var thumb = (formats.tinygif || formats.gif || {}).url || '';
+      var full = (formats.gif || formats.tinygif || {}).url || thumb;
+      if(!thumb) return;
+      var img = document.createElement('img');
+      img.src = thumb;
+      img.className = 'gif-thumb';
+      img.style.cssText = 'width:100%;height:60px;object-fit:cover;border-radius:3px;cursor:pointer;border:1px solid transparent';
+      img.onclick = function(){
+        _uploadedImgUrl = '[gif:'+full+']'; // formato especial para GIFs
+        // mostrar seleccionado
+        grid.querySelectorAll('img').forEach(function(i){ i.style.borderColor='transparent'; });
+        img.style.borderColor = 'var(--green)';
+        toast('// GIF seleccionado ✓');
+      };
+      grid.appendChild(img);
+    });
+    if(!results.length) grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem">// sin resultados</span>';
+  } catch(e){
+    grid.innerHTML = '<span style="color:var(--red);font-size:.7rem;font-family:var(--mono)">// error: '+e.message+'</span>';
+  }
+}
+
+async function doPost(){
+  var titulo=document.getElementById('m-titulo').value.trim();
+  var comunidad_id=parseInt(document.getElementById('m-com').value);
+  var btn=document.getElementById('m-sub');
+  var err=document.getElementById('m-err');
+  if(!titulo){err.textContent='// error: el título es requerido';return;}
+
+  // Determinar contenido según tipo de comunidad
+  var isMeme = (comunidad_id === 4); // memescl
+  var contenido = '';
+
+  if(isMeme){
+    if(!_uploadedImgUrl){
+      err.textContent='// error: debes subir una imagen o seleccionar un GIF';
+      return;
+    }
+    // Si es GIF del modal, _uploadedImgUrl ya tiene formato [gif:url]
+    // Si es imagen subida a Storage, la guardamos como [img:url]
+    if(_uploadedImgUrl.startsWith('[gif:')){
+      contenido = _uploadedImgUrl; // ya tiene el formato correcto
+    } else {
+      contenido = '[img:'+_uploadedImgUrl+']';
+    }
+  } else {
+    var mcEl = document.getElementById('m-contenido');
+    contenido = mcEl ? mcEl.value.trim() : '';
+  }
+
+  // Validar sesión
+  var sess=await db.auth.getSession();
+  if(!sess.data||!sess.data.session){err.textContent='// error: debes estar logueado';return;}
+  currentUser=sess.data.session.user;
+  var rp=await db.from('perfiles').select('*').eq('id',currentUser.id).single();
+  if(rp.data) currentPerfil=rp.data;
+
+  btn.disabled=true;
+  btn.textContent = isMeme ? '// publicando meme...' : '// publicando...';
+
+  var r=await db.from('posts').insert({
+    titulo:titulo,
+    contenido:contenido,
+    user_id:currentUser.id,
+    comunidad_id:comunidad_id,
+    votos:0
+  });
+
+  if(r.error){
+    err.textContent='// error: '+r.error.message;
+    btn.disabled=false;
+    btn.textContent='./publicar --exec';
+  } else {
+    _uploadedImgUrl = null; // reset
+    closeModal();
+    toast(isMeme ? 'meme publicado 🔥' : 'post publicado');
+    setTimeout(function(){loadRealPosts(null);},500);
+  }
+}
+
+// ── TICKER ──
+var tickerAssets=[
+  {sym:'BTC',label:'₿ BTC',type:'crypto',id:'bitcoin'},
+  {sym:'ETH',label:'Ξ ETH',type:'crypto',id:'ethereum'},
+  {sym:'AAPL',label:'AAPL',type:'stock'},
+  {sym:'TSLA',label:'TSLA',type:'stock'},
+  {sym:'NVDA',label:'NVDA',type:'stock'},
+  {sym:'DOLAR',label:'USD/CLP',type:'clp'},
+  {sym:'XAU',label:'ORO',type:'metal',id:'gold'},
+  {sym:'XAG',label:'PLATA',type:'metal',id:'silver'},
+];
+
+var tickerData={};
+
+async function loadTicker(){
+  try {
+    // Crypto: CoinGecko free API
+    var cryptoIds=tickerAssets.filter(function(a){return a.type==='crypto';}).map(function(a){return a.id;}).join(',');
+    var rc=await fetch('https://api.coingecko.com/api/v3/simple/price?ids='+cryptoIds+'&vs_currencies=usd&include_24hr_change=true');
+    if(rc.ok){
+      var cd=await rc.json();
+      tickerAssets.forEach(function(a){
+        if(a.type==='crypto'&&cd[a.id]){
+          tickerData[a.sym]={price:cd[a.id].usd,chg:cd[a.id].usd_24h_change||0};
+        }
+      });
+    }
+  } catch(e){}
+
+  try {
+    // USD/CLP: mindicador.cl
+    var rd=await fetch('https://mindicador.cl/api/dolar');
+    if(rd.ok){
+      var dd=await rd.json();
+      if(dd.serie&&dd.serie[0]){
+        tickerData['DOLAR']={price:dd.serie[0].valor,chg:0,isCLP:true};
+      }
+    }
+  } catch(e){}
+
+  try {
+    // Stocks + metals via Yahoo Finance (no-cors workaround with allorigins)
+    var symbols=['AAPL','TSLA','NVDA','GC=F','SI=F'];
+    for(var si=0;si<symbols.length;si++){
+      var sym=symbols[si];
+      try {
+        var url='https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=2d';
+        var proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);
+        var ry=await fetch(proxy);
+        if(!ry.ok) continue;
+        var py=await ry.json();
+        var data=JSON.parse(py.contents);
+        var result=data&&data.chart&&data.chart.result&&data.chart.result[0];
+        if(!result) continue;
+        var meta=result.meta;
+        var price=meta.regularMarketPrice||0;
+        var prev=meta.previousClose||price;
+        var chg=prev>0?((price-prev)/prev*100):0;
+        var mapSym={'GC=F':'XAU','SI=F':'XAG'};
+        var key=mapSym[sym]||sym;
+        tickerData[key]={price:price,chg:chg};
+      } catch(e){}
+    }
+  } catch(e){}
+
+  renderTicker();
+}
+
+function renderTicker(){
+  var items='';
+  tickerAssets.forEach(function(a){
+    var d=tickerData[a.sym];
+    if(!d) return;
+    var priceStr=a.sym==='DOLAR'?
+      '$'+Math.round(d.price).toLocaleString('es-CL')+' CLP':
+      '$'+d.price.toLocaleString('en-US',{minimumFractionDigits:d.price>100?2:4,maximumFractionDigits:d.price>100?2:4});
+    var chgStr=d.chg!==0?(d.chg>0?'+':'')+d.chg.toFixed(2)+'%':'';
+    var chgClass=d.chg>0?'up':d.chg<0?'down':'';
+    var arrow=d.chg>0?'▲':d.chg<0?'▼':'';
+    items+='<span class="ticker-item">'+
+      '<span class="ticker-sym">'+a.label+'</span>'+
+      '<span class="ticker-price">'+priceStr+'</span>'+
+      (chgStr?'<span class="ticker-chg '+chgClass+'">'+arrow+' '+chgStr+'</span>':'')+
+    '</span>';
+  });
+  if(!items){ document.getElementById('ticker-track').innerHTML='<span class="ticker-loading">// error cargando precios</span>'; return; }
+  // duplicate for seamless loop
+  var track=document.getElementById('ticker-track');
+  track.innerHTML=items+items;
+  // adjust animation duration based on content width
+  var totalW=track.scrollWidth/2;
+  var duration=Math.max(30, totalW/80);
+  track.style.animationDuration=duration+'s';
+}
+
+// Load ticker and refresh every 60s
+loadTicker();
+setInterval(loadTicker, 60000);
+
+// ── EMOJI & GIF ──
+var EMOJIS='😂,🔥,💀,🤣,😭,🤯,👀,😤,🫡,🤔,💯,🎯,🤙,👊,😎,🥲,😬,🤦,🙄,👏,🫠,😅,🤡,💪,🫶,❤️,🖤,⚡,🌊,🏔,🐍,🦅,🦁,🐺,💻,📱,🎮,🏆,🎯,💰,📈,📉,🔑,⚠️,❌,✅,🚀,🌙,☀️,🌧,❄️,🍺,🍕,🌮,☕,🤝,🙏,👋,✌️,🤞,💪,🫵,🧠,👁️,💬,🔊,📢,🗣️,⏰,📅,🔗,📎,✏️,🗑️,🔍,💡,🎵,🎶'.split(',');
+
+function toggleEmojiPicker(pickerId){
+  var el=document.getElementById(pickerId);
+  if(!el)return;
+  el.classList.toggle('on');
+  var gp=document.getElementById(pickerId.replace('emoji','gif'));
+  if(gp)gp.classList.remove('on');
+}
+
+function toggleGifPicker(pickerId){
+  var el=document.getElementById(pickerId);
+  if(!el)return;
+  el.classList.toggle('on');
+  var ep=document.getElementById(pickerId.replace('gif','emoji'));
+  if(ep)ep.classList.remove('on');
+  if(el.classList.contains('on')&&!el.dataset.loaded){
+    el.dataset.loaded='1';
+    searchGifs(pickerId,'meme chile');
+  }
+}
+
+function insertEmoji(targetId, emoji){
+  var inp=document.getElementById(targetId);
+  if(!inp)return;
+  var pos=inp.selectionStart||inp.value.length;
+  inp.value=inp.value.slice(0,pos)+emoji+inp.value.slice(pos);
+  inp.focus();
+  inp.selectionStart=inp.selectionEnd=pos+emoji.length;
+}
+
+var gifCache={};
+async function searchGifs(pickerId, query){
+  var grid=document.getElementById(pickerId+'-grid');
+  if(!grid)return;
+  grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">// buscando...</span>';
+  try {
+    // Tenor API v2 - free
+    var key='AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY'; // demo key
+    var url='https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(query)+'&key='+key+'&limit=9&media_filter=gif';
+    var r=await fetch(url);
+    if(!r.ok) throw new Error('tenor error');
+    var data=await r.json();
+    var results=data.results||[];
+    if(!results.length){grid.innerHTML='<span style="color:var(--text3);font-size:.7rem">// sin resultados</span>';return;}
+    grid.innerHTML='';
+    results.forEach(function(item){
+      var gif=item.media_formats&&item.media_formats.tinygif?item.media_formats.tinygif.url:'';
+      var full=item.media_formats&&item.media_formats.gif?item.media_formats.gif.url:gif;
+      if(!gif)return;
+      var img=document.createElement('img');
+      img.className='gif-thumb';
+      img.src=gif;
+      img.alt=item.content_description||'gif';
+      img.onclick=function(){selectGif(pickerId,full,gif);};
+      grid.appendChild(img);
+    });
+  } catch(e){
+    // fallback - show message
+    grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">// conecta internet para ver GIFs</span>';
+  }
+}
+
+function selectGif(pickerId, fullUrl, thumbUrl){
+  var preview=document.getElementById(pickerId+'-preview');
+  if(preview){
+    preview.src=thumbUrl;
+    preview.classList.add('on');
+    preview.dataset.full=fullUrl;
+  }
+  // store selected gif for send
+  var picker=document.getElementById(pickerId);
+  if(picker) picker.dataset.selectedGif=fullUrl;
+}
+
+// ── EMOJI / GIF GLOBAL PICKER ──
+// Single floating picker that works everywhere
+var _activeInput = null;
 
 function showEmojiPicker(inputId){
   _activeInput = inputId;
@@ -2896,8 +4010,8 @@ async function loadGlobalGifs(query){
 
 function buildMediaBar(inputId){
   return '<div class="media-bar">'+
-    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmoji(this)">😊</button>'+
-    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGif(this)">GIF</button>'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmojiPicker(this.dataset.inp)">😊</button>'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGifPicker(this.dataset.inp)">GIF</button>'+
   '</div>';
 }
 
@@ -2927,12 +4041,18 @@ async function botCommentRealPost(postId, postTitle, postContenido, postSub, fak
   if (!candidates.length) candidates = BOTS;
   var botData = candidates[Math.floor(Math.random() * candidates.length)];
 
-  // Intentar Claude API para comentario contextual
+  // Usar pool propio del arquetipo — sin Claude API (CORS)
   var pool = getBotPool(botData);
-  var fallbackTxt = pool[Math.floor(Math.random()*pool.length)];
-  var txt = (await generateClaudeComment(botData.name, botData.arq||'santiaguino', postTitle, postSub)) || fallbackTxt;
+  var longitud = getBotLength(botData);
+  var filtered = longitud === 'muy_corta'
+    ? pool.filter(function(p) { return p.length <= 40; })
+    : longitud === 'corta'
+    ? pool.filter(function(p) { return p.length <= 80; })
+    : pool;
+  if (!filtered.length) filtered = pool;
+  var txt = filtered[Math.floor(Math.random() * filtered.length)];
 
-  // Solo DOM - no DB
+  // Solo DOM
   if(fakeId){
     var clist=document.getElementById('clist-'+fakeId);
     if(clist){
@@ -3041,6 +4161,122 @@ async function botActivityLoop() {
 }
 
 
+function openPostView(postId){
+  var p=POSTS.find(function(x){return x.id===postId;});
+  if(!p)return;
+  var wrap=document.getElementById('post-view');
+  var body=document.getElementById('post-view-body');
+  if(!wrap||!body)return;
+  document.getElementById('post-view-sub').textContent=(p.ic||'')+' p/'+p.sub;
+  document.body.style.overflow='hidden';
+  wrap.classList.add('on');
+  var html='';
+  html+='<div class="post-view-meta">'+makeAvatar(p.user.name,'sm')+' <span data-u="'+p.user.name+'" onclick="showProfile(this.dataset.u)" style="cursor:pointer;color:var(--green);font-family:var(--mono);font-size:.72rem">u/'+p.user.name+'</span> · <span>'+p.t+'</span>';
+  if(p.flair)html+=' <span class="flair '+(p.isNews?'flair-news':'fc-'+(p.fc||'g'))+'">'+p.flair+'</span>';
+  html+='</div>';
+  html+='<div class="post-view-title">'+p.title+'</div>';
+  html+='<div class="post-view-content">';
+  if(p.img)html+='<img class="post-view-img" src="'+p.img+'" alt="">';
+  if(p.prev)html+='<div style="font-size:.88rem;color:var(--text2);line-height:1.6;word-break:break-word;margin-top:'+(p.img?'.8rem':'0')+'">'+p.prev+'</div>';
+  html+='</div>';
+  html+='<hr class="post-view-divider">';
+  if(currentUser){
+    html+='<div class="post-view-comment-box"><textarea id="pv-inp-'+postId+'" placeholder="escribe un comentario..." style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:3px;padding:.5rem .7rem;font-family:var(--sans);font-size:.84rem;color:var(--text1);outline:none;resize:vertical;min-height:70px;box-sizing:border-box"></textarea>';
+    html+='<div style="display:flex;justify-content:flex-end;margin-top:.4rem;gap:.5rem"><button class="media-btn" onclick="showEmoji(this)" data-inp="pv-inp-'+postId+'">😊</button><button style="background:var(--green);color:#000;border:none;border-radius:3px;padding:.35rem .9rem;font-family:var(--mono);font-size:.75rem;cursor:pointer;font-weight:700" onclick="sendPVComment('+postId+')">ENVIAR</button></div></div>';
+  }
+  html+='<div class="post-view-comments-title">// '+(p.coms||0)+' comentarios</div>';
+  html+='<div id="pv-list-'+postId+'"><div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// cargando...</div></div>';
+  body.innerHTML=html;
+  wrap.scrollTop=0;
+  loadPVComments(postId);
+}
+function closePostView(){var w=document.getElementById('post-view');if(w)w.classList.remove('on');document.body.style.overflow='';}
+async function loadPVComments(postId){
+  var list=document.getElementById('pv-list-'+postId);
+  if(!list)return;
+  var p=POSTS.find(function(x){return x.id===postId;});
+  if(!p){list.innerHTML='';return;}
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
+  var html='';
+  if(!realId){
+    var coms=generateBotComments(p.coms||5,p.cd||[],p.sub);
+    coms.forEach(function(c){html+=renderCommentHTML('pvc-'+Math.random().toString(36).slice(2),c.bot.name,'',c.t,linkify(c.txt),c.v,false,null);});
+    list.innerHTML=html||'<div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// sin comentarios aún</div>';
+    return;
+  }
+  var r=await db.from('comentarios').select('*,perfiles(username)').eq('post_id',realId).order('votos',{ascending:false}).limit(50);
+  if(r.error||!r.data||!r.data.length){list.innerHTML='<div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// sin comentarios aún</div>';return;}
+  r.data.forEach(function(c){var u=c.perfiles||{username:'anon'};html+=renderCommentHTML('pvc-'+c.id,u.username,'','ahora',linkify(c.texto),c.votos||0,currentUser&&c.user_id===currentUser.id,c.id);});
+  list.innerHTML=html;
+}
+async function sendPVComment(postId){
+  var inp=document.getElementById('pv-inp-'+postId);
+  if(!inp||!inp.value.trim())return;
+  var texto=inp.value.trim();
+  var sess=await db.auth.getSession();
+  if(!sess.data||!sess.data.session){showModal('login');return;}
+  var uid=sess.data.session.user.id;
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
+  inp.value='';
+  if(realId){
+    var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
+    if(r.error){toast('error: '+r.error.message);return;}
+    if(currentPerfil){currentPerfil.karma=(currentPerfil.karma||0)+1;db.from('perfiles').update({karma:currentPerfil.karma}).eq('id',uid);}
+  }
+  var list=document.getElementById('pv-list-'+postId);
+  if(list){var nh=renderCommentHTML('pvc-new-'+Date.now(),currentPerfil?currentPerfil.username:'yo','','ahora',linkify(texto),0,true,null);list.innerHTML=nh+list.innerHTML;}
+  toast('comentario publicado');
+  var p=POSTS.find(function(x){return x.id===postId;});if(p)p.coms=(p.coms||0)+1;
+}
+
+function getKarmaLevel(k){
+  if(k>=10000)return{label:'⚡ leyenda',color:'#ffd700'};
+  if(k>=5000) return{label:'🔥 élite',color:'#ff6b35'};
+  if(k>=1000) return{label:'💎 veterano',color:'#79c0ff'};
+  if(k>=500)  return{label:'⭐ activo',color:'#00ff88'};
+  if(k>=100)  return{label:'📈 regular',color:'#a5d6ff'};
+  if(k>=10)   return{label:'🌱 nuevo',color:'#8b949e'};
+  return{label:'👾 anon',color:'#484f58'};
+}
+function karmaTag(k){var lvl=getKarmaLevel(k||0);var n=k>=1000?(k/1000).toFixed(1)+'k':k+'';return '<span class="karma-tag" style="color:'+lvl.color+';border-color:'+lvl.color+'40">'+lvl.label+' · '+n+'</span>';}
+function hashNum(s,m){var n=0;for(var i=0;i<s.length;i++)n=(n*31+s.charCodeAt(i))&0xfffffff;return n%m;}
+function showProfile(username){
+  if(!username||username==='noticia_cl')return;
+  var wrap=document.getElementById('profile-wrap');
+  if(!wrap)return;
+  document.getElementById('profile-title').textContent='u/'+username;
+  document.getElementById('profile-body').innerHTML='<div style="text-align:center;padding:2rem;font-family:var(--mono);font-size:.75rem;color:var(--text3)">// cargando...</div>';
+  wrap.classList.add('on');
+  document.body.style.overflow='hidden';
+  loadProfile(username);
+}
+function closeProfile(){var w=document.getElementById('profile-wrap');if(w)w.classList.remove('on');document.body.style.overflow='';}
+async function loadProfile(username){
+  var body=document.getElementById('profile-body');
+  var bot=BOTS.find(function(b){return b.name===username;});
+  if(bot){
+    var karma=hashNum(username,4500)+50;var posts=hashNum(username+'p',80)+5;var coms=hashNum(username+'c',300)+20;
+    var lvl=getKarmaLevel(karma);
+    var joinDate=new Date(Date.now()-hashNum(username+'d',365*2)*86400000).toLocaleDateString('es-CL',{timeZone:'America/Santiago'});
+    var arqL={nortenio:'Norte Grande',portenio:'Valparaíso',santiaguino:'Santiago',sureno:'Sur de Chile',economista:'Economista',gamer_tech:'Gamer/Tech',senora_barrio:'Barrio',profe:'Educación',flaite:'Calle',diaspora:'Diáspora',emprendedor:'Startup',gen_z:'Gen Z'};
+    var html='<div class="profile-card">'+makeAvatar(username,'lg')+'<div><div style="font-size:1.1rem;font-weight:700;color:var(--text1);font-family:var(--mono)">u/'+username+'</div><div style="margin:.3rem 0">'+karmaTag(karma)+'</div><div style="font-size:.65rem;color:var(--text3);font-family:var(--mono)">'+(arqL[bot.arq]||'Usuario')+' · desde '+joinDate+'</div></div></div>';
+    html+='<div class="profile-stats"><div class="profile-stat"><div class="profile-stat-n" style="color:var(--green)">'+karma+'</div><div class="profile-stat-l">karma</div></div><div class="profile-stat"><div class="profile-stat-n" style="color:var(--blue)">'+posts+'</div><div class="profile-stat-l">posts</div></div><div class="profile-stat"><div class="profile-stat-n" style="color:var(--purple)">'+coms+'</div><div class="profile-stat-l">comentarios</div></div></div>';
+    body.innerHTML=html;return;
+  }
+  try{
+    var rp=await db.from('perfiles').select('*').eq('username',username).single();
+    if(rp.error||!rp.data){body.innerHTML='<div class="profile-empty">// usuario no encontrado</div>';return;}
+    var u=rp.data;
+    var rpo=await db.from('posts').select('*,comunidades(nombre,icono)').eq('user_id',u.id).order('created_at',{ascending:false}).limit(8);
+    var rc=await db.from('comentarios').select('*').eq('user_id',u.id).order('created_at',{ascending:false}).limit(8);
+    var ps=rpo.data||[];var cs=rc.data||[];
+    var h2='<div class="profile-card">'+makeAvatar(u.username,'lg')+'<div><div style="font-size:1.1rem;font-weight:700;color:var(--text1);font-family:var(--mono)">u/'+u.username+'</div><div style="margin:.3rem 0">'+karmaTag(u.karma)+'</div><div style="font-size:.65rem;color:var(--text3);font-family:var(--mono)">desde '+new Date(u.created_at||Date.now()).toLocaleDateString('es-CL',{timeZone:'America/Santiago'})+'</div></div></div>';
+    h2+='<div class="profile-stats"><div class="profile-stat"><div class="profile-stat-n" style="color:var(--green)">'+(u.karma||0)+'</div><div class="profile-stat-l">karma</div></div><div class="profile-stat"><div class="profile-stat-n" style="color:var(--blue)">'+ps.length+'</div><div class="profile-stat-l">posts</div></div><div class="profile-stat"><div class="profile-stat-n" style="color:var(--purple)">'+cs.length+'</div><div class="profile-stat-l">comentarios</div></div></div>';
+    body.innerHTML=h2;
+  }catch(e){body.innerHTML='<div class="profile-empty">// error: '+e.message+'</div>';}
+}
+
+
 var _newsLoaded=false;
 async function loadNews(){
   if(_newsLoaded)return;
@@ -3053,326 +4289,20 @@ async function loadNews(){
     _newsLoaded=true;
     items.forEach(function(n,i){
       if(!n.title||n.title.length<5)return;
+      var cleanDesc=(n.desc||'').replace(/<[^>]+>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim().slice(0,200);
       POSTS.unshift({id:8500+i,sub:n.sub||'chile',ic:n.ic||'📰',
         user:{name:'noticia_cl',av:'📰'},t:'ahora',flair:'📡 LIVE',fc:'r',
-        title:n.title,prev:n.desc||null,url:n.link||null,
+        title:n.title,prev:cleanDesc||null,url:n.link||null,
         votos:Math.floor(Math.random()*12)+1,
         coms:Math.floor(Math.random()*6)+1,
         cd:[],isNews:true});
     });
     var f=document.getElementById('posts-feed');
-    if(f)f.innerHTML=renderFeed(null);
+    if(f)f.innerHTML=renderFeed(window._currentFilter||null);
     renderTrending();
-    console.log('[RandomPlan] '+items.length+' noticias cargadas');
+    console.log('[RandomPlan] '+items.length+' noticias');
   }catch(e){console.log('[RandomPlan] news error:',e.message);}
 }
-
-// ── CLAUDE API BOT COMMENTS ──
-var _botCommentCache={};
-
-async function generateClaudeComment(botName, botArq, postTitle, postSub){
-  var cacheKey=botName+':'+postTitle.slice(0,20);
-  if(_botCommentCache[cacheKey]) return _botCommentCache[cacheKey];
-  var arqDesc={nortenio:'eres de Antofagasta directo y del norte',portenio:'eres de Valparaiso bohemio',santiaguino:'eres de Santiago urbano',sureno:'eres de Concepcion tranquilo',economista:'eres economista analitico',gamer_tech:'eres gamer y tech usas jerga internet',senora_barrio:'eres senora de barrio practica',profe:'eres profesor reflexivo',flaite:'eres de la calle hablas chilenismo',diaspora:'vives en extranjero compara chile',emprendedor:'eres emprendedor startup',gen_z:'eres gen z chileno no cap based'};
-  var desc=arqDesc[botArq]||'eres chileno';
-  var prompt='Eres u/'+botName+' en RandomPlan. '+desc+'. Comenta en max 15 palabras en chileno coloquial este post de p/'+postSub+': '+postTitle;
-  try{
-    var r=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:80,messages:[{role:'user',content:prompt}]})
-    });
-    if(!r.ok) return null;
-    var d=await r.json();
-    var txt=d.content&&d.content[0]&&d.content[0].text;
-    if(txt){txt=txt.trim().replace(/^["']|["']$/g,'');_botCommentCache[cacheKey]=txt;return txt;}
-  }catch(e){}
-  return null;
-}
-
-
-// ── VISTA DE POST ──
-function openPostView(postId){
-  var p=POSTS.find(function(x){return x.id===postId;});
-  if(!p) return;
-
-  var wrap=document.getElementById('post-view');
-  var body=document.getElementById('post-view-body');
-  var subEl=document.getElementById('post-view-sub');
-  if(!wrap||!body) return;
-
-  subEl.textContent=(p.ic||'')+'  p/'+p.sub;
-  document.body.style.overflow='hidden';
-  wrap.classList.add('on');
-
-  var html='';
-
-  // meta
-  html+='<div class="post-view-meta">';
-  html+=makeAvatar(p.user.name,'sm')+' ';
-  html+='<span class="u" data-u="'+p.user.name+'" onclick="showProfile(this.dataset.u)" style="cursor:pointer">u/'+p.user.name+'</span>';
-  html+='<span>·</span><span>'+p.t+'</span>';
-  if(p.flair) html+='<span class="flair '+(p.isNews?'flair-news':'fc-'+(p.fc||'g'))+'">'+p.flair+'</span>';
-  html+='</div>';
-
-  // title
-  html+='<div class="post-view-title">'+p.title+'</div>';
-
-  // content
-  html+='<div class="post-view-content">';
-  if(p.img){
-    html+='<img class="post-view-img" src="'+p.img+'" alt="'+p.title+'">';
-  }
-  if(p.prev){
-    html+='<div style="font-size:.88rem;color:var(--text2);line-height:1.6;word-break:break-word;'+(p.img?'margin-top:.8rem':'')+'">'+linkify(p.prev)+'</div>';
-  }
-  if(p.isNews&&p.url){
-    
-  }
-  html+='</div>';
-
-  // votes
-  html+='<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;font-family:var(--mono);font-size:.8rem">';
-  html+='<button class="ccact ccvote-up" style="padding:.3rem .6rem" onclick="votePost('+postId+',1,this)">▲ '+(p.votos||0)+'</button>';
-  html+='<button class="ccact ccvote-down" style="padding:.3rem .6rem" onclick="votePost('+postId+',-1,this)">▼</button>';
-  html+='</div>';
-
-  html+='<hr class="post-view-divider">';
-
-  // comment box
-  if(currentUser){
-    html+='<div class="post-view-comment-box">';
-    html+='<textarea id="pv-comment-inp" placeholder="escribe un comentario..." style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:3px;padding:.5rem .7rem;font-family:var(--sans);font-size:.84rem;color:var(--text1);outline:none;resize:vertical;min-height:70px;box-sizing:border-box"></textarea>';
-    html+='<div style="display:flex;justify-content:flex-end;margin-top:.4rem;gap:.5rem">';
-    html+='<button class="media-btn" onclick="showEmoji(this)" data-inp="pv-comment-inp">😊</button>';
-    html+='<button style="background:var(--green);color:#000;border:none;border-radius:3px;padding:.35rem .9rem;font-family:var(--mono);font-size:.75rem;cursor:pointer;font-weight:700" onclick="sendPostViewComment('+postId+')">ENVIAR</button>';
-    html+='</div></div>';
-  }
-
-  // comments section
-  html+='<div class="post-view-comments-title">// '+( p.coms||0)+' comentarios</div>';
-  html+='<div id="pv-clist-'+postId+'">'; 
-  html+='<div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// cargando comentarios...</div>';
-  html+='</div>';
-
-  body.innerHTML=html;
-  wrap.scrollTop=0;
-
-  // load comments
-  loadPostViewComments(postId);
-}
-
-function closePostView(){
-  var w=document.getElementById('post-view');
-  if(w) w.classList.remove('on');
-  document.body.style.overflow='';
-}
-
-async function loadPostViewComments(postId){
-  var list=document.getElementById('pv-clist-'+postId);
-  if(!list) return;
-  var p=POSTS.find(function(x){return x.id===postId;});
-  if(!p){list.innerHTML='';return;}
-
-  var html='';
-
-  // bot/news posts - show bot comments
-  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
-  if(!realId){
-    var allComs=generateBotComments(p.coms||5, p.cd||[], p.sub);
-    allComs.forEach(function(c){
-      html+=renderCommentHTML('pvc-'+Math.random().toString(36).slice(2), c.bot.name, '', c.t, linkify(c.txt), c.v, false, null);
-    });
-    list.innerHTML=html||'<div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// sin comentarios aún</div>';
-    return;
-  }
-
-  // real posts - load from Supabase
-  var r=await db.from('comentarios').select('*,perfiles(username)').eq('post_id',realId).order('votos',{ascending:false}).limit(50);
-  if(r.error||!r.data||!r.data.length){
-    list.innerHTML='<div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// sin comentarios aún</div>';
-    return;
-  }
-  r.data.forEach(function(c){
-    var u=c.perfiles||{username:'anon'};
-    var isMe=currentUser&&c.user_id===currentUser.id;
-    html+=renderCommentHTML('pvc-'+c.id, u.username, '', 'ahora', linkify(c.texto), c.votos||0, isMe, c.id);
-  });
-  list.innerHTML=html;
-}
-
-async function sendPostViewComment(postId){
-  var inp=document.getElementById('pv-comment-inp');
-  if(!inp||!inp.value.trim()) return;
-  var texto=inp.value.trim();
-  var sess=await db.auth.getSession();
-  if(!sess.data||!sess.data.session){showModal('login');return;}
-  var uid=sess.data.session.user.id;
-  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
-  inp.value='';
-  if(realId){
-    var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
-    if(r.error){toast('error: '+r.error.message);return;}
-    if(currentPerfil){
-      currentPerfil.karma=(currentPerfil.karma||0)+1;
-      db.from('perfiles').update({karma:currentPerfil.karma}).eq('id',uid);
-    }
-  }
-  // show in UI
-  var list=document.getElementById('pv-clist-'+postId);
-  if(list){
-    var newHtml=renderCommentHTML('pvc-new-'+Date.now(), currentPerfil?currentPerfil.username:'yo', '', 'ahora', linkify(texto), 0, true, null);
-    list.innerHTML=newHtml+list.innerHTML;
-  }
-  toast('comentario publicado');
-  // update count
-  var p=POSTS.find(function(x){return x.id===postId;});
-  if(p) p.coms=(p.coms||0)+1;
-}
-
-function votePost(postId, dir, btn){
-  var p=POSTS.find(function(x){return x.id===postId;});
-  if(!p) return;
-  p.votos=(p.votos||0)+dir;
-  var upBtn=btn.closest('div').querySelector('.ccvote-up');
-  if(upBtn) upBtn.textContent='▲ '+p.votos;
-}
-
-// ── KARMA & PERFIL ──
-function getKarmaLevel(k){
-  if(k>=10000)return{label:'⚡ leyenda',color:'#ffd700'};
-  if(k>=5000) return{label:'🔥 élite',color:'#ff6b35'};
-  if(k>=1000) return{label:'💎 veterano',color:'#79c0ff'};
-  if(k>=500)  return{label:'⭐ activo',color:'#00ff88'};
-  if(k>=100)  return{label:'📈 regular',color:'#a5d6ff'};
-  if(k>=10)   return{label:'🌱 nuevo',color:'#8b949e'};
-  return{label:'👾 anon',color:'#484f58'};
-}
-function karmaTag(k){
-  var lvl=getKarmaLevel(k||0);
-  var n=k>=1000?(k/1000).toFixed(1)+'k':k+'';
-  return '<span class="karma-tag" style="color:'+lvl.color+';border-color:'+lvl.color+'40">'+lvl.label+' · '+n+'</span>';
-}
-function hashNum(s,m){var n=0;for(var i=0;i<s.length;i++)n=(n*31+s.charCodeAt(i))&0xfffffff;return n%m;}
-
-function showProfile(username){
-  if(!username||username==='noticia_cl') return;
-  var wrap=document.getElementById('profile-wrap');
-  var body=document.getElementById('profile-body');
-  var title=document.getElementById('profile-title');
-  if(!wrap) return;
-  title.textContent='u/'+username;
-  body.innerHTML='<div style="text-align:center;padding:2rem;font-family:var(--mono);font-size:.75rem;color:var(--text3)">// cargando...</div>';
-  wrap.classList.add('on');
-  document.body.style.overflow='hidden';
-  loadProfile(username);
-}
-function closeProfile(){
-  var w=document.getElementById('profile-wrap');
-  if(w) w.classList.remove('on');
-  document.body.style.overflow='';
-}
-async function loadProfile(username){
-  var body=document.getElementById('profile-body');
-  var bot=BOTS.find(function(b){return b.name===username;});
-  if(bot){
-    var karma=hashNum(username,4500)+50;
-    var posts=hashNum(username+'p',80)+5;
-    var coms=hashNum(username+'c',300)+20;
-    var lvl=getKarmaLevel(karma);
-    var joinDate=new Date(Date.now()-hashNum(username+'d',365*2)*86400000).toLocaleDateString('es-CL',{timeZone:'America/Santiago'});
-    var arqLabels={nortenio:'Norte Grande',portenio:'Valparaíso',santiaguino:'Santiago',sureno:'Sur de Chile',economista:'Economista',gamer_tech:'Gamer/Tech',senora_barrio:'Barrio',profe:'Educación',flaite:'Calle',diaspora:'Diáspora',emprendedor:'Startup',gen_z:'Gen Z'};
-    var html='<div class="profile-card">'+makeAvatar(username,'lg')+'<div>';
-    html+='<div style="font-size:1.1rem;font-weight:700;color:var(--text1);font-family:var(--mono)">u/'+username+'</div>';
-    html+='<div style="margin:.3rem 0">'+karmaTag(karma)+'</div>';
-    html+='<div style="font-size:.65rem;color:var(--text3);font-family:var(--mono)">'+(arqLabels[bot.arq]||'Usuario')+' · miembro desde '+joinDate+'</div>';
-    html+='</div></div>';
-    html+='<div class="profile-stats">';
-    html+='<div class="profile-stat"><div class="profile-stat-n" style="color:var(--green)">'+karma+'</div><div class="profile-stat-l">karma</div></div>';
-    html+='<div class="profile-stat"><div class="profile-stat-n" style="color:var(--blue)">'+posts+'</div><div class="profile-stat-l">posts</div></div>';
-    html+='<div class="profile-stat"><div class="profile-stat-n" style="color:var(--purple)">'+coms+'</div><div class="profile-stat-l">comentarios</div></div>';
-    html+='</div>';
-    var nextLevels=[10,100,500,1000,5000,10000];
-    var next=nextLevels.find(function(n){return n>karma;});
-    if(next){
-      var prevLvl=[0,10,100,500,1000,5000][nextLevels.indexOf(next)];
-      var pct=Math.min(100,Math.floor((karma-prevLvl)/(next-prevLvl)*100));
-      html+='<div style="background:var(--bg0);border:1px solid var(--border);border-radius:4px;padding:.7rem;margin-bottom:.8rem">';
-      html+='<div style="font-size:.65rem;font-family:var(--mono);color:var(--text3)">// nivel: <span style="color:'+lvl.color+'">'+lvl.label+'</span></div>';
-      html+='<div style="background:var(--bg2);border-radius:2px;height:4px;margin-top:.4rem"><div style="background:'+lvl.color+';width:'+pct+'%;height:4px;border-radius:2px"></div></div>';
-      html+='<div style="font-size:.6rem;color:var(--text3);font-family:var(--mono);margin-top:.3rem">'+pct+'% hacia el siguiente nivel ('+next+' karma)</div></div>';
-    }
-    body.innerHTML=html;
-    return;
-  }
-  try{
-    var rp=await db.from('perfiles').select('*').eq('username',username).single();
-    if(rp.error||!rp.data){
-      // usuario desconocido - mostrar perfil genérico
-      var karma2=hashNum(username,500)+5;
-      var lvlg=getKarmaLevel(karma2);
-      body.innerHTML='<div class="profile-card">'+makeAvatar(username,'lg')+'<div>'+
-        '<div style="font-size:1.1rem;font-weight:700;color:var(--text1);font-family:var(--mono)">u/'+username+'</div>'+
-        '<div style="margin:.3rem 0">'+karmaTag(karma2)+'</div>'+
-        '<div style="font-size:.65rem;color:var(--text3);font-family:var(--mono)">usuario de RandomPlan</div>'+
-        '</div></div>'+
-        '<div class="profile-empty">// sin historial público disponible</div>';
-      return;
-    }
-    var u=rp.data;
-    var lvl2=getKarmaLevel(u.karma||0);
-    var rpo=await db.from('posts').select('*,comunidades(nombre,icono)').eq('user_id',u.id).order('created_at',{ascending:false}).limit(8);
-    var rc=await db.from('comentarios').select('*').eq('user_id',u.id).order('created_at',{ascending:false}).limit(8);
-    var ps=rpo.data||[]; var cs=rc.data||[];
-    var html2='<div class="profile-card">'+makeAvatar(u.username,'lg')+'<div>';
-    html2+='<div style="font-size:1.1rem;font-weight:700;color:var(--text1);font-family:var(--mono)">u/'+u.username+'</div>';
-    html2+='<div style="margin:.3rem 0">'+karmaTag(u.karma)+'</div>';
-    html2+='<div style="font-size:.65rem;color:var(--text3);font-family:var(--mono)">miembro desde '+new Date(u.created_at||Date.now()).toLocaleDateString('es-CL',{timeZone:'America/Santiago'})+'</div>';
-    html2+='</div></div>';
-    html2+='<div class="profile-stats">';
-    html2+='<div class="profile-stat"><div class="profile-stat-n" style="color:var(--green)">'+(u.karma||0)+'</div><div class="profile-stat-l">karma</div></div>';
-    html2+='<div class="profile-stat"><div class="profile-stat-n" style="color:var(--blue)">'+ps.length+'</div><div class="profile-stat-l">posts</div></div>';
-    html2+='<div class="profile-stat"><div class="profile-stat-n" style="color:var(--purple)">'+cs.length+'</div><div class="profile-stat-l">comentarios</div></div>';
-    html2+='</div>';
-    var nextL=[10,100,500,1000,5000,10000];
-    var nxt=nextL.find(function(n){return n>(u.karma||0);});
-    if(nxt){
-      var prv=[0,10,100,500,1000,5000][nextL.indexOf(nxt)];
-      var pct2=Math.min(100,Math.floor(((u.karma||0)-prv)/(nxt-prv)*100));
-      html2+='<div style="background:var(--bg0);border:1px solid var(--border);border-radius:4px;padding:.7rem;margin-bottom:.8rem">';
-      html2+='<div style="font-size:.65rem;font-family:var(--mono);color:var(--text3)">// nivel: <span style="color:'+lvl2.color+'">'+lvl2.label+'</span></div>';
-      html2+='<div style="background:var(--bg2);border-radius:2px;height:4px;margin-top:.4rem"><div style="background:'+lvl2.color+';width:'+pct2+'%;height:4px;border-radius:2px"></div></div>';
-      html2+='<div style="font-size:.6rem;color:var(--text3);font-family:var(--mono);margin-top:.3rem">'+pct2+'% hacia el siguiente nivel</div></div>';
-    }
-    if(ps.length){
-      html2+='<div class="profile-section"><div class="profile-section-title">// posts recientes</div>';
-      ps.forEach(function(p){var c2=p.comunidades||{nombre:'chile',icono:'🇨🇱'};
-        html2+='<div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:.6rem .8rem;margin-bottom:.4rem">';
-        html2+='<div style="font-size:.65rem;color:var(--text3);font-family:var(--mono);margin-bottom:.25rem">'+c2.icono+' p/'+c2.nombre+'</div>';
-        html2+='<div style="font-size:.85rem;font-weight:700;color:var(--text1)">'+p.titulo+'</div>';
-        html2+='<div style="font-size:.7rem;color:var(--text3);font-family:var(--mono);margin-top:.25rem">▲ '+(p.votos||0)+'</div></div>';
-      });
-      html2+='</div>';
-    }
-    if(cs.length){
-      html2+='<div class="profile-section"><div class="profile-section-title">// comentarios recientes</div>';
-      cs.forEach(function(c3){
-        html2+='<div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:.6rem .8rem;margin-bottom:.4rem">';
-        html2+='<div style="font-size:.82rem;color:var(--text2)">'+c3.texto+'</div>';
-        html2+='<div style="font-size:.7rem;color:var(--text3);font-family:var(--mono);margin-top:.25rem">▲ '+(c3.votos||0)+'</div></div>';
-      });
-      html2+='</div>';
-    }
-    body.innerHTML=html2;
-  }catch(e){body.innerHTML='<div class="profile-empty">// error: '+e.message+'</div>';}
-}
-
-
-function openNewsLink(btn){
-  var url=btn.getAttribute('data-url');
-  if(url) window.open(url,'_blank','noopener,noreferrer');
-}
-
 
 // Init
 addMsg(null,'// chat global activo · randomplan.cl',false,true);
