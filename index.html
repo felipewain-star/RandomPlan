@@ -1415,15 +1415,8 @@ function renderFeed(filter){
 // Mapeo permanente de posts semilla (ids JS) → IDs reales en Supabase
 // Actualizar aquí si se agregan nuevos posts semilla
 function initSeedPostMap(){
+  // realPostIdMap filled dynamically by loadRealPosts only
   window.realPostIdMap = window.realPostIdMap || {};
-  // id_js: id_supabase
-  window.realPostIdMap[1]  = 21; // La Roja convocó
-  window.realPostIdMap[2]  = 22; // El dólar $960
-  window.realPostIdMap[3]  = 23; // Camiseta roja igual
-  window.realPostIdMap[4]  = 24; // Invierno Chile
-  window.realPostIdMap[5]  = 25; // Dólar análisis semana
-  window.realPostIdMap[6]  = 26; // SpaceX ETF
-  window.realPostIdMap[7]  = 27; // Mia Khalifa mundial
 }
 
 async function loadRealPosts(filter){
