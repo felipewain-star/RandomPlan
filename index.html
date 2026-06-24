@@ -1932,8 +1932,16 @@ function renderBotProfile(username, bot, body){
   var arq=bot.arq||'santiaguino';
   html+='<div class="profile-section">';
   html+='<div class="profile-section-title">// comentarios recientes</div>';
-  var frases=BOT_PHRASES[arq]||BOT_PHRASES.santiaguino;
-  var samples=[].concat(frases.largo||[],frases.corto||[]).slice(0,3);
+  // use generic phrases pool
+  var samplePhrases=[
+    'desde '+bot.ciudad+' siguiendo este tema de cerca',
+    'interesante perspectiva, hay que ver los dos lados',
+    'lo mismo pasa acá, no es solo en santiago',
+    'llevamos años con el mismo problema y nadie hace nada',
+    'al final uno hace lo que puede con lo que tiene',
+    'seré honesto: no estaba de acuerdo pero cambié de opinión leyendo los comentarios'
+  ];
+  var samples=samplePhrases.slice(0,3);
   samples.forEach(function(txt){
     html+='<div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:.6rem .8rem;margin-bottom:.4rem">';
     html+='<div style="font-size:.82rem;color:var(--text2)">'+txt+'</div>';
