@@ -3214,6 +3214,8 @@ function openPostDetail(postId) {
     '</div>' +
     '<div class="pd-body">' +
       '<div class="pd-meta">' +
+        '<span style="cursor:pointer;color:var(--blue);font-weight:700" onclick="closePostDetail();filterFeedSub(\'' + p.sub + '\')">' + p.ic + ' p/' + p.sub + '</span>' +
+        '<span>·</span>' +
         '<span style="color:var(--amber)">u/' + p.user.name + '</span>' +
         '<span>·</span><span>' + p.t + '</span>' +
         '<span class="flair ' + p.fc + '">' + p.flair + '</span>' +
@@ -3229,10 +3231,10 @@ function openPostDetail(postId) {
       '</div>' +
       '<div class="pd-comments-title">comentarios</div>' +
       '<div class="pd-comment-box" onclick="document.getElementById(\'pd-inp\').focus()">' +
-        '<input class="pd-comment-inp" id="pd-inp" placeholder="escribe un comentario..." onkeydown="if(event.key===\'Enter\')sendDetailComment(' + postId + ')">' +
+        '<input class="pd-comment-inp" id="pd-inp" placeholder="¿qué opinas?" onkeydown="if(event.key===\'Enter\')sendDetailComment(' + postId + ')">' +
         '<button class="pd-send-btn" onclick="sendDetailComment(' + postId + ')">SEND</button>' +
       '</div>' +
-      '<div id="pd-comments-list"><div class="pd-loading">// cargando comentarios...</div></div>' +
+      '<div id="pd-comments-list" style="min-height:80px"><div class="pd-loading">// cargando comentarios...</div></div>' +
     '</div>';
 
   overlay.classList.add('on');
@@ -3376,7 +3378,7 @@ CHAT_INIT.forEach(function(m){addMsg(m.bot,m.txt,false,false)});
 newMsgCount=0;document.getElementById('chat-badge').textContent='0';
 scheduleBot();
 setTimeout(botActivityLoop, 15000);
-setTimeout(loadNews, 5000); // cargar noticias al inicio
+setTimeout(loadNews, 800); // cargar noticias al inicio
 initSeedPostMap();renderFeed(null);renderTrending();renderComms();
 setInterval(tickVotes,8000);
 loadChatHistory();
