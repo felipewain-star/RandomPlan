@@ -212,6 +212,21 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .link-preview-desc{font-size:.75rem;color:var(--text2);line-height:1.4;font-family:var(--sans)}
 .link-preview-loading{padding:.6rem .7rem;font-size:.72rem;color:var(--text3);font-family:var(--mono)}
 .karma-tag{font-size:.6rem;font-family:var(--mono);border:1px solid;border-radius:2px;padding:.05rem .35rem;white-space:nowrap;opacity:.85}
+.post-view{display:none;position:fixed;inset:0;z-index:400;background:var(--bg0);overflow-y:auto}
+.post-view.on{display:block}
+.post-view-header{background:var(--bg1);border-bottom:1px solid var(--border);padding:.8rem 1.2rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:10}
+.post-view-back{background:none;border:1px solid var(--border2);color:var(--text3);padding:.3rem .7rem;border-radius:3px;font-family:var(--mono);font-size:.72rem;cursor:pointer;transition:all .15s}
+.post-view-back:hover{border-color:var(--green);color:var(--green)}
+.post-view-body{max-width:740px;margin:0 auto;padding:1.2rem 1rem}
+.post-view-title{font-size:1.3rem;font-weight:700;color:var(--text1);margin:1rem 0 .5rem;line-height:1.35}
+.post-view-meta{font-size:.7rem;color:var(--text3);font-family:var(--mono);margin-bottom:.8rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.post-view-content{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:1rem;margin-bottom:1rem}
+.post-view-img{width:100%;max-height:500px;object-fit:contain;border-radius:4px;display:block}
+.post-view-link{display:inline-flex;align-items:center;gap:.4rem;color:var(--green);font-family:var(--mono);font-size:.75rem;text-decoration:none;border:1px solid var(--green);padding:.3rem .7rem;border-radius:3px;margin-top:.5rem}
+.post-view-link:hover{background:var(--green);color:#000}
+.post-view-divider{border:none;border-top:1px solid var(--border);margin:1rem 0}
+.post-view-comment-box{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:.8rem;margin-bottom:1.2rem}
+.post-view-comments-title{font-family:var(--mono);font-size:.72rem;color:var(--text3);margin-bottom:.8rem}
 .profile-wrap{display:none;position:fixed;inset:0;z-index:500;background:var(--bg0);overflow-y:auto}
 .profile-wrap.on{display:block}
 .profile-header{background:var(--bg1);border-bottom:1px solid var(--border);padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:10}
@@ -572,6 +587,15 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 <div id="global-gif-picker" style="display:none;position:fixed;z-index:99999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;width:280px;box-shadow:0 4px 24px rgba(0,0,0,.8)">
   <input id="gif-search-global" placeholder="buscar GIF + Enter" style="width:100%;background:#0d1117;border:1px solid #2a3f55;border-radius:3px;padding:.38rem .6rem;font-family:monospace;font-size:.75rem;color:#e6edf3;outline:none;margin-bottom:.4rem;box-sizing:border-box" onkeydown="if(event.key==='Enter'){document.getElementById('gif-grid-global').dataset.loaded='1';buscarGif(this.value)}">
   <div id="gif-grid-global" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:165px;overflow-y:auto"></div>
+</div>
+
+<!-- VISTA DE POST -->
+<div class="post-view" id="post-view">
+  <div class="post-view-header">
+    <button class="post-view-back" onclick="closePostView()">← volver</button>
+    <span id="post-view-sub" style="font-family:var(--mono);font-size:.72rem;color:var(--text3)"></span>
+  </div>
+  <div class="post-view-body" id="post-view-body"></div>
 </div>
 
 <!-- PERFIL -->
@@ -3077,6 +3101,153 @@ async function generateClaudeComment(botName, botArq, postTitle, postSub){
   return null;
 }
 
+
+// ── VISTA DE POST ──
+function openPostView(postId){
+  var p=POSTS.find(function(x){return x.id===postId;});
+  if(!p) return;
+
+  var wrap=document.getElementById('post-view');
+  var body=document.getElementById('post-view-body');
+  var subEl=document.getElementById('post-view-sub');
+  if(!wrap||!body) return;
+
+  subEl.textContent=(p.ic||'')+'  p/'+p.sub;
+  document.body.style.overflow='hidden';
+  wrap.classList.add('on');
+
+  var html='';
+
+  // meta
+  html+='<div class="post-view-meta">';
+  html+=makeAvatar(p.user.name,'sm')+' ';
+  html+='<span class="u" data-u="'+p.user.name+'" onclick="showProfile(this.dataset.u)" style="cursor:pointer">u/'+p.user.name+'</span>';
+  html+='<span>·</span><span>'+p.t+'</span>';
+  if(p.flair) html+='<span class="flair '+(p.isNews?'flair-news':'fc-'+(p.fc||'g'))+'">'+p.flair+'</span>';
+  html+='</div>';
+
+  // title
+  html+='<div class="post-view-title">'+p.title+'</div>';
+
+  // content
+  html+='<div class="post-view-content">';
+  if(p.img){
+    html+='<img class="post-view-img" src="'+p.img+'" alt="'+p.title+'">';
+  }
+  if(p.prev){
+    html+='<div style="font-size:.88rem;color:var(--text2);line-height:1.6;word-break:break-word;'+(p.img?'margin-top:.8rem':'')+'">'+linkify(p.prev)+'</div>';
+  }
+  if(p.isNews&&p.url){
+    html+='<a class="post-view-link" href="'+p.url+'" target="_blank" rel="noopener">↗ leer nota completa</a>';
+  }
+  html+='</div>';
+
+  // votes
+  html+='<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;font-family:var(--mono);font-size:.8rem">';
+  html+='<button class="ccact ccvote-up" style="padding:.3rem .6rem" onclick="votePost('+postId+',1,this)">▲ '+(p.votos||0)+'</button>';
+  html+='<button class="ccact ccvote-down" style="padding:.3rem .6rem" onclick="votePost('+postId+',-1,this)">▼</button>';
+  html+='</div>';
+
+  html+='<hr class="post-view-divider">';
+
+  // comment box
+  if(currentUser){
+    html+='<div class="post-view-comment-box">';
+    html+='<textarea id="pv-comment-inp" placeholder="escribe un comentario..." style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:3px;padding:.5rem .7rem;font-family:var(--sans);font-size:.84rem;color:var(--text1);outline:none;resize:vertical;min-height:70px;box-sizing:border-box"></textarea>';
+    html+='<div style="display:flex;justify-content:flex-end;margin-top:.4rem;gap:.5rem">';
+    html+='<button class="media-btn" onclick="showEmoji(this)" data-inp="pv-comment-inp">😊</button>';
+    html+='<button style="background:var(--green);color:#000;border:none;border-radius:3px;padding:.35rem .9rem;font-family:var(--mono);font-size:.75rem;cursor:pointer;font-weight:700" onclick="sendPostViewComment('+postId+')">ENVIAR</button>';
+    html+='</div></div>';
+  }
+
+  // comments section
+  html+='<div class="post-view-comments-title">// '+( p.coms||0)+' comentarios</div>';
+  html+='<div id="pv-clist-'+postId+'">'; 
+  html+='<div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// cargando comentarios...</div>';
+  html+='</div>';
+
+  body.innerHTML=html;
+  wrap.scrollTop=0;
+
+  // load comments
+  loadPostViewComments(postId);
+}
+
+function closePostView(){
+  var w=document.getElementById('post-view');
+  if(w) w.classList.remove('on');
+  document.body.style.overflow='';
+}
+
+async function loadPostViewComments(postId){
+  var list=document.getElementById('pv-clist-'+postId);
+  if(!list) return;
+  var p=POSTS.find(function(x){return x.id===postId;});
+  if(!p){list.innerHTML='';return;}
+
+  var html='';
+
+  // bot/news posts - show bot comments
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
+  if(!realId){
+    var allComs=generateBotComments(p.coms||5, p.cd||[], p.sub);
+    allComs.forEach(function(c){
+      html+=renderCommentHTML('pvc-'+Math.random().toString(36).slice(2), c.bot.name, '', c.t, linkify(c.txt), c.v, false, null);
+    });
+    list.innerHTML=html||'<div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// sin comentarios aún</div>';
+    return;
+  }
+
+  // real posts - load from Supabase
+  var r=await db.from('comentarios').select('*,perfiles(username)').eq('post_id',realId).order('votos',{ascending:false}).limit(50);
+  if(r.error||!r.data||!r.data.length){
+    list.innerHTML='<div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// sin comentarios aún</div>';
+    return;
+  }
+  r.data.forEach(function(c){
+    var u=c.perfiles||{username:'anon'};
+    var isMe=currentUser&&c.user_id===currentUser.id;
+    html+=renderCommentHTML('pvc-'+c.id, u.username, '', 'ahora', linkify(c.texto), c.votos||0, isMe, c.id);
+  });
+  list.innerHTML=html;
+}
+
+async function sendPostViewComment(postId){
+  var inp=document.getElementById('pv-comment-inp');
+  if(!inp||!inp.value.trim()) return;
+  var texto=inp.value.trim();
+  var sess=await db.auth.getSession();
+  if(!sess.data||!sess.data.session){showModal('login');return;}
+  var uid=sess.data.session.user.id;
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
+  inp.value='';
+  if(realId){
+    var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
+    if(r.error){toast('error: '+r.error.message);return;}
+    if(currentPerfil){
+      currentPerfil.karma=(currentPerfil.karma||0)+1;
+      db.from('perfiles').update({karma:currentPerfil.karma}).eq('id',uid);
+    }
+  }
+  // show in UI
+  var list=document.getElementById('pv-clist-'+postId);
+  if(list){
+    var newHtml=renderCommentHTML('pvc-new-'+Date.now(), currentPerfil?currentPerfil.username:'yo', '', 'ahora', linkify(texto), 0, true, null);
+    list.innerHTML=newHtml+list.innerHTML;
+  }
+  toast('comentario publicado');
+  // update count
+  var p=POSTS.find(function(x){return x.id===postId;});
+  if(p) p.coms=(p.coms||0)+1;
+}
+
+function votePost(postId, dir, btn){
+  var p=POSTS.find(function(x){return x.id===postId;});
+  if(!p) return;
+  p.votos=(p.votos||0)+dir;
+  var upBtn=btn.closest('div').querySelector('.ccvote-up');
+  if(upBtn) upBtn.textContent='▲ '+p.votos;
+}
 
 // ── KARMA & PERFIL ──
 function getKarmaLevel(k){
