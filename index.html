@@ -2184,7 +2184,7 @@ function showModal(tipo){
         '<div class="field"><label>tipo de meme</label>'+
           '<div class="meme-type-selector">'+
             '<button class="meme-type-btn on" onclick="setMemeType(\'img\',this)">📸 Imagen</button>'+
-            '<button class="meme-type-btn" onclick="setMemeType(\'gif\',this)">🎞 GIF</button>'+
+
           '</div>'+
         '</div>'+
         '<div id="m-img-section">'+
@@ -2197,12 +2197,7 @@ function showModal(tipo){
             '<div class="img-upload-progress"><div class="img-upload-progress-bar" id="m-img-progress"></div></div>'+
           '</div>'+
         '</div>'+
-        '<div id="m-gif-section" style="display:none">'+
-          '<div class="field">'+
-            '<input type="text" id="m-gif-search" placeholder="buscar GIF... presiona Enter" style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:2px;padding:.48rem .7rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none" onkeydown="if(event.key===\'Enter\')buscarGifModal(this.value)">'+
-            '<div id="m-gif-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:140px;overflow-y:auto;margin-top:.4rem"></div>'+
-          '</div>'+
-        '</div>'+
+
       '</div>'+
       '<div class="field"><label>título</label><input type="text" id="m-titulo" placeholder="¿de qué trata?"></div>'+
       '<div id="m-normal-section">'+
