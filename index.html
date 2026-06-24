@@ -4850,6 +4850,218 @@ function addRealNewsToPosts(items){var seen={};POSTS.forEach(function(p){var u=g
 async function loadNews(){if(_newsLoaded)return;try{var fed=await fetchFedRssNews();var gdelt=await fetchGdeltFedNews();var count=addRealNewsToPosts(fed.concat(gdelt));if(count>0){_newsLoaded=true;renderFeed(window._currentFilter||null);renderTrending();console.log('[RandomPlan] '+count+' noticias reales cargadas');}else{console.log('[RandomPlan] no se pudieron cargar noticias reales; no se publican noticias falsas');}}catch(e){console.log('[RandomPlan] news error:',e.message||e);}}
 
 
+
+
+// ─────────────────────────────────────────────────────────────
+// RANDOMPLAN FINAL V4 — noticias_cl + GIF/emoji estable global + hilo interno
+// Este bloque va al final para sobreescribir cualquier versión anterior.
+// ─────────────────────────────────────────────────────────────
+var RP_FINAL_EMOJIS = ['😂','🤣','🔥','💀','😭','🤯','👀','😤','🫡','🤔','💯','🎯','🤙','👊','😎','🥲','😬','🤦','🙄','👏','🫠','😅','🤡','💪','🫶','❤️','🖤','💜','💚','⚡','🌊','🏔','🐍','🦅','🦁','🐺','🐸','🐱','🐶','💻','📱','🎮','🏆','💰','📈','📉','🔑','⚠️','❌','✅','🚀','🌙','☀️','🌧','❄️','🍺','🍕','🌮','☕','🍿','🥹','😳','😱','😡','😈','🤝','🙏','👋','✌️','🤞','🧠','💬','🔊','🎵','🎶','🇨🇱'];
+var RP_FINAL_GIFS = [
+  {tags:'risa laugh jajaja meme chile', url:'https://media.giphy.com/media/3oEjHI8WJv4x6UPDB6/giphy.gif'},
+  {tags:'esperar waiting paciencia meme', url:'https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif'},
+  {tags:'sorprendido shocked mind blown wow', url:'https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif'},
+  {tags:'si yes approve ok', url:'https://media.giphy.com/media/111ebonMs90YLu/giphy.gif'},
+  {tags:'fuego fire hype', url:'https://media.giphy.com/media/5VKbvrjxpVJCM/giphy.gif'},
+  {tags:'baile dance fiesta carrete', url:'https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif'},
+  {tags:'money plata finanzas mercado bolsa', url:'https://media.giphy.com/media/LCdPNT81vlv3y/giphy.gif'},
+  {tags:'gato cat meme', url:'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif'},
+  {tags:'facepalm fail error', url:'https://media.giphy.com/media/3o7TKr3nzbh5WgCFxe/giphy.gif'},
+  {tags:'no nope rechazo', url:'https://media.giphy.com/media/ToMjGpKniGqRNLGBrhu/giphy.gif'},
+  {tags:'ok entiendo fine bien', url:'https://media.giphy.com/media/GCvktC0KFy9l6/giphy.gif'},
+  {tags:'tech computador computer codigo', url:'https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif'},
+  {tags:'bruh serio realidad', url:'https://media.giphy.com/media/xT9IgG50Fb7Mi0prBC/giphy.gif'},
+  {tags:'aplauso clap bravo', url:'https://media.giphy.com/media/3o6Zt481isNVuQI1l6/giphy.gif'},
+  {tags:'confused confundido que', url:'https://media.giphy.com/media/3o7btPCcdNniyf0ArS/giphy.gif'},
+  {tags:'wow sorpresa omg', url:'https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif'},
+  {tags:'deal negocio acuerdo', url:'https://media.giphy.com/media/l3q2XhfQ8oCkm1Ts4/giphy.gif'},
+  {tags:'boom explosivo hype', url:'https://media.giphy.com/media/laUY2MuoktHPy/giphy.gif'},
+  {tags:'sad triste llanto', url:'https://media.giphy.com/media/OPU6wzx8JrHna/giphy.gif'},
+  {tags:'thinking pensar duda', url:'https://media.giphy.com/media/a5viI92PAF89q/giphy.gif'},
+  {tags:'celebrar win ganador', url:'https://media.giphy.com/media/artj92V8o75VPL7AeQ/giphy.gif'},
+  {tags:'popcorn mirando drama', url:'https://media.giphy.com/media/tyqcJoNjNv0Fq/giphy.gif'},
+  {tags:'run correr rapido', url:'https://media.giphy.com/media/3o7ZetIsjtbkgNE1I4/giphy.gif'},
+  {tags:'crypto bitcoin money', url:'https://media.giphy.com/media/YnkMcHgNIMW4Yfmjxr/giphy.gif'},
+  {tags:'stocks market bolsa finanzas', url:'https://media.giphy.com/media/xTiTnqUxyWbsAXq7Ju/giphy.gif'},
+  {tags:'chill relax tranqui', url:'https://media.giphy.com/media/3o7aD2saalBwwftBIY/giphy.gif'},
+  {tags:'angry enojado rage', url:'https://media.giphy.com/media/11tTNkNy1SdXGg/giphy.gif'},
+  {tags:'typing escribiendo codigo', url:'https://media.giphy.com/media/13FrpeVH09Zrb2/giphy.gif'},
+  {tags:'victoria success exito', url:'https://media.giphy.com/media/26u4cqiYI30juCOGY/giphy.gif'},
+  {tags:'meme classic internet', url:'https://media.giphy.com/media/12XDYvMJNcmLgQ/giphy.gif'},
+  {tags:'lol risa carcajada', url:'https://media.giphy.com/media/10JhviFuU2gWD6/giphy.gif'},
+  {tags:'noticias news periodista', url:'https://media.giphy.com/media/l0HlQ7LRalQqdWfao/giphy.gif'},
+  {tags:'politica debate chile', url:'https://media.giphy.com/media/3o6MbudZJtl8nNebaE/giphy.gif'},
+  {tags:'football futbol gol', url:'https://media.giphy.com/media/3o6Zt6ML6BklcajjsA/giphy.gif'},
+  {tags:'perro dog cute', url:'https://media.giphy.com/media/4Zo41lhzKt6iZ8xff9/giphy.gif'},
+  {tags:'mind blown cabeza explota', url:'https://media.giphy.com/media/OK27wINdQS5YQ/giphy.gif'}
+];
+
+function rpFinalById(id){return document.getElementById(id);}
+function rpFinalEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function rpFinalInsertInto(inputId, text){
+  var inp=rpFinalById(inputId); if(!inp) return;
+  var add=String(text||'');
+  var pos=typeof inp.selectionStart==='number'?inp.selectionStart:inp.value.length;
+  inp.value=inp.value.slice(0,pos)+add+inp.value.slice(pos);
+  inp.focus();
+  try{inp.selectionStart=inp.selectionEnd=pos+add.length;}catch(e){}
+  try{inp.dispatchEvent(new Event('input',{bubbles:true}));}catch(e){}
+}
+
+(function(){
+  window._rpActiveMediaInput=null;
+  function ensure(){
+    var ep=rpFinalById('global-emoji-picker');
+    if(!ep){ep=document.createElement('div');ep.id='global-emoji-picker';document.body.appendChild(ep);}
+    ep.style.cssText='display:none;position:fixed;z-index:999999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;max-width:310px;flex-wrap:wrap;gap:.1rem;max-height:210px;overflow-y:auto;box-shadow:0 4px 24px rgba(0,0,0,.85)';
+    if(!ep.dataset.ready){ep.dataset.ready='1';ep.innerHTML='';RP_FINAL_EMOJIS.forEach(function(e){var b=document.createElement('button');b.type='button';b.textContent=e;b.style.cssText='background:none;border:none;font-size:1.18rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px;line-height:1.1';b.onmouseenter=function(){b.style.background='#1c2733'};b.onmouseleave=function(){b.style.background='none'};b.onclick=function(ev){ev.preventDefault();ev.stopPropagation();rpFinalInsertInto(window._rpActiveMediaInput,e);ep.style.display='none';};ep.appendChild(b);});}
+    var gp=rpFinalById('global-gif-picker');
+    if(!gp){gp=document.createElement('div');gp.id='global-gif-picker';document.body.appendChild(gp);}
+    gp.style.cssText='display:none;position:fixed;z-index:999999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;width:340px;max-width:calc(100vw - 12px);box-shadow:0 4px 24px rgba(0,0,0,.85)';
+    if(!gp.dataset.ready){gp.dataset.ready='1';gp.innerHTML='<input id="gif-search-global" placeholder="buscar GIF + Enter" style="width:100%;background:#0d1117;border:1px solid #2a3f55;border-radius:3px;padding:.4rem .6rem;font-family:monospace;font-size:.75rem;color:#e6edf3;outline:none;margin-bottom:.45rem;box-sizing:border-box"><div id="gif-grid-global" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.32rem;max-height:250px;overflow-y:auto"></div>';}
+    var search=rpFinalById('gif-search-global');
+    if(search&&!search.dataset.bound){search.dataset.bound='1';search.addEventListener('keydown',function(ev){if(ev.key==='Enter'){ev.preventDefault();window.loadGlobalGifs(search.value||'meme chile');}});}
+  }
+  function place(picker,inputId,anchor){
+    var node=anchor||(window.event&&(window.event.currentTarget||window.event.target))||rpFinalById(inputId);
+    var r=node&&node.getBoundingClientRect?node.getBoundingClientRect():null;
+    var w=picker.id==='global-gif-picker'?350:320;
+    if(r){picker.style.top=Math.min(window.innerHeight-40,r.bottom+8)+'px';picker.style.left=Math.max(6,Math.min(r.left,window.innerWidth-w-6))+'px';}
+    else{picker.style.top='80px';picker.style.left='12px';}
+  }
+  function drawGifs(query, tenorItems){
+    ensure();
+    var grid=rpFinalById('gif-grid-global'); if(!grid) return;
+    var q=String(query||'').toLowerCase().trim();
+    var words=q.split(/\s+/).filter(Boolean);
+    var local=RP_FINAL_GIFS.filter(function(x){return !words.length||q==='meme chile'||words.some(function(w){return x.tags.indexOf(w)!==-1;});});
+    if(!local.length) local=RP_FINAL_GIFS.slice();
+    var mixed=[];
+    local.forEach(function(x){mixed.push({url:x.url,thumb:x.url});});
+    (tenorItems||[]).forEach(function(x){mixed.push(x);});
+    var seen={}, final=[];
+    mixed.forEach(function(x){if(!x.url||seen[x.url])return;seen[x.url]=true;final.push(x);});
+    grid.innerHTML='';
+    final.slice(0,32).forEach(function(item){var img=document.createElement('img');img.src=item.thumb||item.url;img.className='gif-thumb';img.alt='GIF';img.loading='lazy';img.style.cssText='width:100%;height:74px;object-fit:cover;border:1px solid transparent;border-radius:3px;cursor:pointer;background:#080b0f';img.onerror=function(){img.style.display='none'};img.onclick=function(ev){ev.preventDefault();ev.stopPropagation();rpFinalInsertInto(window._rpActiveMediaInput,(rpFinalById(window._rpActiveMediaInput)&&rpFinalById(window._rpActiveMediaInput).value?' ':'')+'[gif:'+item.url+']');var gp=rpFinalById('global-gif-picker');if(gp)gp.style.display='none';};grid.appendChild(img);});
+  }
+  window.loadGlobalGifs=function(query){
+    query=query||'meme chile';
+    drawGifs(query,[]);
+    var grid=rpFinalById('gif-grid-global');
+    // Tenor se usa como extra, nunca como dependencia. Si falla, quedan los GIF locales.
+    fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(query)+'&key=LIVDSRZULELA&client_key=randomplan&limit=24&media_filter=gif,tinygif',{cache:'no-store'})
+      .then(function(r){if(!r.ok)throw new Error('tenor '+r.status);return r.json();})
+      .then(function(d){var arr=(d.results||[]).map(function(item){var mf=item.media_formats||{};var thumb=(mf.tinygif&&mf.tinygif.url)||(mf.gif&&mf.gif.url)||'';var full=(mf.gif&&mf.gif.url)||thumb;return {url:full,thumb:thumb};}).filter(function(x){return x.url;});if(arr.length)drawGifs(query,arr);})
+      .catch(function(){ if(grid&&!grid.children.length) drawGifs(query,[]); });
+  };
+  window.showEmojiPicker=function(inputId,anchor){ensure();window._rpActiveMediaInput=inputId;var ep=rpFinalById('global-emoji-picker'),gp=rpFinalById('global-gif-picker');if(gp)gp.style.display='none';if(!ep)return;if(ep.style.display==='flex'&&ep.dataset.input===inputId){ep.style.display='none';return;}ep.dataset.input=inputId;place(ep,inputId,anchor);ep.style.display='flex';};
+  window.showGifPicker=function(inputId,anchor){ensure();window._rpActiveMediaInput=inputId;var ep=rpFinalById('global-emoji-picker'),gp=rpFinalById('global-gif-picker');if(ep)ep.style.display='none';if(!gp)return;if(gp.style.display==='block'&&gp.dataset.input===inputId){gp.style.display='none';return;}gp.dataset.input=inputId;place(gp,inputId,anchor);gp.style.display='block';window.loadGlobalGifs((rpFinalById('gif-search-global')&&rpFinalById('gif-search-global').value)||'meme chile');};
+  window.buildMediaBar=function(inputId){return '<div class="media-bar"><button class="media-btn" type="button" data-inp="'+inputId+'" onclick="event.preventDefault();event.stopPropagation();showEmojiPicker(this.dataset.inp,this)">😊</button><button class="media-btn" type="button" data-inp="'+inputId+'" onclick="event.preventDefault();event.stopPropagation();showGifPicker(this.dataset.inp,this)">GIF</button></div>';};
+  window.showEmoji=function(btn){var id=btn&&btn.dataset?btn.dataset.inp:null;if(id)window.showEmojiPicker(id,btn);};
+  window.showGif=function(btn){var id=btn&&btn.dataset?btn.dataset.inp:null;if(id)window.showGifPicker(id,btn);};
+  document.addEventListener('click',function(ev){var ep=rpFinalById('global-emoji-picker'),gp=rpFinalById('global-gif-picker');if(ep&&!ep.contains(ev.target)&&!ev.target.closest('.media-btn'))ep.style.display='none';if(gp&&!gp.contains(ev.target)&&!ev.target.closest('.media-btn'))gp.style.display='none';},true);
+  setTimeout(ensure,0);
+})();
+
+function rpFinalLinkify(text){
+  text=String(text||'');
+  var out='', last=0, re=/\[gif:(https?:\/\/[^\]]+)\]/g, m;
+  while((m=re.exec(text))!==null){out+=rpFinalEsc(text.slice(last,m.index));out+='<img src="'+rpFinalEsc(m[1])+'" class="inserted-gif" loading="lazy" alt="GIF">';last=m.index+m[0].length;}
+  out+=rpFinalEsc(text.slice(last));
+  out=out.replace(/(https?:\/\/[^\s<>"']+)/g,function(url){var clean=url.replace(/&amp;/g,'&');if(/\.(gif|webp)(\?|$)/i.test(clean)||clean.indexOf('media.tenor.com')!==-1||clean.indexOf('c.tenor.com')!==-1){return '<img src="'+rpFinalEsc(clean)+'" class="inserted-gif" loading="lazy" alt="GIF">';}var short=clean.length>58?clean.slice(0,58)+'...':clean;return '<a href="'+rpFinalEsc(clean)+'" target="_blank" rel="noopener noreferrer" class="inline-link">'+rpFinalEsc(short)+'</a>';});
+  return out;
+}
+// Asegura que los GIF insertados rendericen en comentarios inline y vista interna.
+linkify = rpFinalLinkify;
+
+// Hilo en nueva ventana con picker autónomo, sin depender del DOM padre.
+buildPostThreadWindowHTML = function(p, refUrl, commentsHtml){
+  var title=rpFinalEsc(p.title||'sin título');
+  var user=rpFinalEsc(getPostUserName(p));
+  var subPlain=(p.ic||'')+' '+(p.sub||'');
+  var sub=rpFinalEsc(subPlain);
+  var time=rpFinalEsc(p.t||'ahora');
+  var flair=rpFinalEsc(p.flair||'post');
+  var isNews=(p.isNews===true)||isNewsBotPost(p);
+  var domain=refUrl?rpFinalEsc(getDomain(refUrl)):'';
+  var sourceBlock='';
+  if(refUrl){sourceBlock='<div class="rp-source"><div><span>'+(isNews?'fuente externa':'link externo')+'</span><strong>'+domain+'</strong></div><a href="'+rpFinalEsc(refUrl)+'" target="_blank" rel="noopener noreferrer">'+(isNews?'leer fuente original ↗':'abrir enlace externo ↗')+'</a></div>';}
+  else if(isNews){sourceBlock='<div class="rp-source"><div><span>fuente externa</span><strong>noticias_cl no publica esta noticia porque no trae URL real válida.</strong></div></div>';}
+  var bodyHtml=renderPostThreadBodyHTML(p);
+  var voteTotal=(p.votos||0)+(votes[p.id]||0);
+  var commentsCount=(commentsHtml.match(/rp-thread-comment/g)||[]).length;
+  var emojisJson=JSON.stringify(RP_FINAL_EMOJIS);
+  var gifsJson=JSON.stringify(RP_FINAL_GIFS);
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${title} — RandomPlan</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap");
+*{box-sizing:border-box}body{margin:0;background:#080b0f;color:#e6edf3;font-family:"JetBrains Mono",monospace;min-height:100vh}a{color:inherit}button{font-family:inherit}.top{position:sticky;top:0;background:#080b0f;border-bottom:1px solid #1e2d3d;height:52px;display:flex;align-items:center;gap:.7rem;padding:0 1rem;z-index:5}.logo{font-weight:700}.logo span{color:#00ff88}.pill{font-size:.65rem;color:#8b949e;border:1px solid #2a3f55;padding:.18rem .5rem;border-radius:3px;white-space:nowrap}.close{margin-left:auto;background:none;border:1px solid #2a3f55;color:#8b949e;border-radius:3px;padding:.25rem .6rem;cursor:pointer}.wrap{max-width:980px;margin:0 auto;padding:1rem}.thread{background:#0d1117;border:1px solid #1e2d3d;border-radius:4px;overflow:hidden}.post{display:flex}.votes{width:46px;background:#080b0f;border-right:1px solid #1e2d3d;display:flex;flex-direction:column;align-items:center;padding:.75rem .25rem;gap:.2rem;color:#8b949e}.votes button{background:none;border:none;color:#484f58;font-size:1rem;cursor:pointer}.votes strong{font-size:.78rem;color:#00ff88}.body{flex:1;padding:1rem 1.05rem}.meta{display:flex;gap:.42rem;align-items:center;flex-wrap:wrap;font-size:.75rem;color:#484f58;margin-bottom:.55rem}.sub{color:#79c0ff;font-weight:700}.user{color:#ffa657}.flair{color:#ff7b72;border:1px solid rgba(255,123,114,.25);background:rgba(255,123,114,.08);padding:.05rem .34rem;border-radius:2px;font-size:.65rem}.title{font-family:"Space Grotesk",sans-serif;font-size:1.65rem;line-height:1.18;margin:.15rem 0 .75rem;font-weight:700}.excerpt{font-family:"Space Grotesk",sans-serif;color:#8b949e;font-size:.98rem;line-height:1.65;border-left:2px solid #2a3f55;padding-left:.85rem;margin:.75rem 0 1rem;word-break:break-word}.rp-main-img{max-width:100%;max-height:460px;object-fit:contain;display:block;border-radius:4px;border:1px solid #1e2d3d;background:#080b0f;margin:.25rem 0 .7rem}.rp-source{background:#080b0f;border:1px solid #2a3f55;border-radius:4px;padding:.75rem;display:flex;justify-content:space-between;gap:.75rem;align-items:center;flex-wrap:wrap;margin:.9rem 0 1rem}.rp-source span{display:block;font-size:.65rem;color:#484f58;text-transform:uppercase;letter-spacing:.08em}.rp-source strong{display:block;margin-top:.1rem;color:#ffa657;font-size:.82rem}.rp-source a{background:rgba(0,255,136,.08);border:1px solid #00ff88;color:#00ff88;text-decoration:none;padding:.48rem .8rem;border-radius:3px;font-size:.78rem;font-weight:700}.actions{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.6rem}.act{font-size:.72rem;color:#484f58;border:1px solid #1e2d3d;padding:.25rem .5rem;border-radius:2px}.comments{border-top:1px solid #1e2d3d;padding:.9rem 1.05rem 1.2rem;background:#0d1117}.comments-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.75rem}.comments h2{font-size:.82rem;color:#00ff88;text-transform:uppercase;letter-spacing:.08em;margin:0}.sort{font-size:.65rem;color:#484f58}.comment-box{margin-bottom:.9rem;background:#080b0f;border:1px solid #1e2d3d;border-radius:4px;padding:.55rem}.comment-row{display:flex;gap:.45rem;align-items:center}.comment-row input{flex:1;background:#080b0f;border:1px solid #2a3f55;border-radius:3px;color:#e6edf3;padding:.52rem .7rem;outline:none;min-width:120px}.comment-row input:focus{border-color:#00ff88}.comment-row button,.media-btn{background:rgba(0,255,136,.08);border:1px solid #00ff88;color:#00ff88;border-radius:3px;padding:.45rem .75rem;font-weight:700;cursor:pointer}.media-bar{display:flex;gap:.35rem;align-items:center;margin-top:.45rem}.media-btn{padding:.25rem .55rem;color:#8b949e;border-color:#2a3f55;background:transparent;font-size:.72rem}.emoji-picker{display:none;gap:.1rem;flex-wrap:wrap;margin-top:.45rem;padding:.4rem;border:1px solid #2a3f55;border-radius:4px;background:#141c25;max-height:160px;overflow:auto}.emoji-picker button{background:transparent;border:none;font-size:1.18rem;padding:.18rem .24rem;cursor:pointer;border-radius:3px}.gif-picker{display:none;margin-top:.45rem;padding:.45rem;border:1px solid #2a3f55;border-radius:4px;background:#141c25}.gif-picker input{width:100%;background:#080b0f;border:1px solid #2a3f55;border-radius:3px;color:#e6edf3;padding:.42rem .6rem;margin-bottom:.45rem;outline:none}.gif-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.32rem;max-height:240px;overflow:auto}.gif-thumb{width:100%;height:76px;object-fit:cover;border:1px solid transparent;border-radius:3px;cursor:pointer;background:#080b0f}.gif-thumb:hover{border-color:#00ff88}.rp-thread-comment{display:flex;gap:.65rem;border-left:1px solid #1e2d3d;margin:.55rem 0 0 .25rem;padding:.15rem 0 .45rem .65rem}.rp-thread-votes{width:30px;display:flex;flex-direction:column;align-items:center;gap:.1rem;color:#484f58}.rp-thread-votes button{background:none;border:none;color:#484f58;cursor:pointer;font-size:.75rem}.rp-thread-votes strong{font-size:.68rem;color:#00ff88}.rp-thread-comment-body{flex:1}.rp-thread-comment-meta{font-size:.72rem;color:#484f58;margin-bottom:.16rem}.rp-thread-comment-text{font-family:"Space Grotesk",sans-serif;font-size:.92rem;line-height:1.5;color:#e6edf3;word-break:break-word}.inline-link{color:#79c0ff}.inserted-gif{max-width:280px;border-radius:4px;margin-top:.4rem;display:block}.empty{color:#484f58;font-size:.75rem;padding:.8rem 0}@media(max-width:640px){.wrap{padding:.5rem}.post{display:block}.votes{width:100%;height:36px;flex-direction:row;border-right:none;border-bottom:1px solid #1e2d3d;justify-content:flex-start;padding:.35rem .8rem}.title{font-size:1.28rem}.body,.comments{padding:.8rem}.pill{display:none}.comment-row{flex-wrap:wrap}.comment-row button{width:100%}.gif-grid{grid-template-columns:repeat(3,1fr)}}
+</style></head><body><div class="top"><div class="logo"><span>Random</span>Plan</div><div class="pill">hilo interno</div><div class="pill">${sub}</div><div class="pill">u/${user}</div><button class="close" onclick="window.close()">cerrar</button></div><div class="wrap"><div class="thread"><div class="post"><div class="votes"><button>▲</button><strong>${rpFinalEsc(fmtV(voteTotal))}</strong><button>▼</button></div><div class="body"><div class="meta"><span class="sub">${sub}</span><span>::</span><span class="user">u/${user}</span><span>::</span><span>${time}</span><span class="flair">${flair}</span></div><h1 class="title">${title}</h1><div class="excerpt">${bodyHtml}</div>${sourceBlock}<div class="actions"><span class="act">// ${rpFinalEsc(String(p.coms||commentsCount||0))} comentarios</span><span class="act">// compartir hilo</span></div></div></div><div class="comments"><div class="comments-head"><h2>// comentarios</h2><div class="sort">destacados · recientes · antiguos</div></div><div class="comment-box"><div class="comment-row"><input id="rpNewComment" placeholder="comentar en el hilo..." onkeydown="if(event.key==='Enter')rpAddComment()"><button onclick="rpAddComment()">SEND</button></div><div class="media-bar"><button class="media-btn" onclick="rpToggleEmoji(event)">😊</button><button class="media-btn" onclick="rpToggleGif(event)">GIF</button></div><div id="rpEmojiPicker" class="emoji-picker"></div><div id="rpGifPicker" class="gif-picker"><input id="rpGifSearch" placeholder="buscar GIF + Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();rpDrawGif(this.value)}"><div id="rpGifGrid" class="gif-grid"></div></div></div><div id="rpComments">${commentsHtml||'<div class="empty">// todavía no hay comentarios</div>'}</div></div></div></div>
+<script>
+var RP_EMOJIS=${emojisJson};
+var RP_GIFS=${gifsJson};
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function insert(txt){var i=document.getElementById('rpNewComment');if(!i)return;var p=typeof i.selectionStart==='number'?i.selectionStart:i.value.length;i.value=i.value.slice(0,p)+txt+i.value.slice(p);i.focus();try{i.selectionStart=i.selectionEnd=p+txt.length}catch(e){}}
+function linkifyLocal(text){text=String(text||'');var out='',last=0,re=/\[gif:(https?:\/\/[^\]]+)\]/g,m;while((m=re.exec(text))!==null){out+=esc(text.slice(last,m.index));out+='<img src="'+esc(m[1])+'" class="inserted-gif" loading="lazy">';last=m.index+m[0].length;}out+=esc(text.slice(last));out=out.replace(/(https?:\/\/[^\s<>"']+)/g,function(url){var clean=url.replace(/&amp;/g,'&');if(/\.(gif|webp)(\?|$)/i.test(clean)||clean.indexOf('media.tenor.com')!==-1||clean.indexOf('c.tenor.com')!==-1){return '<img src="'+esc(clean)+'" class="inserted-gif" loading="lazy">'}var sh=clean.length>58?clean.slice(0,58)+'...':clean;return '<a class="inline-link" href="'+esc(clean)+'" target="_blank" rel="noopener noreferrer">'+esc(sh)+'</a>';});return out;}
+function initEmoji(){var b=document.getElementById('rpEmojiPicker');if(!b||b.dataset.ready)return;b.dataset.ready='1';RP_EMOJIS.forEach(function(e){var x=document.createElement('button');x.type='button';x.textContent=e;x.onclick=function(ev){ev.preventDefault();insert(e);b.style.display='none'};b.appendChild(x);});}
+function rpToggleEmoji(ev){if(ev){ev.preventDefault();ev.stopPropagation();}initEmoji();var e=document.getElementById('rpEmojiPicker'),g=document.getElementById('rpGifPicker');if(g)g.style.display='none';e.style.display=e.style.display==='flex'?'none':'flex';}
+function rpToggleGif(ev){if(ev){ev.preventDefault();ev.stopPropagation();}var e=document.getElementById('rpEmojiPicker'),g=document.getElementById('rpGifPicker');if(e)e.style.display='none';g.style.display=g.style.display==='block'?'none':'block';if(g.style.display==='block')rpDrawGif(document.getElementById('rpGifSearch').value||'meme chile');}
+function rpDrawGif(q,tenor){var grid=document.getElementById('rpGifGrid');if(!grid)return;q=String(q||'').toLowerCase().trim();var words=q.split(/\s+/).filter(Boolean);var local=RP_GIFS.filter(function(x){return !words.length||q==='meme chile'||words.some(function(w){return x.tags.indexOf(w)!==-1})});if(!local.length)local=RP_GIFS.slice();var mixed=[];local.forEach(function(x){mixed.push({url:x.url,thumb:x.url})});(tenor||[]).forEach(function(x){mixed.push(x)});var seen={},arr=[];mixed.forEach(function(x){if(!x.url||seen[x.url])return;seen[x.url]=1;arr.push(x)});grid.innerHTML='';arr.slice(0,32).forEach(function(item){var im=document.createElement('img');im.src=item.thumb||item.url;im.className='gif-thumb';im.loading='lazy';im.onerror=function(){im.style.display='none'};im.onclick=function(ev){ev.preventDefault();insert((document.getElementById('rpNewComment').value?' ':'')+'[gif:'+item.url+']');document.getElementById('rpGifPicker').style.display='none'};grid.appendChild(im)});if(tenor)return;fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q||'meme chile')+'&key=LIVDSRZULELA&client_key=randomplan&limit=18&media_filter=gif,tinygif').then(function(r){if(!r.ok)throw new Error();return r.json()}).then(function(d){var t=(d.results||[]).map(function(it){var mf=it.media_formats||{};var th=(mf.tinygif&&mf.tinygif.url)||(mf.gif&&mf.gif.url)||'';var fu=(mf.gif&&mf.gif.url)||th;return {url:fu,thumb:th};}).filter(function(x){return x.url});if(t.length)rpDrawGif(q,t);}).catch(function(){});}
+function rpAddComment(){var i=document.getElementById('rpNewComment'),v=i.value.trim();if(!v)return;var box=document.getElementById('rpComments');var empty=box.querySelector('.empty');if(empty)empty.remove();var d=document.createElement('div');d.className='rp-thread-comment';d.innerHTML='<div class="rp-thread-votes"><button>▲</button><strong>0</strong><button>▼</button></div><div class="rp-thread-comment-body"><div class="rp-thread-comment-meta">u/tu_usuario · ahora</div><div class="rp-thread-comment-text">'+linkifyLocal(v)+'</div></div>';box.insertBefore(d,box.firstChild);i.value='';}
+initEmoji();
+<\/script></body></html>`;
+};
+
+// Noticias reales: restaurar noticias_cl sin publicar contenido inventado.
+async function fetchGdeltFedNewsV4(){
+  try{
+    var q='("Federal Reserve" OR FOMC OR "Fed rate" OR "Fed decision" OR "Jerome Powell")';
+    var url='https://api.gdeltproject.org/api/v2/doc/doc?query='+encodeURIComponent(q)+'&mode=ArtList&format=json&sort=DateDesc&maxrecords=16';
+    var r=await fetch(url,{cache:'no-store'});
+    if(!r.ok)throw new Error('GDELT '+r.status);
+    var d=await r.json();
+    return (d.articles||[]).map(function(a){return {title:stripHtmlNews(a.title),desc:'Fuente real: '+(a.domain||'medio externo'),link:a.url,date:a.seendate,sub:'finanzas',ic:'🏦',flair:'NEWS REAL',source:a.domain||'GDELT'};}).filter(function(n){return n.title&&normalizeNewsUrl(n.link);});
+  }catch(e){console.log('[RandomPlan] GDELT V4 fail',e.message||e);return [];}
+}
+async function fetchFedRssNewsV4(){
+  var feeds=[
+    {name:'Federal Reserve',sub:'finanzas',ic:'🏦',flair:'OFICIAL FED',url:'https://www.federalreserve.gov/feeds/press_monetary.xml'},
+    {name:'Federal Reserve',sub:'finanzas',ic:'🏦',flair:'OFICIAL FED',url:'https://www.federalreserve.gov/feeds/press_all.xml'}
+  ];
+  var out=[];
+  for(var i=0;i<feeds.length;i++){
+    var f=feeds[i];
+    var urls=['https://api.allorigins.win/raw?url='+encodeURIComponent(f.url),'https://corsproxy.io/?'+encodeURIComponent(f.url),'https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(f.url)];
+    for(var j=0;j<urls.length;j++){
+      try{
+        var r=await fetch(urls[j],{cache:'no-store'});
+        if(!r.ok)continue;
+        var txt=await r.text();
+        if(txt.trim().charAt(0)==='{'){
+          var js=JSON.parse(txt);
+          out=out.concat((js.items||[]).slice(0,8).map(function(it){return {title:stripHtmlNews(it.title),desc:stripHtmlNews(it.description||it.content||''),link:it.link,date:it.pubDate,sub:f.sub,ic:f.ic,flair:f.flair,source:f.name};}));
+        }else{
+          out=out.concat(parseRssItems(txt,f));
+        }
+        break;
+      }catch(e){}
+    }
+  }
+  return out.filter(function(n){return n.title&&normalizeNewsUrl(n.link);});
+}
+loadNews = async function(){
+  if(_newsLoaded)return;
+  try{
+    var items=[];
+    var fed=await fetchFedRssNewsV4();
+    var gdelt=await fetchGdeltFedNewsV4();
+    items=fed.concat(gdelt);
+    var count=addRealNewsToPosts(items);
+    if(count>0){_newsLoaded=true;renderFeed(window._currentFilter&&window._currentFilter!=='inicio'?window._currentFilter:null);renderTrending();console.log('[RandomPlan] noticias_cl activo: '+count+' noticias reales cargadas');}
+    else{console.log('[RandomPlan] noticias_cl: fuentes reales sin respuesta. No se publican noticias inventadas.');}
+  }catch(e){console.log('[RandomPlan] news V4 error:',e.message||e);}
+};
+
 // Init
 addMsg(null,'// chat global activo · randomplan.cl',false,true);
 CHAT_INIT.forEach(function(m){addMsg(m.bot,m.txt,false,false)});
