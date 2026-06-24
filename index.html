@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+}<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -2668,23 +2668,47 @@ async function buscarGif(q){
   }
 }
 
+function _initPickers(){
+  var ep=document.getElementById('global-emoji-picker');
+  if(!ep||ep.dataset.init)return;
+  ep.dataset.init='1';
+  var emojis=['😂','🤣','😊','😍','🔥','👍','💯','🤔','😎','🙄','😅','😭','🤦','🤷','💀','❤️','🎉','👀','🤯','😤','🥲','😡','🤡','💪','🙏','✅','❌','🚀','💰','⚽','🇨🇱','😏','🥴','💩','🤮','👏','🫡','🤌','💬','📢'];
+  ep.innerHTML='';
+  var emojiGrid=document.createElement('div');
+  emojiGrid.id='emoji-grid';
+  emojiGrid.style.cssText='display:flex;flex-wrap:wrap;gap:.1rem';
+  emojis.forEach(function(e){
+    var btn=document.createElement('button');
+    btn.style.cssText='background:none;border:none;font-size:1.2rem;cursor:pointer;padding:.15rem;border-radius:3px;line-height:1';
+    btn.textContent=e;
+    btn.onclick=function(){insertEmojiGlobal(e);};
+    emojiGrid.appendChild(btn);
+  });
+  ep.appendChild(emojiGrid);
+}
+
+function filterEmoji(q){
+  var btns=document.querySelectorAll('#emoji-grid button');
+  btns.forEach(function(b){
+    b.style.display=!q||b.textContent.includes(q)?'':'none';
+  });
+}
+
 function showEmoji(btn){
   var newInput=btn.getAttribute('data-inp');
   var ep=document.getElementById('global-emoji-picker');
   var gp=document.getElementById('global-gif-picker');
-  // cerrar gif siempre
   if(gp){gp.style.display='none';_gifShowing=false;}
-  // si ya está abierto para ESTE mismo input → cerrar (toggle)
   if(_pickerShowing && _activeInput===newInput){
     ep.style.display='none';
     _pickerShowing=false;
     return;
   }
-  // nuevo input o estaba cerrado → abrir
   _activeInput=newInput;
   _initPickers();
   _pickerShowing=true;
   ep.style.display='flex';
+  ep.style.flexDirection='column';
   var r=btn.getBoundingClientRect();
   ep.style.top=(r.bottom+6)+'px';
   ep.style.left=Math.max(4,Math.min(r.left, window.innerWidth-280))+'px';
