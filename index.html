@@ -1450,10 +1450,11 @@ async function loadRealPosts(filter){
     };
   });
   // add to POSTS array so openPostView can find them
+  // remove any existing post with same id first (avoid duplicates)
   converted.forEach(function(p){
-    if(!POSTS.find(function(x){return x.id===p.id;})){
-      POSTS.unshift(p);
-    }
+    var existing=POSTS.findIndex(function(x){return x.id===p.id;});
+    if(existing!==-1) POSTS.splice(existing,1);
+    POSTS.unshift(p);
   });
   // filter if needed
   var filtered=filter?converted.filter(function(p){return p.sub===filter;}):converted;
