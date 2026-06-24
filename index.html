@@ -4200,6 +4200,8 @@ async function loadPVComments(postId){
   var p=POSTS.find(function(x){return x.id===postId;});
   if(!p){list.innerHTML='';return;}
   var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
+  // bot posts (id < 8000) always use bot comments regardless of realId mapping
+  if(postId < 8000) realId=null;
   var html='';
   if(!realId){
     var numComs=Math.max(p.coms||5, 5);
@@ -4230,12 +4232,18 @@ async function sendPVComment(postId){
   var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
   inp.value='';
   if(realId){
+    // solo guardar en DB si el post existe en Supabase
     var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
     if(r.error){toast('error: '+r.error.message);return;}
     if(currentPerfil){currentPerfil.karma=(currentPerfil.karma||0)+1;db.from('perfiles').update({karma:currentPerfil.karma}).eq('id',uid);}
   }
+  // siempre mostrar en UI
   var list=document.getElementById('pv-list-'+postId);
-  if(list){var nh=renderCommentHTML('pvc-new-'+Date.now(),currentPerfil?currentPerfil.username:'yo','','ahora',linkify(texto),0,true,null);list.innerHTML=nh+list.innerHTML;}
+  if(list){
+    var uname=currentPerfil?currentPerfil.username:'yo';
+    var nh=renderCommentHTML('pvc-new-'+Date.now(),uname,'','ahora',linkify(texto),0,true,null);
+    list.innerHTML=nh+list.innerHTML;
+  }
   toast('comentario publicado');
   var p=POSTS.find(function(x){return x.id===postId;});if(p)p.coms=(p.coms||0)+1;
 }
