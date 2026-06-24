@@ -172,6 +172,47 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .news-source:hover{border-color:var(--amber);color:var(--green)}
 .source-link{color:var(--amber)!important}
 .source-link:hover{color:var(--green)!important;border-color:var(--green)}
+
+/* POST DETAIL VIEW - noticias_cl */
+.post-view-lock{overflow:hidden}
+.post-view-wrap{display:none;position:fixed;inset:0;z-index:650;background:rgba(0,0,0,.86);backdrop-filter:blur(4px);align-items:flex-start;justify-content:center;padding:3.8rem .8rem 1.2rem;overflow-y:auto}
+.post-view-wrap.on{display:flex}
+.post-view{width:100%;max-width:860px;background:var(--bg1);border:1px solid var(--border2);border-radius:5px;box-shadow:0 20px 60px rgba(0,0,0,.55);overflow:hidden;position:relative}
+.post-view-top{position:sticky;top:0;z-index:2;background:var(--bg0);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem;padding:.55rem .75rem}
+.post-view-label{font-size:.65rem;color:var(--green);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono)}
+.post-view-label::before{content:'// ';color:var(--text3);font-weight:400}
+.post-view-x{margin-left:auto;background:none;border:1px solid var(--border2);color:var(--text3);border-radius:3px;font-size:.78rem;font-family:var(--mono);cursor:pointer;padding:.2rem .5rem;transition:all .12s}
+.post-view-x:hover{border-color:var(--red);color:var(--red);background:var(--reddim)}
+.post-view-body{padding:1rem 1.05rem 1.1rem}
+.pv-meta{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;font-size:.74rem;color:var(--text3);margin-bottom:.5rem;font-family:var(--mono)}
+.pv-title{font-family:var(--sans);font-size:1.55rem;line-height:1.2;font-weight:700;color:var(--text1);letter-spacing:-.02em;margin-bottom:.7rem;word-break:break-word}
+.pv-excerpt{font-family:var(--sans);font-size:.96rem;line-height:1.65;color:var(--text2);border-left:2px solid var(--border2);padding-left:.8rem;margin:.7rem 0 1rem;word-break:break-word}
+.pv-source-box{background:var(--bg0);border:1px solid var(--border2);border-radius:4px;padding:.75rem;margin:.8rem 0 1rem;display:flex;align-items:center;gap:.75rem;justify-content:space-between;flex-wrap:wrap}
+.pv-source-copy{font-size:.72rem;color:var(--text3);font-family:var(--mono);line-height:1.4}
+.pv-source-copy strong{color:var(--amber);font-weight:700}
+.pv-source-btn{background:var(--greendim);border:1px solid var(--green);color:var(--green);border-radius:3px;padding:.45rem .75rem;font-size:.76rem;font-family:var(--mono);font-weight:700;cursor:pointer;transition:all .12s;white-space:nowrap}
+.pv-source-btn:hover{background:var(--greenglow);box-shadow:0 0 18px var(--greenglow)}
+.pv-actions{display:flex;align-items:center;gap:.4rem;margin:.7rem 0 1rem;flex-wrap:wrap}
+.pv-vote{display:flex;align-items:center;gap:.25rem;background:var(--bg0);border:1px solid var(--border);border-radius:3px;padding:.25rem .45rem;color:var(--text2);font-family:var(--mono);font-size:.75rem}
+.pv-comments-head{border-top:1px solid var(--border);padding-top:.85rem;margin-top:.9rem;display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}
+.pv-comments-title{font-size:.78rem;color:var(--green);font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em}
+.pv-sort{display:flex;align-items:center;gap:.3rem}
+.pv-sort button{background:none;border:1px solid var(--border);color:var(--text3);border-radius:2px;font-size:.64rem;font-family:var(--mono);cursor:pointer;padding:.18rem .45rem;transition:all .12s}
+.pv-sort button:hover,.pv-sort button.on{border-color:var(--green);color:var(--green)}
+.pv-comment-box{display:flex;gap:.45rem;margin:.75rem 0 .85rem;background:var(--bg0);border:1px solid var(--border);border-radius:4px;padding:.55rem}
+.pv-comment-box input{flex:1;background:transparent;border:none;outline:none;color:var(--text1);font-family:var(--mono);font-size:.8rem;min-width:120px}
+.pv-comment-send{background:none;border:1px solid var(--green);color:var(--green);border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;padding:.25rem .55rem;font-weight:700}
+.pv-comments-list{display:flex;flex-direction:column;gap:.1rem}
+.pv-comment{display:grid;grid-template-columns:36px 1fr;gap:.55rem;padding:.65rem 0;border-top:1px solid rgba(42,63,85,.45)}
+.pv-comment:first-child{border-top:none}
+.pv-comment-v{display:flex;flex-direction:column;align-items:center;gap:.1rem;color:var(--text3);font-size:.68rem;font-family:var(--mono)}
+.pv-comment-v button{background:none;border:none;color:var(--text3);cursor:pointer;font-size:.8rem;line-height:1}
+.pv-comment-v button:hover{color:var(--green)}
+.pv-comment-meta{font-size:.72rem;color:var(--text3);font-family:var(--mono);margin-bottom:.18rem}
+.pv-comment-meta .u{color:var(--amber);font-weight:700}
+.pv-comment-text{font-family:var(--sans);font-size:.9rem;line-height:1.55;color:var(--text1);word-break:break-word}
+.pv-empty{padding:1rem;text-align:center;color:var(--text3);font-size:.75rem;font-family:var(--mono)}
+@media(max-width:700px){.post-view-wrap{padding:3rem .45rem .8rem}.post-view-body{padding:.8rem}.pv-title{font-size:1.2rem}.pv-source-box{align-items:flex-start}.pv-source-btn{width:100%;text-align:center}.pv-comment-box{flex-wrap:wrap}.pv-comment-send{width:100%}}
 .cprev{word-break:break-word;overflow-wrap:break-word;font-family:var(--sans);font-size:.86rem;color:var(--text2);line-height:1.5;margin-bottom:.42rem}
 .cactions{display:flex;align-items:center;gap:.1rem;flex-wrap:wrap}
 .cact{display:flex;align-items:center;gap:.22rem;padding:.23rem .48rem;border-radius:2px;border:none;background:none;font-family:var(--mono);font-size:.76rem;color:var(--text3);cursor:pointer;transition:all .1s}
@@ -555,6 +596,18 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
     <span class="chat-prompt">$_</span>
     <input class="chat-inp" id="chat-inp" placeholder="escribe y presiona enter..." onkeydown="chatKey(event)">
     <button class="chat-send" onclick="sendMsg()">SEND</button>
+  </div>
+</div>
+
+
+<!-- POST DETAIL VIEW: noticias_cl -->
+<div class="post-view-wrap" id="post-view-wrap" onclick="closePostViewBg(event)">
+  <div class="post-view" role="dialog" aria-modal="true" aria-label="Vista de noticia">
+    <div class="post-view-top">
+      <div class="post-view-label">hilo de noticia</div>
+      <button class="post-view-x" onclick="closePostView()">ESC / cerrar</button>
+    </div>
+    <div class="post-view-body" id="post-view-content"></div>
   </div>
 </div>
 
@@ -1340,6 +1393,189 @@ function openPostReference(url){
   window.open(u,'_blank','noopener,noreferrer');
 }
 
+
+function escHtml(s){
+  return String(s||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function getPostById(id){
+  id=parseInt(id,10);
+  return POSTS.find(function(x){return parseInt(x.id,10)===id;})||null;
+}
+
+function getPostUserName(p){
+  return (p&&p.user&&p.user.name)?String(p.user.name):'anon';
+}
+
+function openPostView(id){
+  var p=getPostById(id);
+  if(!p){toast('post no encontrado');return;}
+  var wrap=document.getElementById('post-view-wrap');
+  var cont=document.getElementById('post-view-content');
+  if(!wrap||!cont)return;
+  var refUrl=getPostReference(p);
+  var refJs=refUrl?jsStr(refUrl):'';
+  var isNews=(p.isNews===true)||isNewsBotPost(p);
+  var bodyText=p.prev||p.contenido||'';
+  var bodyHtml=bodyText?linkify(bodyText):'<span style="color:var(--text3)">// sin bajada disponible</span>';
+  var voteTotal=(p.votos||0)+(votes[p.id]||0);
+  var sourceHtml='';
+  if(refUrl){
+    sourceHtml=
+      '<div class="pv-source-box">'+
+        '<div class="pv-source-copy">Referencia externa detectada:<br><strong>'+escHtml(getDomain(refUrl))+'</strong></div>'+
+        '<button class="pv-source-btn" onclick="openPostReference(\''+refJs+'\')">leer fuente original ↗</button>'+
+      '</div>';
+  } else if(isNews){
+    sourceHtml='<div class="pv-source-box"><div class="pv-source-copy"><strong>sin fuente externa disponible</strong><br>Este post de noticias_cl no trae URL válida.</div></div>';
+  }
+  cont.innerHTML=
+    '<div class="pv-meta">'+
+      '<span class="csub">'+escHtml((p.ic||'')+' '+(p.sub||''))+'</span><span class="dot">::</span>'+
+      '<span>'+makeAvatar(getPostUserName(p),'sm')+' u/'+escHtml(getPostUserName(p))+'</span><span class="dot">::</span>'+
+      '<span>'+escHtml(p.t||'ahora')+'</span><span class="flair '+escHtml(p.fc||'g')+'">'+escHtml(p.flair||'post')+'</span>'+
+    '</div>'+
+    '<h1 class="pv-title">'+escHtml(p.title||'sin título')+'</h1>'+
+    '<div class="pv-excerpt">'+bodyHtml+'</div>'+
+    sourceHtml+
+    '<div class="pv-actions">'+
+      '<div class="pv-vote"><button class="vbtn up" onclick="vote('+p.id+',1);openPostView('+p.id+')">▲</button><strong>'+fmtV(voteTotal)+'</strong><button class="vbtn down" onclick="vote('+p.id+',-1);openPostView('+p.id+')">▼</button></div>'+
+      '<button class="cact" onclick="toast(&quot;enlace del hilo copiado&quot;)">// compartir hilo</button>'+
+    '</div>'+
+    '<div class="pv-comments-head">'+
+      '<div class="pv-comments-title">comentarios</div>'+
+      '<div class="pv-sort">'+
+        '<button class="on" onclick="setPostViewSort(this,'+p.id+',\'top\')">destacados</button>'+
+        '<button onclick="setPostViewSort(this,'+p.id+',\'new\')">recientes</button>'+
+        '<button onclick="setPostViewSort(this,'+p.id+',\'old\')">antiguos</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="pv-comment-box">'+
+      '<input id="pv-comment-input" placeholder="comentar en el hilo..." onkeydown="if(event.key===\'Enter\')sendPostViewComment('+p.id+')">'+
+      '<button class="pv-comment-send" onclick="sendPostViewComment('+p.id+')">SEND</button>'+
+    '</div>'+
+    '<div class="pv-comments-list" id="pv-comments-list"></div>';
+  wrap.classList.add('on');
+  document.body.classList.add('post-view-lock');
+  renderPostViewComments(p.id,'top');
+}
+
+function closePostView(){
+  var wrap=document.getElementById('post-view-wrap');
+  if(wrap)wrap.classList.remove('on');
+  document.body.classList.remove('post-view-lock');
+}
+
+function closePostViewBg(e){
+  if(e.target&&e.target.id==='post-view-wrap')closePostView();
+}
+
+function setPostViewSort(btn, postId, sort){
+  var box=btn&&btn.parentElement;
+  if(box)box.querySelectorAll('button').forEach(function(b){b.classList.remove('on')});
+  if(btn)btn.classList.add('on');
+  renderPostViewComments(postId, sort);
+}
+
+function pvVote(btn, dir){
+  var box=btn&&btn.parentElement;
+  if(!box)return;
+  var num=box.querySelector('strong');
+  if(!num)return;
+  var v=parseInt(num.textContent,10)||0;
+  var wasOn=btn.classList.contains('on');
+  box.querySelectorAll('button').forEach(function(b){b.classList.remove('on')});
+  if(!wasOn){
+    btn.classList.add('on');
+    v += (dir===1?1:-1);
+  }
+  num.textContent=v;
+}
+
+function renderPostViewCommentHTML(c){
+  var username=(c.bot&&c.bot.name)||c.username||'anon';
+  var tiempo=c.t||c.tiempo||'ahora';
+  var votos=parseInt(c.v||c.votos||0,10)||0;
+  var texto=c.txt||c.texto||'';
+  return '<div class="pv-comment">'+
+    '<div class="pv-comment-v"><button onclick="pvVote(this,1)">▲</button><strong>'+votos+'</strong><button onclick="pvVote(this,-1)">▼</button></div>'+
+    '<div><div class="pv-comment-meta"><span class="u">u/'+escHtml(username)+'</span> · '+escHtml(tiempo)+'</div><div class="pv-comment-text">'+linkify(texto)+'</div></div>'+
+  '</div>';
+}
+
+async function renderPostViewComments(postId, sort){
+  var p=getPostById(postId);
+  var list=document.getElementById('pv-comments-list');
+  if(!p||!list)return;
+  list.innerHTML='<div class="pv-empty">// cargando comentarios...</div>';
+
+  var isBotOnly=(postId<9000&&!p.realId);
+  if(isBotOnly){
+    var all=generateBotComments(p.coms||0, p.cd||[]);
+    if(sort==='new') all=all.slice().reverse();
+    else if(sort==='old') all=all.slice();
+    else all=all.slice().sort(function(a,b){return (b.v||0)-(a.v||0)});
+    list.innerHTML=all.length?all.map(renderPostViewCommentHTML).join(''):'<div class="pv-empty">// todavía no hay comentarios</div>';
+    return;
+  }
+
+  try{
+    var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||p.realId||postId;
+    var q=db.from('comentarios').select('*, perfiles(username,ciudad)').eq('post_id',realId).limit(40);
+    if(sort==='top') q=q.order('votos',{ascending:false});
+    else if(sort==='new') q=q.order('created_at',{ascending:false});
+    else q=q.order('created_at',{ascending:true});
+    var r=await q;
+    if(r.error){list.innerHTML='<div class="pv-empty">// error al cargar comentarios</div>';return;}
+    var rows=(r.data||[]).map(function(c){
+      var u=c.perfiles||{};
+      return {username:u.username||'anon',tiempo:'ahora',texto:c.texto||'',votos:c.votos||0};
+    });
+    list.innerHTML=rows.length?rows.map(renderPostViewCommentHTML).join(''):'<div class="pv-empty">// todavía no hay comentarios</div>';
+  }catch(e){
+    list.innerHTML='<div class="pv-empty">// comentarios no disponibles</div>';
+  }
+}
+
+async function sendPostViewComment(postId){
+  var p=getPostById(postId);
+  var inp=document.getElementById('pv-comment-input');
+  if(!p||!inp)return;
+  var texto=inp.value.trim();
+  if(!texto)return;
+
+  var sess=await db.auth.getSession();
+  if(!sess.data||!sess.data.session){showModal('login');return;}
+  if(!currentPerfil) await loadPerfil();
+  var username=currentPerfil?currentPerfil.username:'tu_usuario';
+
+  var isBotOnly=(postId<9000&&!p.realId);
+  if(isBotOnly){
+    p.cd=p.cd||[];
+    p.cd.unshift({bot:{name:username,ciudad:'Chile'},t:'ahora',txt:texto,v:0});
+    p.coms=(p.coms||0)+1;
+    inp.value='';
+    renderPostViewComments(postId,'new');
+    renderFeed((window._currentFilter&&window._currentFilter!=='inicio')?window._currentFilter:null);
+    toast('comentario publicado');
+    return;
+  }
+
+  var uid=sess.data.session.user.id;
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||p.realId||postId;
+  var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
+  if(r.error){toast('error: '+r.error.message);return;}
+  p.coms=(p.coms||0)+1;
+  inp.value='';
+  renderPostViewComments(postId,'new');
+  toast('comentario publicado');
+}
+
 function renderPost(p){
   var voto=votes[p.id]||0;
   var v=p.votos+voto;
@@ -1390,7 +1626,7 @@ function renderPost(p){
   var isNewsClickable=(p.isNews===true)||isNewsBotPost(p);
   var refJs=refUrl?jsStr(refUrl):'';
   if(refUrl && isNewsClickable){
-    html+='<div class="ctitle news-click" title="abrir noticia en fuente externa" onclick="openPostReference(\''+refJs+'\')">'+p.title+' <span style="color:var(--text3);font-size:.72rem">↗</span></div>';
+    html+='<div class="ctitle news-click" title="abrir hilo de noticia con comentarios" onclick="openPostView('+p.id+')">'+p.title+' <span style="color:var(--text3);font-size:.72rem">// hilo</span></div>';
   } else {
     html+='<div class="ctitle" onclick="toggleComs('+p.id+')">'+p.title+'</div>';
   }
@@ -1412,10 +1648,12 @@ function renderPost(p){
   }
 
   html+='<div class="cactions">';
-  if(refUrl){
+  if(refUrl && isNewsClickable){
+    html+='<button class="cact source-link" onclick="event.stopPropagation();openPostView('+p.id+')">// abrir hilo + fuente</button>';
+  } else if(refUrl){
     html+='<button class="cact source-link" onclick="event.stopPropagation();openPostReference(\''+refJs+'\')">// fuente: '+getDomain(refUrl)+' ↗</button>';
   }
-  html+='<button class="cact" onclick="toggleComs('+p.id+')">// '+p.coms+' comentarios</button>';
+  html+='<button class="cact" onclick="'+(isNewsClickable?'openPostView('+p.id+')':'toggleComs('+p.id+')')+'">// '+p.coms+' comentarios</button>';
   html+='<button class="cact" onclick="toast(&quot;enlace copiado&quot;)">// compartir</button>';
   if(p.realId&&currentUser&&p.userId===currentUser.id) html+='<button class="cact com-del" onclick="deletePost('+p.id+','+p.realId+',this)">// borrar</button>';
   html+='</div>';
@@ -4234,7 +4472,7 @@ db.auth.getSession().then(function(r){
     document.getElementById('user-btns').style.display='flex';
   }
 });
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closePostView();closeModal();}});
 </script>
 </body>
 </html>
