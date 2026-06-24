@@ -147,6 +147,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .csub{color:var(--blue);cursor:pointer;font-weight:700}.csub:hover{text-decoration:underline}
 .cuser{color:var(--amber);cursor:pointer}.cuser:hover{text-decoration:underline}
 .dot{color:var(--border2)}
+.flair-news{background:rgba(255,59,48,.15);color:#ff3b30;border:1px solid rgba(255,59,48,.3)}
 .flair{padding:.04rem .33rem;border-radius:2px;font-size:.6rem;font-weight:700}
 .flair.r{background:rgba(255,123,114,.1);color:#ff7b72;border:1px solid rgba(255,123,114,.2)}
 .flair.b{background:rgba(121,192,255,.1);color:var(--blue);border:1px solid rgba(121,192,255,.2)}
@@ -1067,6 +1068,27 @@ function sendMsg(){
 function chatKey(e){if(e.key==='Enter')sendMsg()}
 
 var POSTS=[
+  {id:101,sub:'futbol',ic:'⚽',user:{name:'noticia_cl',av:'📰'},t:'1h',flair:'📡 NOTICIA',fc:'r',
+   title:'Cristiano Ronaldo marcó su primer gol en el Mundial 2026 ante Uzbekistán y hace historia',
+   prev:'Portugal ganó y CR7 sigue escribiendo su leyenda. La tabla la lideran Mbappé, Messi y Haaland.',
+   votos:12,coms:8,cd:[],isNews:true},
+  {id:102,sub:'futbol',ic:'⚽',user:{name:'noticia_cl',av:'📰'},t:'2h',flair:'📡 NOTICIA',fc:'r',
+   title:'Messi doblete histórico: Speed festejó penal errado y luego sufrió con el 10',
+   prev:'Leo Messi respondió en la cancha. El partido quedó para el recuerdo.',
+   votos:9,coms:6,cd:[],isNews:true},
+  {id:103,sub:'finanzas',ic:'💰',user:{name:'noticia_cl',av:'📰'},t:'3h',flair:'📡 NOTICIA',fc:'r',
+   title:'Fintech vinculada al Tren de Aragua: la diferencia entre estar inscrito y autorizado por la CMF',
+   prev:'Un caso que mezcla crimen organizado y sistema financiero chileno.',
+   votos:6,coms:4,cd:[],isNews:true},
+  {id:104,sub:'contingencia',ic:'📰',user:{name:'noticia_cl',av:'📰'},t:'4h',flair:'📡 NOTICIA',fc:'r',
+   title:'Amenaza de bomba obliga a evacuar el Centro de Justicia y el GAM en Santiago',
+   prev:'El Ministerio Público calificó la situación como particularmente gravosa.',
+   votos:7,coms:5,cd:[],isNews:true},
+  {id:105,sub:'chile',ic:'🇨🇱',user:{name:'noticia_cl',av:'📰'},t:'5h',flair:'📡 NOTICIA',fc:'r',
+   title:'PDI confirma que 52 de los 64 niños haitianos ya fueron ubicados: están escolarizados',
+   prev:'La mayoría ya se encuentran integrados al sistema educativo y de salud.',
+   votos:8,coms:4,cd:[],isNews:true},
+
   {id:1,sub:'futbol',ic:'⚽',user:BOTS[0],t:'2h',flair:'Mundial 2026',fc:'r',
    title:'Chile afuera del mundial y España goleando: la noche más larga del fútbol latinoamericano',
    prev:'España aplastó a Arabia Saudita con Lamine Yamal y Oyarzabal. Mientras tanto acá mirando el mundial ajeno como siempre. Igual es entretenido cuando no te duele.',
@@ -1366,9 +1388,15 @@ function renderPost(p){
 
 function renderFeed(filter){
   var list=filter?POSTS.filter(function(p){return p.sub===filter}):POSTS;
+  if(!filter){
+    var news=list.filter(function(p){return p.isNews;});
+    var rest=list.filter(function(p){return !p.isNews;});
+    list=news.concat(rest);
+  }
   var html=list.map(renderPost).join('');
   if(!html)html='<div style="text-align:center;padding:2.5rem;color:var(--text3);font-size:.75rem;font-family:var(--mono)">// no hay posts aquí todavía<br><br>🌵</div>';
   document.getElementById('posts-feed').innerHTML=html;
+  return html;
 }
 
 // Mapeo permanente de posts semilla (ids JS) → IDs reales en Supabase
@@ -1775,6 +1803,7 @@ function voteComment(btn,dir){ vc(btn,dir); }
 
 
 function filterFeed(sub,el){
+  window._currentFilter=sub||null;
   document.querySelectorAll('.sf-item').forEach(function(i){i.classList.remove('on')});
   if(el)el.classList.add('on');
   var f=(!sub||sub==='inicio')?null:sub;
@@ -4119,6 +4148,30 @@ async function botActivityLoop() {
 }
 
 
+var _newsLoaded=false;
+async function loadNews(){
+  if(_newsLoaded)return;
+  try{
+    var r=await fetch('/api/news');
+    if(!r.ok)return;
+    var d=await r.json();
+    var items=d.items||[];
+    if(!items.length)return;
+    _newsLoaded=true;
+    items.forEach(function(n,i){
+      if(!n.title||n.title.length<5)return;
+      POSTS.unshift({id:8500+i,sub:n.sub||'chile',ic:n.ic||'📰',
+        user:{name:'noticia_cl',av:'📰'},t:'ahora',flair:'📡 LIVE',fc:'r',
+        title:n.title,prev:n.desc||null,url:n.link||null,
+        votos:Math.floor(Math.random()*12)+1,coms:Math.floor(Math.random()*6)+1,
+        cd:[],isNews:true});
+    });
+    var f=document.getElementById('posts-feed');
+    if(f)f.innerHTML=renderFeed(window._currentFilter||null);
+    renderTrending();
+  }catch(e){}
+}
+
 // Init
 addMsg(null,'// chat global activo · randomplan.cl',false,true);
 CHAT_INIT.forEach(function(m){addMsg(m.bot,m.txt,false,false)});
@@ -4129,6 +4182,7 @@ initSeedPostMap();renderFeed(null);renderTrending();renderComms();
 setInterval(tickVotes,8000);
 loadChatHistory();
 setInterval(pollChat,3000);
+setTimeout(loadNews,1500);
 loadRealPosts(null);
 // check existing session
 db.auth.getSession().then(function(r){
