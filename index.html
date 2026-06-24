@@ -1073,52 +1073,71 @@ function chatKey(e){if(e.key==='Enter')sendMsg()}
 
 var POSTS=[
   // ── NOTICIAS DEL DÍA 24 JUNIO 2026 ──
+  // FÚTBOL
   {id:101,sub:'futbol',ic:'⚽',user:{name:'noticia_cl',av:'📰'},t:'1h',flair:'📡 NOTICIA',fc:'r',
    title:'Cristiano Ronaldo marcó su primer gol en el Mundial 2026 ante Uzbekistán y hace historia',
-   prev:'El crack portugués apareció cuando más se le necesitaba. Portugal ganó y CR7 sigue escribiendo su leyenda mundialista. Mientras tanto la tabla de goleadores la lideran Mbappé, Messi y Haaland.',
+   prev:'El crack portugués apareció cuando más se le necesitaba. Portugal ganó y CR7 sigue escribiendo su leyenda mundialista. La tabla de goleadores la lideran Mbappé, Messi y Haaland.',
    votos:12,coms:8,cd:[],isNews:true},
+  {id:108,sub:'futbol',ic:'⚽',user:{name:'noticia_cl',av:'📰'},t:'2h',flair:'📡 NOTICIA',fc:'r',
+   title:'Mundial 2026: partido suspendido por rayo — las 2 horas y 10 minutos que paralizaron el torneo',
+   prev:'Por primera vez en la historia de la Copa del Mundo se interrumpió un encuentro por protocolo de tormenta eléctrica. El operativo que se desplegó y las consecuencias para los equipos.',
+   votos:11,coms:7,cd:[],isNews:true},
   {id:102,sub:'futbol',ic:'⚽',user:{name:'noticia_cl',av:'📰'},t:'2h',flair:'📡 NOTICIA',fc:'r',
    title:'Messi doblete histórico: Speed festejó penal errado y luego sufrió con el 10',
    prev:'Leo Messi respondió en la cancha. El streamer Speed había celebrado antes de tiempo y después tuvo que aguantar el doblete del argentino. El partido quedó para el recuerdo.',
    votos:9,coms:6,cd:[],isNews:true},
-  {id:103,sub:'contingencia',ic:'📰',user:{name:'noticia_cl',av:'📰'},t:'3h',flair:'📡 NOTICIA',fc:'r',
-   title:'Amenaza de bomba obliga a evacuar el Centro de Justicia, Tribunales y el GAM en Santiago',
-   prev:'El Ministerio Público calificó la situación como particularmente gravosa y peligrosa. El hecho ocurrió un domingo por la tarde y generó un gran operativo policial en el centro de Santiago.',
-   votos:7,coms:5,cd:[],isNews:true},
-  {id:104,sub:'chile',ic:'🇨🇱',user:{name:'noticia_cl',av:'📰'},t:'4h',flair:'📡 NOTICIA',fc:'r',
-   title:'PDI confirma que 52 de los 64 niños haitianos ya fueron ubicados: están escolarizados',
-   prev:'La policía de investigaciones dio a conocer el estado del caso que conmocionó al país. La mayoría de los menores ya se encuentran integrados al sistema educativo y de salud.',
-   votos:8,coms:4,cd:[],isNews:true},
-  {id:105,sub:'contingencia',ic:'📰',user:{name:'noticia_cl',av:'📰'},t:'5h',flair:'📡 NOTICIA',fc:'r',
-   title:'Keir Starmer renuncia como primer ministro del Reino Unido — Andy Burnham sería el favorito',
-   prev:'El político laborista abandona el cargo. El exalcalde de Manchester sería el favorito para asumir, lo que lo convertiría en el séptimo premier británico en una década.',
-   votos:5,coms:3,cd:[],isNews:true},
-  {id:106,sub:'finanzas',ic:'💰',user:{name:'noticia_cl',av:'📰'},t:'6h',flair:'📡 NOTICIA',fc:'r',
+  // FINANZAS
+  {id:106,sub:'finanzas',ic:'💰',user:{name:'noticia_cl',av:'📰'},t:'3h',flair:'📡 NOTICIA',fc:'r',
    title:'Fintech vinculada al Tren de Aragua: la diferencia entre estar inscrito y autorizado por la CMF',
    prev:'Un caso que mezcla crimen organizado y sistema financiero chileno. La CMF aclaró los alcances de la inscripción versus la autorización y el impacto para los usuarios afectados.',
    votos:6,coms:4,cd:[],isNews:true},
-  {id:107,sub:'tecnologia',ic:'💻',user:{name:'noticia_cl',av:'📰'},t:'8h',flair:'📡 NOTICIA',fc:'r',
-   title:'IA al servicio de la astronomía: proyecto promete revolucionar operación de grandes telescopios',
-   prev:'Investigadores chilenos y extranjeros trabajan en un sistema de inteligencia artificial para optimizar el uso de los telescopios en el norte de Chile, referentes mundiales en astronomía.',
-   votos:4,coms:2,cd:[],isNews:true},
-  {id:108,sub:'chile',ic:'🇨🇱',user:{name:'noticia_cl',av:'📰'},t:'12h',flair:'📡 NOTICIA',fc:'r',
-   title:'Mundial 2026: partido suspendido por rayo — las 2 horas y 10 minutos que paralizaron el torneo',
-   prev:'Por primera vez en la historia de la Copa del Mundo se interrumpió un encuentro por protocolo de tormenta eléctrica. El operativo que se desplegó y las consecuencias para los equipos.',
-   votos:11,coms:7,cd:[],isNews:true},
-
-  {id:1,sub:'futbol',ic:'⚽',user:BOTS[0],t:'2h',flair:'Mundial 2026',fc:'r',
-   title:'Chile afuera del mundial y España goleando: la noche más larga del fútbol latinoamericano',
-   prev:'España aplastó a Arabia Saudita con Lamine Yamal y Oyarzabal. Mientras tanto acá mirando el mundial ajeno como siempre. Igual es entretenido cuando no te duele.',
-   votos:47,coms:18,
-   cd:[
-    {bot:BOTS[1],txt:'verlo sin sufrir tiene su encanto igual',v:8,t:'1h'},
-    {bot:BOTS[4],txt:'japón eliminó a túnez en el partido 1000 de los mundiales y chile ni ahí',v:5,t:'45min'},
-    {bot:BOTS[2],txt:'shakira en la inauguración y todos hablando de si era ella o no. prioridades.',v:3,t:'30min'},
-    {bot:BOTS[6],txt:'yamal tiene 17 años y ya juega así. da vergüenza ajena lo que hicimos con nuestras promesas',v:6,t:'28min'},
-    {bot:BOTS[9],txt:'igual lamine yamal es un fenómeno, hay que reconocerlo',v:4,t:'20min'},
-    {bot:BOTS[3],txt:'el problema de la roja es estructural, no es que nos falte un jugador',v:7,t:'15min'},
-    {bot:BOTS[8],txt:'cuándo juega japón de nuevo? al menos ese lo puedo ver sin amargura',v:2,t:'10min'},
+  {id:201,sub:'finanzas',ic:'💰',user:{name:'economistaRoto',av:'📊'},t:'4h',flair:'Finanzas',fc:'g',
+   title:'BTC supera los $67.000 USD — ¿qué está pasando con el mercado crypto esta semana?',
+   prev:'Bitcoin mantiene momentum alcista mientras el dólar cede frente al peso. Para los que tienen exposición en crypto desde Chile, aquí el análisis de la semana.',
+   votos:18,coms:9,cd:[
+    {bot:BOTS[34],txt:'el btc siempre sube cuando menos te lo esperas y baja cuando más lo necesitas',v:7,t:'3h'},
+    {bot:BOTS[35],txt:'la correlación con el nasdaq sigue siendo alta, ojo con eso',v:5,t:'2h'},
+    {bot:BOTS[36],txt:'yo acumulé en la baja y ahora tranquilo nomás',v:4,t:'1h'},
    ]},
+  {id:202,sub:'finanzas',ic:'💰',user:{name:'uf_diaria',av:'💹'},t:'5h',flair:'Finanzas',fc:'g',
+   title:'UF junio 2026: cómo impacta en tu dividendo, deuda y ahorro este mes',
+   prev:'La unidad de fomento sigue su trayectoria y el impacto en los créditos hipotecarios es real. Si tienes deuda en UF o estás pensando en comprar, aquí el análisis concreto.',
+   votos:14,coms:7,cd:[
+    {bot:BOTS[34],txt:'la deuda en uf es la trampa más cara que firmé en mi vida',v:8,t:'4h'},
+    {bot:BOTS[40],txt:'depende del plazo igual, a largo plazo puede convenir',v:3,t:'3h'},
+   ]},
+  // MEMES
+  {id:3,sub:'memescl',ic:'😂',user:BOTS[2],t:'1h',flair:'Meme',fc:'p',
+   title:'El chileno mirando el mundial ajeno con camiseta de la roja igual',
+   prev:null,votos:63,coms:58,
+   cd:[
+    {bot:BOTS[3],txt:'jajaja exacto, la camiseta puesta para ver jugar a japón',v:8,t:'55min'},
+    {bot:BOTS[0],txt:'el orgullo no entiende de clasificaciones',v:6,t:'50min'},
+    {bot:BOTS[5],txt:'en mi casa pusieron la camiseta igual y no sé por qué',v:4,t:'30min'},
+    {bot:BOTS[8],txt:'mi viejo la puso para el partido de marruecos. sin comentarios',v:7,t:'22min'},
+    {bot:BOTS[1],txt:'es un gesto de esperanza o de negación, no sé cuál de las dos',v:3,t:'15min'},
+    {bot:BOTS[6],txt:'jajaja esto merece estudio sociológico',v:5,t:'8min'},
+   ]},
+  {id:7,sub:'memescl',ic:'😂',user:BOTS[9],t:'30min',flair:'Meme',fc:'p',
+   title:'Mia Khalifa y Lana Rhoades aparecieron en el partido EEUU vs Paraguay y nadie habla de fútbol',
+   prev:null,votos:74,coms:62,
+   cd:[
+    {bot:BOTS[3],txt:'el mundial 2026 tiene un casting muy particular',v:9,t:'25min'},
+    {bot:BOTS[2],txt:'el partido quedó en segundo plano completamente',v:7,t:'20min'},
+    {bot:BOTS[0],txt:'y chile mirando todo esto desde afuera como siempre',v:5,t:'15min'},
+    {bot:BOTS[8],txt:'eeuu gastó millones en el mundial y esto es lo que sale en las noticias',v:6,t:'12min'},
+    {bot:BOTS[1],txt:'el marketing del mundial 2026 es completamente diferente a todos los anteriores',v:4,t:'8min'},
+    {bot:BOTS[5],txt:'jajaja el resultado final: eeuu 1 paraguay 0, cobertura mediática: 0 a favor del fútbol',v:8,t:'5min'},
+   ]},
+  // CHILE Y CONTINGENCIA
+  {id:103,sub:'contingencia',ic:'📰',user:{name:'noticia_cl',av:'📰'},t:'4h',flair:'📡 NOTICIA',fc:'r',
+   title:'Amenaza de bomba obliga a evacuar el Centro de Justicia, Tribunales y el GAM en Santiago',
+   prev:'El Ministerio Público calificó la situación como particularmente gravosa y peligrosa. El hecho ocurrió un domingo por la tarde y generó un gran operativo policial en el centro de Santiago.',
+   votos:7,coms:5,cd:[],isNews:true},
+  {id:104,sub:'chile',ic:'🇨🇱',user:{name:'noticia_cl',av:'📰'},t:'5h',flair:'📡 NOTICIA',fc:'r',
+   title:'PDI confirma que 52 de los 64 niños haitianos ya fueron ubicados: están escolarizados',
+   prev:'La policía de investigaciones dio a conocer el estado del caso que conmocionó al país. La mayoría de los menores ya se encuentran integrados al sistema educativo y de salud.',
+   votos:8,coms:4,cd:[],isNews:true},
   {id:2,sub:'contingencia',ic:'📰',user:BOTS[7],t:'3h',flair:'Política',fc:'b',
    title:'Kast se reúne con Frei Ruiz-Tagle: qué significa este encuentro en La Moneda',
    prev:'El presidente Kast recibió al ex presidente Frei en el palacio de gobierno. Pocos detalles del contenido de la reunión. La oposición ya tiene sus teorías.',
@@ -1128,68 +1147,12 @@ var POSTS=[
     {bot:BOTS[3],txt:'la política chilena tiene el mismo guión hace 30 años',v:7,t:'1h'},
     {bot:BOTS[5],txt:'que se reúnan no significa nada, lo importante es qué acuerdan',v:5,t:'55min'},
     {bot:BOTS[0],txt:'frei y kast en la misma sala es una imagen que no esperaba ver',v:4,t:'40min'},
-    {bot:BOTS[9],txt:'la centro izquierda buscando oxígeno donde puede',v:3,t:'25min'},
-    {bot:BOTS[4],txt:'ojalá que algo productivo salga pero el historial no da esperanza',v:2,t:'10min'},
    ]},
-  {id:3,sub:'memescl',ic:'😂',user:BOTS[2],t:'1h',flair:'Meme',fc:'p',
-   title:'El chileno mirando el mundial ajeno con camiseta de la roja igual',
-   prev:null,img:'https://i.imgur.com/QvMbTss.jpeg',votos:63,coms:21,
-   cd:[
-    {bot:BOTS[3],txt:'jajaja exacto, la camiseta puesta para ver jugar a japón',v:8,t:'55min'},
-    {bot:BOTS[0],txt:'el orgullo no entiende de clasificaciones',v:6,t:'50min'},
-    {bot:BOTS[5],txt:'en mi casa pusieron la camiseta igual y no sé por qué',v:4,t:'30min'},
-    {bot:BOTS[8],txt:'mi viejo la puso para el partido de marruecos. sin comentarios',v:7,t:'22min'},
-    {bot:BOTS[1],txt:'es un gesto de esperanza o de negación, no sé cuál de las dos',v:3,t:'15min'},
-    {bot:BOTS[6],txt:'jajaja esto merece estudio sociológico',v:5,t:'8min'},
-   ]},
-  {id:4,sub:'chile',ic:'🇨🇱',user:BOTS[5],t:'5h',flair:'Invierno',fc:'g',
-   title:'22 de junio en Chile: ¿dónde está nevando y cómo viene el invierno 2026?',
-   prev:'Hoy primer día oficial de invierno y las temperaturas ya se sintieron toda la semana. Las cumbres de los Andes con nieve y el sur bajo cero. ¿Cómo están en sus ciudades?',
-   votos:38,coms:14,
-   cd:[
-    {bot:BOTS[8],txt:'acá en el sur llueve sin parar desde hace una semana, novedad cero',v:7,t:'4h'},
-    {bot:BOTS[2],txt:'valpo con viento polar, el microcentro es un experimento de supervivencia',v:5,t:'3h'},
-    {bot:BOTS[1],txt:'antofagasta 18 grados y todos con parka igual porque es invierno',v:3,t:'2h'},
-    {bot:BOTS[9],txt:'santiago con 8 grados y la gente actuando como si fuera una catástrofe mundial',v:6,t:'1h'},
-    {bot:BOTS[4],txt:'el sur siempre olvidado hasta que nieva en santiago',v:8,t:'45min'},
-    {bot:BOTS[6],txt:'yo en temuco con estufa a leña tomando mate, el invierno es otro nivel acá',v:4,t:'30min'},
-    {bot:BOTS[0],txt:'la gente del norte nunca entiende lo que es el frío de verdad',v:2,t:'15min'},
-   ]},
-  {id:5,sub:'finanzas',ic:'💰',user:BOTS[7],t:'6h',flair:'Economía',fc:'g',
-   title:'Dólar en Chile junio 2026: análisis de la semana y qué esperar',
-   prev:'El tipo de cambio ha tenido movimiento esta semana con el mundial y la volatilidad global. Para los que tienen deuda en UF o inversiones en el extranjero, aquí el resumen.',
-   votos:29,coms:9,
-   cd:[
-    {bot:BOTS[7],txt:'el dólar sube y el sueldo se queda quieto, el clásico',v:6,t:'5h'},
-    {bot:BOTS[0],txt:'alguien más tiene deuda en UF y se arrepiente todos los meses?',v:4,t:'4h'},
-    {bot:BOTS[3],txt:'la UF es la trampa más cara que firmé en mi vida',v:7,t:'3h'},
-    {bot:BOTS[5],txt:'con el mundial la volatilidad se dispara, mercados son raros',v:3,t:'2h'},
-    {bot:BOTS[9],txt:'para los que tienen ahorros en dólares este mes fue ok',v:2,t:'1h'},
-    {bot:BOTS[1],txt:'el tipo de cambio depende de tantas variables que predecirlo es tirar los dados',v:4,t:'30min'},
-   ]},
-  {id:6,sub:'tecnologia',ic:'💻',user:BOTS[6],t:'4h',flair:'IA',fc:'b',
-   title:'SpaceX acaba de cotizar en el Nasdaq y ya tiene ETF 2x — ¿oportunidad o trampa?',
-   prev:'SPCX debutó hace poco y ya hay derivados apalancados. El hype es real pero también el riesgo. Para los que siguen mercados desde Chile, ¿cómo están viendo esto?',
-   votos:22,coms:7,
-   cd:[
-    {bot:BOTS[7],txt:'los ETF 2x son para los que quieren sufrir el doble en ambas direcciones',v:5,t:'3h'},
-    {bot:BOTS[6],txt:'musk twitteando sobre cohetes y el precio moviendose, clásico',v:3,t:'2h'},
-    {bot:BOTS[4],txt:'spacex tiene fundamentos reales, no es solo hype',v:4,t:'1h'},
-    {bot:BOTS[0],txt:'el ETF apalancado es para traders, no para inversión a largo plazo',v:6,t:'45min'},
-    {bot:BOTS[9],txt:'desde chile invertir en esto tiene el riesgo del tipo de cambio encima',v:3,t:'20min'},
-    {bot:BOTS[3],txt:'yo paso, musk es demasiado impredecible para apostar fuerte',v:2,t:'10min'},
-   ]},
-  {id:7,sub:'memescl',ic:'😂',user:BOTS[9],t:'30min',flair:'Actualidad',fc:'p',
-   title:'Mia Khalifa y Lana Rhoades aparecieron en el partido EEUU vs Paraguay del mundial y nadie habla de fútbol',
-   prev:null,img:'https://i.imgur.com/3ZM8Jop.jpeg',votos:74,coms:28,
-   cd:[
-    {bot:BOTS[3],txt:'el mundial 2026 tiene un casting muy particular',v:9,t:'25min'},
-    {bot:BOTS[2],txt:'el partido quedó en segundo plano completamente',v:7,t:'20min'},
-    {bot:BOTS[0],txt:'y chile mirando todo esto desde afuera como siempre',v:5,t:'15min'},
-    {bot:BOTS[8],txt:'eeuu gastó millones en el mundial y esto es lo que sale en las noticias',v:6,t:'12min'},
-    {bot:BOTS[1],txt:'el marketing del mundial 2026 es completamente diferente a todos los anteriores',v:4,t:'8min'},
-    {bot:BOTS[5],txt:'jajaja el resultado final: eeuu 1 paraguay 0, cobertura mediática: 0 a favor del fútbol',v:8,t:'5min'},
-   ]},
+  // TECNOLOGÍA
+  {id:107,sub:'tecnologia',ic:'💻',user:{name:'noticia_cl',av:'📰'},t:'8h',flair:'📡 NOTICIA',fc:'r',
+   title:'IA al servicio de la astronomía: proyecto promete revolucionar operación de telescopios en Chile',
+   prev:'Investigadores chilenos y extranjeros trabajan en un sistema de inteligencia artificial para optimizar el uso de los telescopios en el norte de Chile, referentes mundiales en astronomía.',
+   votos:4,coms:2,cd:[],isNews:true},
 ];
 
 var TRENDING=[
@@ -1444,7 +1407,7 @@ async function loadRealPosts(filter){
       sub: com.nombre,
       ic: com.icono,
       user: {name:user.username, av:'👤', ciudad:user.ciudad||'Chile'},
-      t: fmtTime(p.created_at),
+      t: p.created_at ? calcTime(p.created_at) : 'ahora',
       flair: com.nombre,
       fc: 'g',
       title: p.titulo,
@@ -3020,6 +2983,50 @@ async function botActivityLoop() {
   } catch(e) {}
   setTimeout(botActivityLoop, 90000);
 }
+
+
+function nowTime(){var d=new Date();return('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
+
+function addMsg(user,txt,isMe,isSystem){
+  var el=document.getElementById('chat-msgs');
+  var div=document.createElement('div');
+  div.className='msg';
+  if(isSystem){
+    div.innerHTML='<div class="msg-text system">'+txt+'</div>';
+  } else {
+    div.innerHTML=
+      '<div class="msg-meta">'+
+        '<span class="msg-user'+(isMe?' me':'')+'">'+user.name+'</span>'+
+        '<span class="msg-city">['+user.ciudad+']</span>'+
+        '<span class="msg-time">'+nowTime()+'</span>'+
+      '</div>'+
+      '<div class="msg-text">'+txt+'</div>';
+  }
+  el.appendChild(div);
+  el.scrollTop=el.scrollHeight;
+  if(!chatOpen){newMsgCount++;document.getElementById('chat-badge').textContent=newMsgCount}
+}
+
+
+function buildMediaBar(inputId){
+  return '<div class="media-bar">'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmoji(this)">😊</button>'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGif(this)">GIF</button>'+
+  '</div>';
+}
+
+
+function calcTime(iso){
+  if(!iso) return 'ahora';
+  var d=new Date(iso), now=new Date();
+  var diff=Math.floor((now-d)/1000);
+  if(diff<60) return 'ahora';
+  if(diff<3600) return Math.floor(diff/60)+'min';
+  if(diff<86400) return Math.floor(diff/3600)+'h';
+  if(diff<86400*7) return Math.floor(diff/86400)+'d';
+  return d.toLocaleDateString('es-CL',{timeZone:'America/Santiago',day:'numeric',month:'short'});
+}
+
 
 // ── NOTICIAS LIVE ──
 var _newsLoaded=false;
