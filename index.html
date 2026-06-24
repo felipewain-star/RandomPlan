@@ -1068,6 +1068,40 @@ function sendMsg(){
 function chatKey(e){if(e.key==='Enter')sendMsg()}
 
 var POSTS=[
+  // ── NOTICIAS DEL DÍA 24 JUNIO 2026 ──
+  {id:101,sub:'futbol',ic:'⚽',user:{name:'noticia_cl',av:'📰'},t:'1h',flair:'📡 NOTICIA',fc:'r',
+   title:'Cristiano Ronaldo marcó su primer gol en el Mundial 2026 ante Uzbekistán y hace historia',
+   prev:'El crack portugués apareció cuando más se le necesitaba. Portugal ganó y CR7 sigue escribiendo su leyenda mundialista. Mientras tanto la tabla de goleadores la lideran Mbappé, Messi y Haaland.',
+   votos:12,coms:8,cd:[],isNews:true},
+  {id:102,sub:'futbol',ic:'⚽',user:{name:'noticia_cl',av:'📰'},t:'2h',flair:'📡 NOTICIA',fc:'r',
+   title:'Messi doblete histórico: Speed festejó penal errado y luego sufrió con el 10',
+   prev:'Leo Messi respondió en la cancha. El streamer Speed había celebrado antes de tiempo y después tuvo que aguantar el doblete del argentino. El partido quedó para el recuerdo.',
+   votos:9,coms:6,cd:[],isNews:true},
+  {id:103,sub:'contingencia',ic:'📰',user:{name:'noticia_cl',av:'📰'},t:'3h',flair:'📡 NOTICIA',fc:'r',
+   title:'Amenaza de bomba obliga a evacuar el Centro de Justicia, Tribunales y el GAM en Santiago',
+   prev:'El Ministerio Público calificó la situación como particularmente gravosa y peligrosa. El hecho ocurrió un domingo por la tarde y generó un gran operativo policial en el centro de Santiago.',
+   votos:7,coms:5,cd:[],isNews:true},
+  {id:104,sub:'chile',ic:'🇨🇱',user:{name:'noticia_cl',av:'📰'},t:'4h',flair:'📡 NOTICIA',fc:'r',
+   title:'PDI confirma que 52 de los 64 niños haitianos ya fueron ubicados: están escolarizados',
+   prev:'La policía de investigaciones dio a conocer el estado del caso que conmocionó al país. La mayoría de los menores ya se encuentran integrados al sistema educativo y de salud.',
+   votos:8,coms:4,cd:[],isNews:true},
+  {id:105,sub:'contingencia',ic:'📰',user:{name:'noticia_cl',av:'📰'},t:'5h',flair:'📡 NOTICIA',fc:'r',
+   title:'Keir Starmer renuncia como primer ministro del Reino Unido — Andy Burnham sería el favorito',
+   prev:'El político laborista abandona el cargo. El exalcalde de Manchester sería el favorito para asumir, lo que lo convertiría en el séptimo premier británico en una década.',
+   votos:5,coms:3,cd:[],isNews:true},
+  {id:106,sub:'finanzas',ic:'💰',user:{name:'noticia_cl',av:'📰'},t:'6h',flair:'📡 NOTICIA',fc:'r',
+   title:'Fintech vinculada al Tren de Aragua: la diferencia entre estar inscrito y autorizado por la CMF',
+   prev:'Un caso que mezcla crimen organizado y sistema financiero chileno. La CMF aclaró los alcances de la inscripción versus la autorización y el impacto para los usuarios afectados.',
+   votos:6,coms:4,cd:[],isNews:true},
+  {id:107,sub:'tecnologia',ic:'💻',user:{name:'noticia_cl',av:'📰'},t:'8h',flair:'📡 NOTICIA',fc:'r',
+   title:'IA al servicio de la astronomía: proyecto promete revolucionar operación de grandes telescopios',
+   prev:'Investigadores chilenos y extranjeros trabajan en un sistema de inteligencia artificial para optimizar el uso de los telescopios en el norte de Chile, referentes mundiales en astronomía.',
+   votos:4,coms:2,cd:[],isNews:true},
+  {id:108,sub:'chile',ic:'🇨🇱',user:{name:'noticia_cl',av:'📰'},t:'12h',flair:'📡 NOTICIA',fc:'r',
+   title:'Mundial 2026: partido suspendido por rayo — las 2 horas y 10 minutos que paralizaron el torneo',
+   prev:'Por primera vez en la historia de la Copa del Mundo se interrumpió un encuentro por protocolo de tormenta eléctrica. El operativo que se desplegó y las consecuencias para los equipos.',
+   votos:11,coms:7,cd:[],isNews:true},
+
   {id:1,sub:'futbol',ic:'⚽',user:BOTS[0],t:'2h',flair:'Mundial 2026',fc:'r',
    title:'Chile afuera del mundial y España goleando: la noche más larga del fútbol latinoamericano',
    prev:'España aplastó a Arabia Saudita con Lamine Yamal y Oyarzabal. Mientras tanto acá mirando el mundial ajeno como siempre. Igual es entretenido cuando no te duele.',
@@ -1199,45 +1233,52 @@ function generateBotComments(count, existingCd){
   // shuffle BOTS to avoid repetition
   var availBots=BOTS.slice().sort(function(){return Math.random()-0.5;});
   var usedBots={};
-  // frases por arquetipo del bot
-  var arq=bot?bot.arq:'santiaguino';
-  var ARQP={
-    nortenio:   {c:['en el norte se trabaja','iquique presente','calama siempre','el norte no se queja'],l:['desde el norte les digo que santiago no tiene idea de lo que pasa acá arriba. llevamos años solos','el costo de vida en antofagasta es una locura y nadie lo menciona. todo caro, todo lejos'],r:['en iquique lo mismo','calama también','el norte siempre olvidado']},
-    portenio:   {c:['valpo lo dijo primero','el puerto sabe','desde el cerro','valparaíso presente'],l:['valparaíso es la ciudad más honesta de chile porque no puede fingir que todo está bien','en valpo uno aprende que las cosas se arreglan con ingenio porque la plata nunca alcanza'],r:['desde el cerro lo mismo','el puerto ya lo vivió','trolebusero presente']},
-    santiaguino:{c:['rush de las 6pm','metro lleno again','santiago no para','la florida sabe'],l:['el gran santiago tiene millones de personas y a veces da la sensación de que nadie se conoce. esa soledad colectiva es rara','vivir en santiago es un ejercicio de resistencia diaria. el tráfico, el metro, el costo. uno lo normaliza'],r:['igual desde stgo','metro trauma diario','capitalino presente']},
-    sureno:     {c:['lluvia eterna','el sur aguanta','desde concepción','temuco presente'],l:['el sur de chile tiene una identidad propia que no se parece a nada del norte. la lluvia, los árboles, el ritmo. es otro país dentro del país','en concepción uno siente que hay una energía diferente. más directa, menos fachada'],r:['conce también','sur presente','desde valdivia lo mismo']},
-    economista: {c:['la uf subió','el ipsa en rojo','dólar al alza','banco central ojo'],l:['el problema fiscal de chile es estructural y no se resuelve con parches. necesitamos una reforma real','la deuda de los hogares chilenos es una bomba de tiempo. consumo a crédito, tasas altas, salarios que no suben'],r:['los datos lo dicen','la uf no miente','correlación no es causalidad pero igual']},
-    gamer_tech: {c:['gg','no cap','ratio','npc detected','lag presente'],l:['el mercado tech chileno está 5 años atrás del mundo y nadie hace nada. los sueldos son malos','la IA va a cambiar todo en 3 años y chile no está ni pensando en eso'],r:['skill issue','ez','100 real','cope']},
-    senora_barrio:{c:['caro todo','la feria libre','qué les pasa','dios mío'],l:['el precio del supermercado es una vergüenza. uno va con 50 mil y no alcanza para nada','mis hijos me preguntan por qué todo está tan caro y no sé qué decirles'],r:['así es señora','en mi barrio igual','mis vecinos dicen lo mismo']},
-    profe:      {c:['en clases lo veo','historia presente','educación pública','el liceo dice'],l:['en el aula uno ve las consecuencias reales de las políticas. no son estadísticas, son cabros que no pudieron comer','enseñar historia en chile es complicado porque la historia reciente todavía duele y divide'],r:['en el liceo igual','los cabros lo dicen','educación presente']},
-    flaite:     {c:['la calle sabe','que lo q','heavy el tema','bkn','wena po','oe'],l:['uno crece en la villa y aprende cosas que en el colegio no enseñan. a leer gente, a moverse, a sobrevivir','el barrio te forma de una manera que no se puede explicar. hay cosas malas pero también hay comunidad real'],r:['la villa presente','oe exacto','bkn el comentario']},
-    diaspora:   {c:['desde afuera','extraño chile pero','se ven las cosas diferente','la nostalgia'],l:['desde afuera chile se ve distinto. uno empieza a entender qué cosas son normales en el mundo y cuáles solo en chile','la pregunta de volver o no volver es la más difícil. no hay respuesta correcta'],r:['desde europa lo mismo','el que salió entiende','afuera se ve clarito']},
-    emprendedor:{c:['el mrr no miente','pivot necesario','tracción presente','validar primero'],l:['emprender en chile es complicado porque el ecosistema es chico y el capital de riesgo es conservador','el problema no es la idea, es la ejecución y el timing. chile tiene talento pero falta apoyo temprano'],r:['el mercado lo valida','pivot inteligente','la tracción no miente']},
-    gen_z:      {c:['no cap','slay','based','ratio','npc moment','mid','sigma'],l:['la generación z chilena está agotada de que le digan que es floja. trabajamos más con menos seguridad','el problema de salud mental en jóvenes chilenos es real y masivo y nadie lo toma en serio de verdad'],r:['no cap real','based respuesta','ratio aplicado']}
-  };
-  var prob={economista:0.85,profe:0.75,nortenio:0.6,sureno:0.6,senora_barrio:0.65,emprendedor:0.6,portenio:0.55,santiaguino:0.5,diaspora:0.5,gamer_tech:0.35,flaite:0.3,gen_z:0.25};
-  var frasesArq=ARQP[arq]||ARQP.santiaguino;
-  // pick context
-  var r2=Math.random();
-  var ctx=r2<0.4?'c':r2<0.7?'l':'r';
-  var fPool=frasesArq[ctx];
-  var phrases=[fPool[Math.floor(Math.random()*fPool.length)]];
+  var phrases=[
+    "si","no","jajaja","exacto","wtf","claro po","obvio","mentira","facts","no way",
+    "ajá","oof","lol","bruh","cap","ni ahí","ya pues","ntp","uff","q","bro...",
+    "literal","ngl","ok pero","espera qué","a ver...","no po","sipo","depende",
+    "ni idea","no sé po","eso","concuerdo","discrepo igual","difícil decir",
+    "ni siquiera la vio!","en serio??","no me digas","eso mismo pensé","claro po wn",
+    "jajajajaja","no lo puedo creer","esto es real?","yo también","me la mandaron al grupo jaja",
+    "no lo había pensado","100%","facts po","momento momento","yo creo que sí","yo creo que no",
+    "no cap esto es verdad","deja de tener razón po","llegué tarde pero sí",
+    "lo mismo nos pasó en la pega","típico de la capital","qué sorpresa que pase esto",
+    "para nada de acuerdo pero respeto","interesante perspectiva igual",
+    "hay que ver los dos lados","fuego este post","guardado esto","compartido al tiro",
+    "esto necesita más upvotes","gracias por decirlo","alguien tenía que decirlo",
+    "primera vez que comento y tenía que ser en este post","por fin alguien lo dice",
+    "no todo es negativo igual","seamos justos con el análisis",
+    "al final uno hace lo que puede","la vida es así no más",
+    "oye pero qué bueno este post","necesitaba leer esto hoy",
+    "alguien más o soy yo solo?","jajaja no pero sí","en realidad tiene sentido",
+    "lo pensé pero no lo iba a decir","esto merece más atención",
+    "las 3am y leyendo esto","procrastinando con esto en vez de estudiar",
+    "fuego","top","guardado","compartido","sin palabras","uf heavy","brutal",
+    "no me lo esperaba","qué level","demasiado real","me pegó fuerte esto",
+    "mira yo llevo años diciéndole esto a mis amigos y nadie me pescaba, al final resulta que tenía razón en todo. ojalá la gente leyera más antes de opinar.",
+    "no puedo creer que estemos discutiendo esto en 2024 como si fuera algo nuevo. esto pasa en chile hace décadas y nadie hace nada porque a los que mandan les conviene.",
+    "yo viví esto en carne propia y les juro que es exactamente como lo describen. perdí trabajo, amigos, plata. no es fácil pero se sale. ánimo a los que estén pasando lo mismo.",
+    "llevo tres años trabajando en esto y puedo decirles con certeza que el problema es más profundo de lo que parece. no es solo lo que se ve en la superficie.",
+    "mi abuelo decía que chile era un país de extremos: o todo bien o todo mal, nunca hay término medio. cuánta razón tenía el viejo. aquí no existe la escala de grises.",
+    "me encanta este espacio porque por fin se puede hablar con gente que piensa distinto sin que se vuelva una pelea. en twitter esto sería una guerra de insultos.",
+    "desde el sur y con todo el respeto: los santiaguinos no tienen idea de lo que pasa en el resto del país. hablan de chile como si fuera solo la capital.",
+    "estudié esto en la u y lo que describen acá coincide con lo que vimos en clases. el problema no es falta de información, es falta de voluntad política.",
+    "llevo una hora leyendo este hilo y es la primera vez en mucho tiempo que siento que la gente realmente está pensando y no solo reaccionando. da esperanza.",
+    "el problema con chile es que tenemos cultura del trabajo duro sin cultura del descanso. nos enseñaron a trabajar más que todos pero nadie nos enseñó a vivir bien.",
+    "seré honesto: al principio no estaba de acuerdo con este post. lo leí de nuevo y cambié de opinión. eso casi nunca me pasa en internet.",
+    "la generación de mis papás no entiende por qué los jóvenes estamos agotados. creen que es flojera. no es flojera, es que el mundo que nos entregaron está roto.",
+    "no voy a mentir, lloré un poco leyendo los comentarios. ver que hay gente que pasó por lo mismo y salió adelante da una fuerza que no sabía que necesitaba.",
+    "llevo mucho tiempo pensando en esto y nunca encontré el espacio para decirlo. el problema es que en chile no sabemos escuchar. hablamos todos al mismo tiempo."
+  ];
   var tiempos=["1min","5min","12min","23min","45min","1h","2h","3h","5h","8h","12h","1d"];
   for(var i=0;i<needed;i++){
+    // pick bot not already used in this section
     var bot=availBots[i % availBots.length];
-    var arq=bot?bot.arq:'santiaguino';
-    var frasesArq=ARQP[arq]||ARQP.santiaguino;
-    var r2=Math.random();
-    var ctx=r2<0.4?'c':r2<0.7?'l':'r';
-    var fPool=frasesArq[ctx];
-    var txt=fPool[Math.floor(Math.random()*fPool.length)];
-    var vProb=prob[arq]||0.5;
-    var maxV=txt.length<20?3:txt.length<60?6:8;
-    var v=0;
-    if(Math.random()<vProb){
-      v=Math.floor(Math.random()*maxV);
-      if(Math.random()<0.2) v=-Math.floor(Math.random()*3);
-    }
+    var txt=phrases[Math.floor(Math.random()*phrases.length)];
+    // votes realistic - max 9, some negative
+    var maxV = txt.length < 20 ? 4 : txt.length < 60 ? 7 : 9;
+    var v = Math.floor(Math.random()*maxV);
+    if(Math.random()<0.25) v = -Math.floor(Math.random()*3);
     all.push({
       bot:bot,
       txt:txt,
@@ -2696,6 +2737,105 @@ async function doPost(){
   }
 }
 
+// ── TICKER ──
+var tickerAssets=[
+  {sym:'BTC',label:'₿ BTC',type:'crypto',id:'bitcoin'},
+  {sym:'ETH',label:'Ξ ETH',type:'crypto',id:'ethereum'},
+  {sym:'AAPL',label:'AAPL',type:'stock'},
+  {sym:'TSLA',label:'TSLA',type:'stock'},
+  {sym:'NVDA',label:'NVDA',type:'stock'},
+  {sym:'DOLAR',label:'USD/CLP',type:'clp'},
+  {sym:'XAU',label:'ORO',type:'metal',id:'gold'},
+  {sym:'XAG',label:'PLATA',type:'metal',id:'silver'},
+];
+
+var tickerData={};
+
+async function loadTicker(){
+  try {
+    // Crypto: CoinGecko free API
+    var cryptoIds=tickerAssets.filter(function(a){return a.type==='crypto';}).map(function(a){return a.id;}).join(',');
+    var rc=await fetch('https://api.coingecko.com/api/v3/simple/price?ids='+cryptoIds+'&vs_currencies=usd&include_24hr_change=true');
+    if(rc.ok){
+      var cd=await rc.json();
+      tickerAssets.forEach(function(a){
+        if(a.type==='crypto'&&cd[a.id]){
+          tickerData[a.sym]={price:cd[a.id].usd,chg:cd[a.id].usd_24h_change||0};
+        }
+      });
+    }
+  } catch(e){}
+
+  try {
+    // USD/CLP: mindicador.cl
+    var rd=await fetch('https://mindicador.cl/api/dolar');
+    if(rd.ok){
+      var dd=await rd.json();
+      if(dd.serie&&dd.serie[0]){
+        tickerData['DOLAR']={price:dd.serie[0].valor,chg:0,isCLP:true};
+      }
+    }
+  } catch(e){}
+
+  try {
+    // Stocks + metals via Yahoo Finance (no-cors workaround with allorigins)
+    var symbols=['AAPL','TSLA','NVDA','GC=F','SI=F'];
+    for(var si=0;si<symbols.length;si++){
+      var sym=symbols[si];
+      try {
+        var url='https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=2d';
+        var proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);
+        var ry=await fetch(proxy);
+        if(!ry.ok) continue;
+        var py=await ry.json();
+        var data=JSON.parse(py.contents);
+        var result=data&&data.chart&&data.chart.result&&data.chart.result[0];
+        if(!result) continue;
+        var meta=result.meta;
+        var price=meta.regularMarketPrice||0;
+        var prev=meta.previousClose||price;
+        var chg=prev>0?((price-prev)/prev*100):0;
+        var mapSym={'GC=F':'XAU','SI=F':'XAG'};
+        var key=mapSym[sym]||sym;
+        tickerData[key]={price:price,chg:chg};
+      } catch(e){}
+    }
+  } catch(e){}
+
+  renderTicker();
+}
+
+function renderTicker(){
+  var items='';
+  tickerAssets.forEach(function(a){
+    var d=tickerData[a.sym];
+    if(!d) return;
+    var priceStr=a.sym==='DOLAR'?
+      '$'+Math.round(d.price).toLocaleString('es-CL')+' CLP':
+      '$'+d.price.toLocaleString('en-US',{minimumFractionDigits:d.price>100?2:4,maximumFractionDigits:d.price>100?2:4});
+    var chgStr=d.chg!==0?(d.chg>0?'+':'')+d.chg.toFixed(2)+'%':'';
+    var chgClass=d.chg>0?'up':d.chg<0?'down':'';
+    var arrow=d.chg>0?'▲':d.chg<0?'▼':'';
+    items+='<span class="ticker-item">'+
+      '<span class="ticker-sym">'+a.label+'</span>'+
+      '<span class="ticker-price">'+priceStr+'</span>'+
+      (chgStr?'<span class="ticker-chg '+chgClass+'">'+arrow+' '+chgStr+'</span>':'')+
+    '</span>';
+  });
+  if(!items){ document.getElementById('ticker-track').innerHTML='<span class="ticker-loading">// error cargando precios</span>'; return; }
+  // duplicate for seamless loop
+  var track=document.getElementById('ticker-track');
+  track.innerHTML=items+items;
+  // adjust animation duration based on content width
+  var totalW=track.scrollWidth/2;
+  var duration=Math.max(30, totalW/80);
+  track.style.animationDuration=duration+'s';
+}
+
+// Load ticker and refresh every 60s
+loadTicker();
+setInterval(loadTicker, 60000);
+
 // ── EMOJI & GIF ──
 var EMOJIS='😂,🔥,💀,🤣,😭,🤯,👀,😤,🫡,🤔,💯,🎯,🤙,👊,😎,🥲,😬,🤦,🙄,👏,🫠,😅,🤡,💪,🫶,❤️,🖤,⚡,🌊,🏔,🐍,🦅,🦁,🐺,💻,📱,🎮,🏆,🎯,💰,📈,📉,🔑,⚠️,❌,✅,🚀,🌙,☀️,🌧,❄️,🍺,🍕,🌮,☕,🤝,🙏,👋,✌️,🤞,💪,🫵,🧠,👁️,💬,🔊,📢,🗣️,⏰,📅,🔗,📎,✏️,🗑️,🔍,💡,🎵,🎶'.split(',');
 
@@ -3596,95 +3736,462 @@ var tickerAssets=[
 
 var tickerData={};
 
+async function loadTicker(){
+  try {
+    // Crypto: CoinGecko free API
+    var cryptoIds=tickerAssets.filter(function(a){return a.type==='crypto';}).map(function(a){return a.id;}).join(',');
+    var rc=await fetch('https://api.coingecko.com/api/v3/simple/price?ids='+cryptoIds+'&vs_currencies=usd&include_24hr_change=true');
+    if(rc.ok){
+      var cd=await rc.json();
+      tickerAssets.forEach(function(a){
+        if(a.type==='crypto'&&cd[a.id]){
+          tickerData[a.sym]={price:cd[a.id].usd,chg:cd[a.id].usd_24h_change||0};
+        }
+      });
+    }
+  } catch(e){}
+
+  try {
+    // USD/CLP: mindicador.cl
+    var rd=await fetch('https://mindicador.cl/api/dolar');
+    if(rd.ok){
+      var dd=await rd.json();
+      if(dd.serie&&dd.serie[0]){
+        tickerData['DOLAR']={price:dd.serie[0].valor,chg:0,isCLP:true};
+      }
+    }
+  } catch(e){}
+
+  try {
+    // Stocks + metals via Yahoo Finance (no-cors workaround with allorigins)
+    var symbols=['AAPL','TSLA','NVDA','GC=F','SI=F'];
+    for(var si=0;si<symbols.length;si++){
+      var sym=symbols[si];
+      try {
+        var url='https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=2d';
+        var proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);
+        var ry=await fetch(proxy);
+        if(!ry.ok) continue;
+        var py=await ry.json();
+        var data=JSON.parse(py.contents);
+        var result=data&&data.chart&&data.chart.result&&data.chart.result[0];
+        if(!result) continue;
+        var meta=result.meta;
+        var price=meta.regularMarketPrice||0;
+        var prev=meta.previousClose||price;
+        var chg=prev>0?((price-prev)/prev*100):0;
+        var mapSym={'GC=F':'XAU','SI=F':'XAG'};
+        var key=mapSym[sym]||sym;
+        tickerData[key]={price:price,chg:chg};
+      } catch(e){}
+    }
+  } catch(e){}
+
+  renderTicker();
+}
+
+function renderTicker(){
+  var items='';
+  tickerAssets.forEach(function(a){
+    var d=tickerData[a.sym];
+    if(!d) return;
+    var priceStr=a.sym==='DOLAR'?
+      '$'+Math.round(d.price).toLocaleString('es-CL')+' CLP':
+      '$'+d.price.toLocaleString('en-US',{minimumFractionDigits:d.price>100?2:4,maximumFractionDigits:d.price>100?2:4});
+    var chgStr=d.chg!==0?(d.chg>0?'+':'')+d.chg.toFixed(2)+'%':'';
+    var chgClass=d.chg>0?'up':d.chg<0?'down':'';
+    var arrow=d.chg>0?'▲':d.chg<0?'▼':'';
+    items+='<span class="ticker-item">'+
+      '<span class="ticker-sym">'+a.label+'</span>'+
+      '<span class="ticker-price">'+priceStr+'</span>'+
+      (chgStr?'<span class="ticker-chg '+chgClass+'">'+arrow+' '+chgStr+'</span>':'')+
+    '</span>';
+  });
+  if(!items){ document.getElementById('ticker-track').innerHTML='<span class="ticker-loading">// error cargando precios</span>'; return; }
+  // duplicate for seamless loop
+  var track=document.getElementById('ticker-track');
+  track.innerHTML=items+items;
+  // adjust animation duration based on content width
+  var totalW=track.scrollWidth/2;
+  var duration=Math.max(30, totalW/80);
+  track.style.animationDuration=duration+'s';
+}
+
+// Load ticker and refresh every 60s
+loadTicker();
+setInterval(loadTicker, 60000);
+
+// ── EMOJI & GIF ──
+var EMOJIS='😂,🔥,💀,🤣,😭,🤯,👀,😤,🫡,🤔,💯,🎯,🤙,👊,😎,🥲,😬,🤦,🙄,👏,🫠,😅,🤡,💪,🫶,❤️,🖤,⚡,🌊,🏔,🐍,🦅,🦁,🐺,💻,📱,🎮,🏆,🎯,💰,📈,📉,🔑,⚠️,❌,✅,🚀,🌙,☀️,🌧,❄️,🍺,🍕,🌮,☕,🤝,🙏,👋,✌️,🤞,💪,🫵,🧠,👁️,💬,🔊,📢,🗣️,⏰,📅,🔗,📎,✏️,🗑️,🔍,💡,🎵,🎶'.split(',');
+
+function toggleEmojiPicker(pickerId){
+  var el=document.getElementById(pickerId);
+  if(!el)return;
+  el.classList.toggle('on');
+  var gp=document.getElementById(pickerId.replace('emoji','gif'));
+  if(gp)gp.classList.remove('on');
+}
+
+function toggleGifPicker(pickerId){
+  var el=document.getElementById(pickerId);
+  if(!el)return;
+  el.classList.toggle('on');
+  var ep=document.getElementById(pickerId.replace('gif','emoji'));
+  if(ep)ep.classList.remove('on');
+  if(el.classList.contains('on')&&!el.dataset.loaded){
+    el.dataset.loaded='1';
+    searchGifs(pickerId,'meme chile');
+  }
+}
+
+function insertEmoji(targetId, emoji){
+  var inp=document.getElementById(targetId);
+  if(!inp)return;
+  var pos=inp.selectionStart||inp.value.length;
+  inp.value=inp.value.slice(0,pos)+emoji+inp.value.slice(pos);
+  inp.focus();
+  inp.selectionStart=inp.selectionEnd=pos+emoji.length;
+}
+
+var gifCache={};
+async function searchGifs(pickerId, query){
+  var grid=document.getElementById(pickerId+'-grid');
+  if(!grid)return;
+  grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">// buscando...</span>';
+  try {
+    // Tenor API v2 - free
+    var key='AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY'; // demo key
+    var url='https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(query)+'&key='+key+'&limit=9&media_filter=gif';
+    var r=await fetch(url);
+    if(!r.ok) throw new Error('tenor error');
+    var data=await r.json();
+    var results=data.results||[];
+    if(!results.length){grid.innerHTML='<span style="color:var(--text3);font-size:.7rem">// sin resultados</span>';return;}
+    grid.innerHTML='';
+    results.forEach(function(item){
+      var gif=item.media_formats&&item.media_formats.tinygif?item.media_formats.tinygif.url:'';
+      var full=item.media_formats&&item.media_formats.gif?item.media_formats.gif.url:gif;
+      if(!gif)return;
+      var img=document.createElement('img');
+      img.className='gif-thumb';
+      img.src=gif;
+      img.alt=item.content_description||'gif';
+      img.onclick=function(){selectGif(pickerId,full,gif);};
+      grid.appendChild(img);
+    });
+  } catch(e){
+    // fallback - show message
+    grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">// conecta internet para ver GIFs</span>';
+  }
+}
+
+function selectGif(pickerId, fullUrl, thumbUrl){
+  var preview=document.getElementById(pickerId+'-preview');
+  if(preview){
+    preview.src=thumbUrl;
+    preview.classList.add('on');
+    preview.dataset.full=fullUrl;
+  }
+  // store selected gif for send
+  var picker=document.getElementById(pickerId);
+  if(picker) picker.dataset.selectedGif=fullUrl;
+}
+
+// ── EMOJI / GIF GLOBAL PICKER ──
+// Single floating picker that works everywhere
+var _activeInput = null;
+
+function showEmojiPicker(inputId){
+  _activeInput = inputId;
+  var picker = document.getElementById('global-emoji-picker');
+  var gif = document.getElementById('global-gif-picker');
+  if(!picker) return;
+  if(picker.style.display==='flex'){
+    picker.style.display='none';
+    return;
+  }
+  gif.style.display='none';
+  // position near input
+  var inp = document.getElementById(inputId);
+  if(inp){
+    var rect = inp.getBoundingClientRect();
+    picker.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+    picker.style.left = Math.max(4, rect.left + window.scrollX) + 'px';
+  }
+  picker.style.display='flex';
+}
+
+function showGifPicker(inputId){
+  _activeInput = inputId;
+  var picker = document.getElementById('global-gif-picker');
+  var ep = document.getElementById('global-emoji-picker');
+  if(!picker) return;
+  if(picker.style.display==='block'){
+    picker.style.display='none';
+    return;
+  }
+  ep.style.display='none';
+  var inp = document.getElementById(inputId);
+  if(inp){
+    var rect = inp.getBoundingClientRect();
+    picker.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+    picker.style.left = Math.max(4, rect.left + window.scrollX) + 'px';
+  }
+  picker.style.display='block';
+  var grid = document.getElementById('global-gif-grid');
+  if(grid && !grid.dataset.loaded){
+    grid.dataset.loaded='1';
+    loadGlobalGifs('meme chile');
+  }
+}
+
+function insertEmojiGlobal(e){
+  if(!_activeInput) return;
+  var inp = document.getElementById(_activeInput);
+  if(!inp) return;
+  var s = inp.selectionStart||inp.value.length;
+  inp.value = inp.value.slice(0,s) + e + inp.value.slice(s);
+  inp.focus();
+  inp.selectionStart = inp.selectionEnd = s + e.length;
+  document.getElementById('global-emoji-picker').style.display='none';
+}
+
+async function loadGlobalGifs(query){
+  var grid = document.getElementById('global-gif-grid');
+  if(!grid) return;
+  grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem">buscando...</span>';
+  try {
+    var r = await fetch('https://api.tenor.com/v1/search?q='+encodeURIComponent(query)+'&key=LIVDSRZULELA&limit=9&media_filter=minimal');
+    var d = await r.json();
+    var results = d.results||[];
+    grid.innerHTML = '';
+    results.forEach(function(item){
+      var media = item.media&&item.media[0];
+      var thumb = media&&media.tinygif ? media.tinygif.url : '';
+      var full = media&&media.gif ? media.gif.url : thumb;
+      if(!thumb) return;
+      var img = document.createElement('img');
+      img.src = thumb;
+      img.className = 'gif-thumb';
+      img.onclick = function(){
+        if(!_activeInput) return;
+        var inp = document.getElementById(_activeInput);
+        if(inp){
+          inp.value += ' [gif:'+full+']';
+          inp.focus();
+        }
+        document.getElementById('global-gif-picker').style.display='none';
+      };
+      grid.appendChild(img);
+    });
+    if(!results.length) grid.innerHTML='<span style="color:var(--text3);font-size:.7rem">sin resultados</span>';
+  } catch(e){
+    grid.innerHTML='<span style="color:var(--text3);font-size:.7rem">error cargando GIFs</span>';
+  }
+}
+
+function buildMediaBar(inputId){
+  return '<div class="media-bar">'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmojiPicker(this.dataset.inp)">😊</button>'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGifPicker(this.dataset.inp)">GIF</button>'+
+  '</div>';
+}
+
+// close pickers on outside click
+document.addEventListener('click', function(e){
+  var ep = document.getElementById('global-emoji-picker');
+  var gp = document.getElementById('global-gif-picker');
+  if(ep && !ep.contains(e.target) && !e.target.classList.contains('media-btn')){
+    ep.style.display='none';
+  }
+  if(gp && !gp.contains(e.target) && !e.target.classList.contains('media-btn')){
+    gp.style.display='none';
+  }
+});
+
+var _botCommentedPosts = {};
+var _botPostsToday = 0;
+var _botPostsLastReset = new Date().toDateString();
+
+async function botCommentRealPost(postId, postTitle, postContenido, postSub, fakeId) {
+  var key = postId + '_' + postSub;
+  if (_botCommentedPosts[key]) return;
+  _botCommentedPosts[key] = true;
+
+  // Elegir bot apropiado para el tema
+  var candidates = getBotsForTopic(postSub);
+  if (!candidates.length) candidates = BOTS;
+  var botData = candidates[Math.floor(Math.random() * candidates.length)];
+
+  // Usar pool propio del arquetipo — sin Claude API (CORS)
+  var pool = getBotPool(botData);
+  var longitud = getBotLength(botData);
+  var filtered = longitud === 'muy_corta'
+    ? pool.filter(function(p) { return p.length <= 40; })
+    : longitud === 'corta'
+    ? pool.filter(function(p) { return p.length <= 80; })
+    : pool;
+  if (!filtered.length) filtered = pool;
+  var txt = filtered[Math.floor(Math.random() * filtered.length)];
+
+  // Insertar en Supabase
+  try {
+    var r = await db.from('comentarios').insert({
+      texto: txt,
+      user_id: '00000000-0000-0000-0000-000000000001',
+      post_id: postId,
+      votos: Math.floor(Math.random() * 8)
+    });
+    if (r.error) return;
+
+    // Mostrar en DOM si el post está abierto
+    if (fakeId) {
+      var clist = document.getElementById('clist-' + fakeId);
+      if (clist) {
+        clist.innerHTML += renderCommentHTML(
+          'bot-' + Date.now(), botData.name, botData.ciudad,
+          'ahora', linkify(txt), Math.floor(Math.random() * 8), false, null
+        );
+      }
+    }
+  } catch(e) {}
+}
+
+async function botPublishPost(botData, comunidadNombre, comunidadId) {
+  var today = new Date().toDateString();
+  if (_botPostsLastReset !== today) { _botPostsToday = 0; _botPostsLastReset = today; }
+  if (_botPostsToday >= 4) return;
+
+  // Posts predefinidos por comunidad — sin Claude API (CORS)
+  var postsByCom = {
+    chile: [
+      {titulo: 'El invierno este año está más frío que el año pasado o me estoy poniendo viejo?', contenido: 'Acá en Santiago la temperatura bajó bastante esta semana. Curiosidad nomás.'},
+      {titulo: 'Pregunta: ¿cuánto demora el cambio de domicilio en el Registro Civil online?', contenido: 'Llevo tres semanas intentando y el sistema me bota cada vez.'},
+      {titulo: 'El tráfico de Santiago a las 8am es un experimento social no consentido', contenido: 'Todos los días lo mismo. Alguien más o soy yo solo?'},
+      {titulo: 'Tips para bajar la cuenta del agua en invierno', contenido: 'Con el frío uno tiende a ducharse más tiempo. Comparto lo que me funcionó.'},
+    ],
+    futbol: [
+      {titulo: 'Colo Colo vs la U este fin de semana — predicciones?', contenido: 'El clásico siempre da para el debate. Yo voy con Colo Colo pero no confío.'},
+      {titulo: 'La Roja sub-20 jugó bien o mal? Análisis honesto', contenido: 'Vi el partido completo y tengo opiniones encontradas.'},
+      {titulo: 'El mejor jugador chileno de la última década — debate abierto', contenido: 'Para mí Alexis sin discusión, pero hay otros candidatos.'},
+    ],
+    finanzas: [
+      {titulo: 'El dólar esta semana — qué esperan para los próximos días?', contenido: 'Con el contexto internacional complicado, el tipo de cambio no da señales claras.'},
+      {titulo: 'Comparación de fondos mutuos en Chile — experiencias reales', contenido: 'He estado investigando opciones para ahorros a mediano plazo.'},
+      {titulo: 'APV vs ahorro tradicional — qué conviene más para alguien de 30 años?', contenido: 'Con las tasas actuales no sé cuál es la mejor opción.'},
+    ],
+    debate: [
+      {titulo: 'El transporte público en Chile: ¿mejor o peor que hace 10 años?', contenido: 'El Transantiago fue un desastre pero algo mejoró. Debate honesto.'},
+      {titulo: 'Horario de verano/invierno — ¿debería eliminarse en Chile?', contenido: 'Cada año el mismo debate. Esta vez lo abrimos acá.'},
+      {titulo: 'El comercio ambulante en Santiago: ¿problema o solución?', contenido: 'Opiniones encontradas en mi grupo de amigos. Qué piensan ustedes?'},
+    ],
+    contingencia: [
+      {titulo: 'Resumen de la semana en Chile — lo más importante', contenido: 'Para los que no pudieron seguir las noticias, acá va un resumen rápido.'},
+      {titulo: 'El costo de la vida en Chile en 2026 — encuesta rápida', contenido: 'Cuánto gastan al mes en lo básico? Arriendos, comida, transporte.'},
+    ]
+  };
+
+  var posts = postsByCom[comunidadNombre] || postsByCom['chile'];
+  var post = posts[Math.floor(Math.random() * posts.length)];
+
+  try {
+    var r = await db.from('posts').insert({
+      titulo: post.titulo,
+      contenido: post.contenido,
+      user_id: '00000000-0000-0000-0000-000000000001',
+      comunidad_id: comunidadId,
+      votos: Math.floor(Math.random() * 15) + 1
+    });
+    if (r.error) return;
+    _botPostsToday++;
+    setTimeout(function() { loadRealPosts(null); }, 2000);
+  } catch(e) {}
+}
+
+async function botActivityLoop() {
+  try {
+    var hace6h = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+    var r = await db.from('posts')
+      .select('id, titulo, contenido, comunidades(nombre)')
+      .gte('created_at', hace6h)
+      .order('created_at', { ascending: false })
+      .limit(15);
+
+    if (r.data && r.data.length) {
+      r.data.forEach(function(post) {
+        var comunidad = post.comunidades ? post.comunidades.nombre : 'chile';
+        var key = post.id + '_' + post.id;
+        if (_botCommentedPosts[key]) return;
+        if (Math.random() < 0.5) {
+          var delay = 20000 + Math.random() * 160000;
+          var fakeId = window.realPostIdMap ? Object.keys(window.realPostIdMap).find(function(k) {
+            return window.realPostIdMap[k] === post.id;
+          }) : null;
+          setTimeout(function(pid, pt, pc, ps, fi) {
+            return function() { botCommentRealPost(pid, pt, pc, ps, fi); };
+          }(post.id, post.titulo, post.contenido, comunidad, fakeId), delay);
+        }
+      });
+    }
+
+    if (Math.random() < 0.10 && _botPostsToday < 4) {
+      var coms = [
+        { nombre: 'chile', id: 1 }, { nombre: 'futbol', id: 2 },
+        { nombre: 'finanzas', id: 5 }, { nombre: 'debate', id: 8 }
+      ];
+      var com = coms[Math.floor(Math.random() * coms.length)];
+      var botCandidatos = getBotsForTopic(com.nombre);
+      if (botCandidatos.length) {
+        var botPoster = botCandidatos[Math.floor(Math.random() * botCandidatos.length)];
+        var postDelay = 60000 + Math.random() * 300000;
+        setTimeout(function(b, c) {
+          return function() { botPublishPost(b, c.nombre, c.id); };
+        }(botPoster, com), postDelay);
+      }
+    }
+  } catch(e) {}
+  setTimeout(botActivityLoop, 90000);
+}
+
+
+// ── NOTICIAS LIVE ──
+var _newsLoaded=false;
+
 async function loadNews(){
   if(_newsLoaded) return;
   try {
-    var allNews=[];
-
-    // Fuente 1: NewsData.io - gratis 200 req/dia, CORS OK
-    try {
-      var key='pub_9287346abcdef1234567890abcdef12'; // free tier key
-      var r1=await fetch('https://newsdata.io/api/1/news?apikey='+key+'&country=cl&language=es&size=5');
-      if(r1.ok){
-        var d1=await r1.json();
-        (d1.results||[]).forEach(function(item){
-          var sub='chile';
-          if(item.category&&item.category[0]==='politics') sub='contingencia';
-          if(item.category&&item.category[0]==='sports') sub='futbol';
-          if(item.category&&item.category[0]==='business') sub='finanzas';
-          allNews.push({sub:sub, title:item.title||'', prev:(item.description||'').slice(0,200), url:item.link||''});
-        });
-      }
-    } catch(e){}
-
-    // Fuente 2: NewsData.io internacional
-    try {
-      var key2='pub_9287346abcdef1234567890abcdef12';
-      var r2=await fetch('https://newsdata.io/api/1/news?apikey='+key2+'&language=es&size=5');
-      if(r2.ok){
-        var d2=await r2.json();
-        (d2.results||[]).forEach(function(item){
-          allNews.push({sub:'contingencia', title:item.title||'', prev:(item.description||'').slice(0,200), url:item.link||''});
-        });
-      }
-    } catch(e){}
-
-    // Fuente 3: GNews - gratis 100 req/dia
-    try {
-      var gkey='a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7';
-      var r3=await fetch('https://gnews.io/api/v4/top-headlines?lang=es&country=cl&max=5&apikey='+gkey);
-      if(r3.ok){
-        var d3=await r3.json();
-        (d3.articles||[]).forEach(function(item){
-          allNews.push({sub:'chile', title:item.title||'', prev:(item.description||'').slice(0,200), url:item.url||''});
-        });
-      }
-    } catch(e){}
-
-    console.log('[RandomPlan News] loaded:', allNews.length, 'items');
-    if(!allNews.length){
-      console.warn('[RandomPlan News] No items loaded - RSS may be blocked');
-      return;
-    }
+    var r=await fetch('/api/news');
+    if(!r.ok) return;
+    var d=await r.json();
+    var items=d.items||[];
+    if(!items.length) return;
     _newsLoaded=true;
-
-    // Inject news as posts
-    var fakeId=8000;
-    var comms={'chile':1,'contingencia':2,'finanzas':5,'tecnologia':6,'futbol':2};
-    allNews.forEach(function(n,i){
-      if(!n.title) return;
-      var ic={'chile':'🇨🇱','contingencia':'📰','finanzas':'💰','tecnologia':'💻','futbol':'⚽','memescl':'😂'}[n.sub]||'📰';
+    var fakeId=8500;
+    items.forEach(function(n,i){
+      if(!n.title||n.title.length<5) return;
       POSTS.unshift({
         id: fakeId+i,
-        sub: n.sub,
-        ic: ic,
-        user: {name:'noticia_cl', av:'📰', ciudad:'Chile'},
+        sub: n.sub||'chile',
+        ic: n.ic||'📰',
+        user: {name:'noticia_cl', av:'📰'},
         t: 'ahora',
-        flair: '📡 NOTICIA',
+        flair: '📡 LIVE',
         fc: 'r',
         title: n.title,
-        prev: n.prev||null,
-        url: n.url||null,
-        votos: Math.floor(Math.random()*15)+2,
-        coms: Math.floor(Math.random()*8)+1,
+        prev: n.desc||null,
+        url: n.link||null,
+        votos: Math.floor(Math.random()*12)+1,
+        coms: Math.floor(Math.random()*6)+1,
         cd: [],
         isNews: true
       });
     });
-
-    // Re-render feed
-    // find feed container
-    var feedEl=document.getElementById('posts-feed')||document.getElementById('feed')||document.querySelector('.feed');
-    if(feedEl){
-      feedEl.innerHTML=renderFeed(window._currentFilter||null);
-      console.log('[RandomPlan News] Feed updated with news posts');
-    } else {
-      console.warn('[RandomPlan News] Feed element not found');
-    }
+    var feedEl=document.getElementById('posts-feed');
+    if(feedEl) feedEl.innerHTML=renderFeed(window._currentFilter||null);
     renderTrending();
-
+    console.log('[RandomPlan] '+items.length+' noticias cargadas');
   } catch(e){
-    console.error('[RandomPlan News] Error:', e.message);
+    console.log('[RandomPlan] news error:', e.message);
   }
 }
 
@@ -3698,8 +4205,7 @@ initSeedPostMap();renderFeed(null);renderTrending();renderComms();
 setInterval(tickVotes,8000);
 loadChatHistory();
 setInterval(pollChat,3000);
-// Load news after feed is ready
-setTimeout(loadNews, 2000);
+setTimeout(loadNews, 1500);
 loadRealPosts(null);
 // check existing session
 db.auth.getSession().then(function(r){
