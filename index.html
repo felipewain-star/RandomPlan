@@ -4179,6 +4179,7 @@ function openPostView(postId){
   if(p.img)html+='<img class="post-view-img" src="'+p.img+'" alt="">';
   if(p.prev)html+='<div style="font-size:.88rem;color:var(--text2);line-height:1.6;word-break:break-word;margin-top:'+(p.img?'.8rem':'0')+'">'+p.prev+'</div>';
   html+='</div>';
+  if(p.isNews&&p.url) html+='<a href="'+p.url+'" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--green);font-family:var(--mono);font-size:.75rem;text-decoration:none;border:1px solid var(--green);padding:.3rem .7rem;border-radius:3px;margin-bottom:1rem">↗ leer nota completa</a>';
   html+='<hr class="post-view-divider">';
   if(currentUser){
     html+='<div class="post-view-comment-box"><textarea id="pv-inp-'+postId+'" placeholder="escribe un comentario..." style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:3px;padding:.5rem .7rem;font-family:var(--sans);font-size:.84rem;color:var(--text1);outline:none;resize:vertical;min-height:70px;box-sizing:border-box"></textarea>';
