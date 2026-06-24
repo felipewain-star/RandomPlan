@@ -4129,14 +4129,12 @@ var _newsLoaded=false;
 async function loadNews(){
   if(_newsLoaded) return;
   try {
-    // GNews API - gratis 100 req/dia
-    var key='a8b4c2d1e3f5g6h7i8j9k0l1m2n3o4p5'; // demo key
-    // Usar RSS2JSON como proxy gratuito - no requiere key
+    // Fuentes RSS via rss2json.com (CORS-friendly proxy)
     var sources=[
-      {url:'https://www.biobiochile.cl/lista/nacional.rss', sub:'chile'},
-      {url:'https://feeds.emol.com/emol/nacional', sub:'chile'},
-      {url:'https://www.latercera.com/rss/', sub:'contingencia'},
       {url:'https://feeds.bbci.co.uk/mundo/rss.xml', sub:'contingencia'},
+      {url:'https://rss.cnn.com/rss/cnn_topstories.rss', sub:'contingencia'},
+      {url:'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada', sub:'contingencia'},
+      {url:'https://www.biobiochile.cl/lista/nacional.rss', sub:'chile'},
     ];
     
     var allNews=[];
@@ -4160,7 +4158,11 @@ async function loadNews(){
       } catch(e){}
     }
 
-    if(!allNews.length) return;
+    console.log('[RandomPlan News] loaded:', allNews.length, 'items');
+    if(!allNews.length){
+      console.warn('[RandomPlan News] No items loaded - RSS may be blocked');
+      return;
+    }
     _newsLoaded=true;
 
     // Inject news as posts
@@ -4188,11 +4190,19 @@ async function loadNews(){
     });
 
     // Re-render feed
-    var feedEl=document.getElementById('posts-feed');
-    if(feedEl) feedEl.innerHTML=renderFeed(window._currentFilter||null);
+    // find feed container
+    var feedEl=document.getElementById('posts-feed')||document.getElementById('feed')||document.querySelector('.feed');
+    if(feedEl){
+      feedEl.innerHTML=renderFeed(window._currentFilter||null);
+      console.log('[RandomPlan News] Feed updated with news posts');
+    } else {
+      console.warn('[RandomPlan News] Feed element not found');
+    }
     renderTrending();
 
-  } catch(e){}
+  } catch(e){
+    console.error('[RandomPlan News] Error:', e.message);
+  }
 }
 
 // Init
