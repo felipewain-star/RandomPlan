@@ -3127,7 +3127,10 @@ function openPostView(postId){
     html+='<div style="font-size:.88rem;color:var(--text2);line-height:1.6;word-break:break-word;'+(p.img?'margin-top:.8rem':'')+'">'+linkify(p.prev)+'</div>';
   }
   if(p.isNews&&p.url){
-    html+='<button class="post-view-link" onclick="window.open(this.dataset.url,\'_blank\')" data-url="'+p.url+'">↗ leer nota completa</button>';
+    if(p.url){
+    var safeUrl=p.url;
+    html+='<button class="post-view-link" onclick="openNewsLink(this)" data-url="'+safeUrl+'">↗ leer nota completa</button>';
+  }
   }
   html+='</div>';
 
@@ -3365,6 +3368,12 @@ async function loadProfile(username){
     }
     body.innerHTML=html2;
   }catch(e){body.innerHTML='<div class="profile-empty">// error: '+e.message+'</div>';}
+}
+
+
+function openNewsLink(btn){
+  var url=btn.getAttribute('data-url');
+  if(url) window.open(url,'_blank','noopener,noreferrer');
 }
 
 
