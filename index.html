@@ -1405,9 +1405,16 @@ function renderPost(p){
 
 function renderFeed(filter){
   var list=filter?POSTS.filter(function(p){return p.sub===filter}):POSTS;
+  // En inicio (sin filtro): noticias primero, luego el resto
+  if(!filter){
+    var news=list.filter(function(p){return p.isNews;});
+    var rest=list.filter(function(p){return !p.isNews;});
+    list=news.concat(rest);
+  }
   var html=list.map(renderPost).join('');
   if(!html)html='<div style="text-align:center;padding:2.5rem;color:var(--text3);font-size:.75rem;font-family:var(--mono)">// no hay posts aquí todavía<br><br>🌵</div>';
   document.getElementById('posts-feed').innerHTML=html;
+  return html;
 }
 
 // Mapeo permanente de posts semilla (ids JS) → IDs reales en Supabase
