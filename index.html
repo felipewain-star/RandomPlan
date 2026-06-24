@@ -7218,5 +7218,534 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closePostVi
 })();
 </script>
 
+<script>
+/* ─────────────────────────────────────────────────────────────
+   RANDOMPLAN V19 — dos mejoras principales:
+   1) Comentarios de bots únicos por hilo (sin repetición) + coherencia semántica real.
+   2) Emoji y GIF dentro del post view modal (inline, no flotante).
+   Este bloque sobreescribe solo las funciones necesarias.
+─────────────────────────────────────────────────────────────── */
+(function(){
+  'use strict';
+
+  /* ── Utilidades ── */
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];}); }
+  function hsh(s){ s=String(s||'');var x=2166136261;for(var i=0;i<s.length;i++){x^=s.charCodeAt(i);x=(x>>>0)*16777619>>>0;}return x; }
+
+  /* ─────────────────────────────────────────────────────────────
+     MEJORA 1: Comentarios únicos por hilo con coherencia semántica
+     Algoritmo:
+       - Detecta el tema del post (sub + palabras clave del título).
+       - Selecciona el banco de frases adecuado (RP18 ya lo tiene; lo reutilizamos).
+       - Mezcla ese banco con Fisher-Yates seeded por post.id
+         → cada hilo obtiene un orden diferente y no repetido.
+       - Toma las N primeras de la mezcla → N frases únicas.
+       - Preserva comentarios reales del usuario sin tocarlos.
+  ─────────────────────────────────────────────────────────────── */
+
+  /* Fisher-Yates con PRNG determinístico seeded por postId.
+     Devuelve una copia mezclada del array. */
+  function shuffleSeeded(arr, seed) {
+    var a = arr.slice();
+    var s = (hsh(String(seed)) >>> 0) || 1;
+    for (var i = a.length - 1; i > 0; i--) {
+      // LCG: simple, reproducible, suficiente para este uso
+      s = (s * 1664525 + 1013904223) >>> 0;
+      var j = s % (i + 1);
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  /* Detecta el banco temático apropiado para un post.
+     Prioridad: título/prev > sub. */
+  function detectBank(p) {
+    var sub = typeof window.normalizeCommunitySub === 'function'
+      ? window.normalizeCommunitySub(p && p.sub) || 'chile'
+      : String(p && p.sub || 'chile').replace(/^p\//,'');
+    var txt = (String(p && p.title || '') + ' ' + String(p && p.prev || '')).toLowerCase();
+
+    // Trámites: detectar por palabras clave sin importar el sub
+    if (/registro civil|domicilio|clave|trámite|tramite|sii|afc|fonasa|licencia|municipal|banco|cartola|certificado|servicio p[uú]blico|notaria|notaría|impuesto|carpeta tributaria/.test(txt))
+      return 'tramites';
+
+    // Por sub
+    var subMap = {
+      futbol: 'futbol', finanzas: 'finanzas', marketplace: 'marketplace',
+      memescl: 'memescl', debate: 'debate', tecnologia: 'tecnologia',
+      contingencia: 'noticias'
+    };
+    if (subMap[sub]) return subMap[sub];
+
+    // Por palabras en el texto
+    if (/\bdólar\b|\bpeso\b|\busd\b|\bclp\b|\barriendo\b|\bsueldo\b|\bapv\b|\bfondo mutuo\b/.test(txt)) return 'finanzas';
+    if (/\bfútbol\b|\bfutbol\b|\broja\b|\bcolo\b|\buniversidad de chile\b|\bliga\b|\bgol\b/.test(txt)) return 'futbol';
+    if (/\bnoticia\b|\bministro\b|\bgobierno\b|\bcongreso\b|\bparlamento\b|\bley\b|\bdecreto\b/.test(txt)) return 'noticias';
+    if (/\bdebate\b|\bopinión\b|\bopinion\b|\bcentralismo\b|\bregión\b|\bpolitica\b|\bpolítica\b/.test(txt)) return 'debate';
+    if (/\btecnología\b|\btecnologia\b|\bapp\b|\bdigital\b|\bstartup\b|\bsoftware\b|\bia\b/.test(txt)) return 'tecnologia';
+
+    return 'chile';
+  }
+
+  /* Obtiene el banco de frases de RP18 por clave temática.
+     RP18 guarda sus bancos en window.RP18_BANKS. */
+  function getBank(bankKey) {
+    var banks = window.RP18_BANKS;
+    if (banks && banks[bankKey] && banks[bankKey].length) return banks[bankKey];
+    // Fallback: banco general
+    if (banks && banks.chile && banks.chile.length) return banks.chile;
+    return [];
+  }
+
+  /* Calidad mínima de una frase: al menos 40 chars y sin predicciones deportivas */
+  function isGoodPhrase(txt) {
+    if (!txt || txt.length < 40) return false;
+    return !/(gana|ganan|ganara|ganará|va a ganar|marcador|resultado exacto|apuesto|pronostico|pronóstico|prediccion|predicción|sale campeon|sale campeón)/i.test(txt);
+  }
+
+  /* Elige un bot de forma determinística: diferente por hilo + índice, sin repetir */
+  function pickBotForSlot(p, idx, usedNames) {
+    var bots = (window.BOTS || []);
+    if (!bots.length) return { name: 'usuario_cl', ciudad: 'Chile', av: '👤' };
+    // Semilla única por (post, slot)
+    var seed = hsh(String(p.id) + '|bot|' + idx);
+    var start = seed % bots.length;
+    for (var k = 0; k < bots.length; k++) {
+      var bot = bots[(start + k) % bots.length];
+      if (!usedNames[bot.name]) return bot;
+    }
+    return bots[start % bots.length]; // fallback si todos usados
+  }
+
+  /* Tiempo relativo pseudo-realista para cada índice */
+  var TIEMPOS = ['ahora','1min','3min','7min','14min','22min','35min','48min','1h','1h 15min','1h 40min','2h','3h','4h','5h'];
+
+  /* ───── Función principal: genera comentarios únicos por hilo ───── */
+  function rp19CleanComments(p, target) {
+    if (!p) return [];
+    p.cd = Array.isArray(p.cd) ? p.cd : [];
+
+    var isNews = !!(p.isNews || String(p.user && p.user.name || '').toLowerCase() === 'noticias_cl');
+    var maxTarget = Math.min(parseInt(target || p.coms || p.cd.length || 0, 10) || 0, isNews ? 14 : 20);
+    if (!maxTarget) maxTarget = isNews ? 0 : Math.min(6, Math.max(3, p.cd.length || 4));
+
+    // Separar comentarios reales de usuario (preservar tal cual)
+    var userComments = [];
+    var botPlaceholders = [];
+    p.cd.forEach(function(c) {
+      c = c || {};
+      var isUser = !!(c.realComId || c.userId || c.isUser || c.fromUser ||
+        String((c.bot && c.bot.name) || c.username || '').toLowerCase() === 'tu_usuario' ||
+        (window.currentPerfil && String((c.bot && c.bot.name) || c.username || '').toLowerCase() === String(window.currentPerfil.username || '').toLowerCase()));
+      if (isUser) {
+        userComments.push(c);
+      } else {
+        botPlaceholders.push(c);
+      }
+    });
+
+    // Obtener banco temático y mezclarlo de forma única para ESTE hilo
+    var bankKey = detectBank(p);
+    var rawBank = getBank(bankKey);
+    // Mezcla determinística seeded por id del post → diferente por hilo, reproducible
+    var shuffled = shuffleSeeded(rawBank, p.id);
+    // Filtrar calidad
+    var goodPhrases = shuffled.filter(isGoodPhrase);
+    // Si quedan pocas frases de calidad, completar con el banco general mezclado
+    if (goodPhrases.length < maxTarget) {
+      var generalBank = shuffleSeeded(getBank('chile'), String(p.id) + 'gen');
+      generalBank.forEach(function(ph) {
+        if (isGoodPhrase(ph) && goodPhrases.indexOf(ph) === -1) goodPhrases.push(ph);
+      });
+    }
+
+    // Construir comentarios de bots: N slots únicos
+    var usedPhrases = {};
+    var usedBotNames = {};
+    var botComments = [];
+
+    var slotsNeeded = Math.max(0, maxTarget - userComments.length);
+    for (var i = 0; i < slotsNeeded; i++) {
+      // Frase: primera disponible y no usada de la lista mezclada
+      var phrase = null;
+      for (var pi = 0; pi < goodPhrases.length; pi++) {
+        var candidate = goodPhrases[pi];
+        var key = candidate.toLowerCase().slice(0, 60);
+        if (!usedPhrases[key]) { phrase = candidate; usedPhrases[key] = 1; break; }
+      }
+      if (!phrase) {
+        // Último recurso: cualquier frase del banco aunque se repita
+        phrase = rawBank[i % Math.max(1, rawBank.length)] || 'Buen tema para discutir acá.';
+      }
+
+      var bot = pickBotForSlot(p, i, usedBotNames);
+      usedBotNames[bot.name] = 1;
+
+      // Votos pseudo-realistas (mayor concentración en valores bajos-medios)
+      var vSeed = hsh(String(p.id) + 'v19' + i);
+      var votos = (vSeed % 3 === 0) ? (1 + (vSeed % 4)) : (1 + (vSeed % 9));
+
+      botComments.push({
+        bot: bot,
+        txt: phrase,
+        v: votos,
+        t: TIEMPOS[i % TIEMPOS.length]
+      });
+    }
+
+    // Intercalar: bots primero, luego comentarios de usuario al final (más recientes)
+    var out = botComments.concat(userComments);
+    p.cd = out;
+    p.coms = out.length;
+    return out;
+  }
+
+  /* Sobreescribir las funciones de comentarios que usan los renders existentes */
+  window.RP19_cleanComments = rp19CleanComments;
+
+  // Sobreescribir generateBotComments (usada por loadComments inline del feed)
+  window.generateBotComments = function(count, existingCd) {
+    var p = window.__rpCommentContextPost || null;
+    if (p) {
+      return rp19CleanComments(p, count || p.coms || p.cd && p.cd.length || 0)
+        .slice(0, Math.min(count || 20, 20));
+    }
+    // Contexto desconocido: banco general mezclado con semilla de tiempo
+    var tmp = { id: 'tmp-' + Date.now(), sub: 'chile', title: '', prev: '', coms: count || 6, cd: existingCd || [] };
+    return rp19CleanComments(tmp, count || 6);
+  };
+
+  // Sobreescribir RP_ensureLocalComments (usada por RP18 y otras capas)
+  window.RP_ensureLocalComments = function(p) {
+    return rp19CleanComments(p, p && (p.coms || (p.cd && p.cd.length) || 0));
+  };
+
+  // Sobreescribir loadComments para posts de bots (id < 9000)
+  var _origLoadComments = window.loadComments;
+  window.loadComments = function(postId, sort, offset) {
+    var list = $('clist-' + postId);
+    if (!list) return;
+    var more = $('cmore-' + postId);
+    var p = (window.POSTS || []).find(function(x) { return parseInt(x.id, 10) === parseInt(postId, 10); });
+
+    if (!p || parseInt(postId, 10) >= 9000) {
+      // Post real de Supabase → delegar al original
+      if (_origLoadComments) return _origLoadComments.apply(this, arguments);
+      return;
+    }
+
+    offset = offset || 0;
+    sort = sort || 'top';
+    var LIMIT = 10;
+
+    // Guardar contexto para generateBotComments
+    window.__rpCommentContextPost = p;
+    var all = rp19CleanComments(p, p.coms || (p.cd && p.cd.length) || 0).slice();
+
+    if (sort === 'new') all = all.slice().reverse();
+    else if (sort === 'old') { /* ya en orden de inserción */ }
+    else all = all.slice().sort(function(a, b) { return (b.v || 0) - (a.v || 0); });
+
+    var page = all.slice(offset, offset + LIMIT);
+    var html = '';
+    page.forEach(function(c) {
+      var bot = c.bot || { name: c.username || 'usuario_cl', ciudad: 'Chile' };
+      if (typeof window.renderCommentHTML === 'function') {
+        html += window.renderCommentHTML(
+          'rp19-' + hsh(String(postId) + '-' + (c.txt || '') + '-' + offset),
+          bot.name || 'usuario_cl',
+          bot.ciudad || 'Chile',
+          c.t || 'ahora',
+          c.txt || c.texto || '',
+          c.v || c.votos || 0,
+          !!c.isUser,
+          c.realComId || null
+        );
+      } else {
+        html += '<div class="comment"><div class="cctext">' + esc(c.txt || c.texto || '') + '</div></div>';
+      }
+    });
+
+    if (offset === 0) list.innerHTML = html;
+    else list.innerHTML += html;
+
+    if (more) {
+      if (all.length > offset + LIMIT) {
+        more.innerHTML = '<button class="com-more-btn" onclick="loadComments(' + postId + ',\'' + sort + '\',' + (offset + LIMIT) + ')">ver más comentarios (' + (all.length - offset - LIMIT) + ' restantes)</button>';
+      } else {
+        more.innerHTML = '';
+      }
+    }
+  };
+
+  // Sobreescribir renderPostViewComments (vista interna del post)
+  window.renderPostViewComments = function(postId, sort) {
+    var p = (window.POSTS || []).find(function(x) { return parseInt(x.id, 10) === parseInt(postId, 10); });
+    var list = $('pv-comments-list');
+    if (!p || !list) return;
+    sort = sort || 'top';
+    window.__rpCommentContextPost = p;
+    var all = rp19CleanComments(p, p.coms || (p.cd && p.cd.length) || 0).slice();
+    if (sort === 'new') all = all.slice().reverse();
+    else if (sort === 'top') all = all.slice().sort(function(a, b) { return (b.v || 0) - (a.v || 0); });
+    list.innerHTML = all.length
+      ? all.map(function(c) {
+          var bot = c.bot || { name: c.username || 'usuario_cl' };
+          var txt = typeof window.linkify === 'function' ? window.linkify(c.txt || c.texto || '') : esc(c.txt || c.texto || '');
+          return '<div class="pv-comment">' +
+            '<div class="pv-comment-v"><button onclick="pvVote(this,1)">▲</button><strong>' + esc(String(c.v || c.votos || 0)) + '</strong><button onclick="pvVote(this,-1)">▼</button></div>' +
+            '<div><div class="pv-comment-meta"><span class="u">u/' + esc(bot.name || 'usuario_cl') + '</span> · ' + esc(c.t || c.tiempo || 'ahora') + '</div>' +
+            '<div class="pv-comment-text">' + txt + '</div></div></div>';
+        }).join('')
+      : '<div class="pv-empty">// todavía no hay comentarios</div>';
+  };
+
+  /* ─────────────────────────────────────────────────────────────
+     MEJORA 2: Emoji y GIF DENTRO del modal openPostView (inline)
+     Reemplaza buildMediaBar en el contexto del post view modal
+     por pickers embebidos que viven dentro del pv-comment-box.
+  ─────────────────────────────────────────────────────────────── */
+
+  var PV_EMOJIS = ['😂','🔥','💀','🤣','😭','🤯','👀','😤','🫡','🤔','💯','🎯','🤙','👊','😎','🥲','😬','🤦','🙄','👏','🫠','😅','🤡','💪','🫶','❤️','🖤','⚡','🌊','🏔','🐍','🦅','🦁','🐺','💻','📱','🎮','🏆','💰','📈','📉','🔑','⚠️','❌','✅','🚀','🌙','☀️','🌧','❄️','🍺','🍕','🌮','☕','🤝','🙏','👋','✌️','🤞','🧠','💬','🔊','🎵','🎶'];
+  var PV_TENOR_KEY = 'AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';
+  var PV_GIF_FALLBACKS = [
+    'https://media.giphy.com/media/3oEjHI8WJv4x6UPDB6/giphy.gif',
+    'https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif',
+    'https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif',
+    'https://media.giphy.com/media/111ebonMs90YLu/giphy.gif',
+    'https://media.giphy.com/media/5VKbvrjxpVJCM/giphy.gif',
+    'https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif',
+    'https://media.giphy.com/media/LCdPNT81vlv3y/giphy.gif',
+    'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif',
+    'https://media.giphy.com/media/3o7TKr3nzbh5WgCFxe/giphy.gif',
+    'https://media.giphy.com/media/ToMjGpKniGqRNLGBrhu/giphy.gif',
+    'https://media.giphy.com/media/GCvktC0KFy9l6/giphy.gif',
+    'https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif'
+  ];
+
+  /* CSS para los pickers inline del post view */
+  var pvStyle = document.createElement('style');
+  pvStyle.textContent = [
+    '.pv-media-bar{display:flex;gap:.35rem;align-items:center;margin-top:.4rem}',
+    '.pv-media-btn{background:none;border:1px solid var(--border2);color:var(--text3);padding:.22rem .55rem;border-radius:3px;font-size:.73rem;font-family:var(--mono);cursor:pointer;transition:all .12s}',
+    '.pv-media-btn:hover,.pv-media-btn.on{border-color:var(--green);color:var(--green);background:var(--greendim)}',
+    '.pv-emoji-picker{display:none;flex-wrap:wrap;gap:.1rem;padding:.4rem;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;margin-top:.35rem;max-height:160px;overflow-y:auto}',
+    '.pv-emoji-picker.on{display:flex}',
+    '.pv-emoji-btn{background:none;border:none;font-size:1.1rem;cursor:pointer;padding:.16rem .2rem;border-radius:3px;line-height:1.1;transition:background .1s}',
+    '.pv-emoji-btn:hover{background:var(--bg3)}',
+    '.pv-gif-picker{display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:.45rem;margin-top:.35rem}',
+    '.pv-gif-picker.on{display:block}',
+    '.pv-gif-search{width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:3px;padding:.38rem .6rem;font-family:var(--mono);font-size:.75rem;color:var(--text1);outline:none;margin-bottom:.4rem;box-sizing:border-box}',
+    '.pv-gif-search:focus{border-color:var(--green)}',
+    '.pv-gif-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;max-height:180px;overflow-y:auto}',
+    '.pv-gif-thumb{width:100%;height:68px;object-fit:cover;border-radius:3px;cursor:pointer;border:1px solid transparent;transition:border-color .1s}',
+    '.pv-gif-thumb:hover{border-color:var(--green)}'
+  ].join('');
+  document.head.appendChild(pvStyle);
+
+  /* HTML del bloque de comentario con pickers inline */
+  function buildPvCommentBox(postId) {
+    return '<div class="pv-comment-box" id="pv-cbox-' + postId + '">' +
+      '<div class="pv-comment-input-row">' +
+        '<input id="pv-comment-input" placeholder="comentar en el hilo..." ' +
+          'onkeydown="if(event.key===\'Enter\')sendPostViewComment(' + postId + ')">' +
+        '<button class="pv-comment-send" onclick="sendPostViewComment(' + postId + ')">SEND</button>' +
+      '</div>' +
+      '<div class="pv-media-bar">' +
+        '<button class="pv-media-btn" id="pv-emoji-toggle-' + postId + '" ' +
+          'onclick="pvToggleEmoji(' + postId + ')">😊 emoji</button>' +
+        '<button class="pv-media-btn" id="pv-gif-toggle-' + postId + '" ' +
+          'onclick="pvToggleGif(' + postId + ')">GIF</button>' +
+      '</div>' +
+      '<div class="pv-emoji-picker" id="pv-emoji-picker-' + postId + '"></div>' +
+      '<div class="pv-gif-picker" id="pv-gif-picker-' + postId + '">' +
+        '<input class="pv-gif-search" id="pv-gif-search-' + postId + '" ' +
+          'placeholder="buscar GIF... presiona Enter" ' +
+          'onkeydown="if(event.key===\'Enter\')pvBuscarGif(' + postId + ',this.value)">' +
+        '<div class="pv-gif-grid" id="pv-gif-grid-' + postId + '"></div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  /* Inicializar emoji picker inline (solo una vez por post) */
+  window.pvInitEmoji = function(postId) {
+    var box = $('pv-emoji-picker-' + postId);
+    if (!box || box.dataset.init) return;
+    box.dataset.init = '1';
+    PV_EMOJIS.forEach(function(e) {
+      var b = document.createElement('button');
+      b.className = 'pv-emoji-btn';
+      b.textContent = e;
+      b.type = 'button';
+      b.onclick = function(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        var inp = $('pv-comment-input');
+        if (!inp) return;
+        var s = typeof inp.selectionStart === 'number' ? inp.selectionStart : inp.value.length;
+        inp.value = inp.value.slice(0, s) + e + inp.value.slice(s);
+        inp.focus();
+        try { inp.selectionStart = inp.selectionEnd = s + e.length; } catch(x) {}
+        // NO cerrar el picker al insertar emoji (UX: insertar varios)
+      };
+      box.appendChild(b);
+    });
+  };
+
+  window.pvToggleEmoji = function(postId) {
+    pvInitEmoji(postId);
+    var ep = $('pv-emoji-picker-' + postId);
+    var gp = $('pv-gif-picker-' + postId);
+    var eTb = $('pv-emoji-toggle-' + postId);
+    var gTb = $('pv-gif-toggle-' + postId);
+    if (!ep) return;
+    var opening = !ep.classList.contains('on');
+    // Cerrar GIF si está abierto
+    if (gp) { gp.classList.remove('on'); if (gTb) gTb.classList.remove('on'); }
+    ep.classList.toggle('on', opening);
+    if (eTb) eTb.classList.toggle('on', opening);
+  };
+
+  window.pvToggleGif = function(postId) {
+    var ep = $('pv-emoji-picker-' + postId);
+    var gp = $('pv-gif-picker-' + postId);
+    var eTb = $('pv-emoji-toggle-' + postId);
+    var gTb = $('pv-gif-toggle-' + postId);
+    if (!gp) return;
+    var opening = !gp.classList.contains('on');
+    // Cerrar emoji si está abierto
+    if (ep) { ep.classList.remove('on'); if (eTb) eTb.classList.remove('on'); }
+    gp.classList.toggle('on', opening);
+    if (gTb) gTb.classList.toggle('on', opening);
+    // Cargar GIFs la primera vez que se abre
+    if (opening) {
+      var grid = $('pv-gif-grid-' + postId);
+      if (grid && !grid.dataset.loaded) {
+        grid.dataset.loaded = '1';
+        pvBuscarGif(postId, 'meme chile');
+      }
+    }
+  };
+
+  window.pvBuscarGif = async function(postId, query) {
+    var grid = $('pv-gif-grid-' + postId);
+    if (!grid) return;
+    query = String(query || 'meme chile').trim();
+    grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem;font-family:var(--mono);padding:.3rem">// buscando...</span>';
+
+    function renderGifs(items) {
+      grid.innerHTML = '';
+      items.forEach(function(item) {
+        var img = document.createElement('img');
+        img.src = item.thumb || item.url;
+        img.className = 'pv-gif-thumb';
+        img.loading = 'lazy';
+        img.alt = 'gif';
+        img.onclick = function(ev) {
+          ev.preventDefault();
+          var inp = $('pv-comment-input');
+          if (!inp) return;
+          inp.value += (inp.value && !/\s$/.test(inp.value) ? ' ' : '') + '[gif:' + item.url + ']';
+          inp.focus();
+          // Cerrar el picker después de seleccionar
+          var gp = $('pv-gif-picker-' + postId);
+          var gTb = $('pv-gif-toggle-' + postId);
+          if (gp) gp.classList.remove('on');
+          if (gTb) gTb.classList.remove('on');
+        };
+        grid.appendChild(img);
+      });
+      if (!grid.children.length) renderFallback();
+    }
+
+    function renderFallback() {
+      renderGifs(PV_GIF_FALLBACKS.map(function(u) { return { url: u, thumb: u }; }));
+    }
+
+    try {
+      var url = 'https://tenor.googleapis.com/v2/search?q=' + encodeURIComponent(query) +
+        '&key=' + PV_TENOR_KEY + '&limit=12&media_filter=gif,tinygif';
+      var r = await fetch(url);
+      if (!r.ok) throw new Error('tenor ' + r.status);
+      var d = await r.json();
+      var results = (d.results || []).map(function(item) {
+        var mf = item.media_formats || {};
+        var thumb = (mf.tinygif && mf.tinygif.url) || (mf.gif && mf.gif.url) || '';
+        var full  = (mf.gif && mf.gif.url) || thumb;
+        return { url: full, thumb: thumb };
+      }).filter(function(x) { return x.url; });
+      if (results.length) renderGifs(results);
+      else renderFallback();
+    } catch(e) {
+      renderFallback();
+    }
+  };
+
+  /* Sobreescribir openPostView para usar el nuevo pv-comment-box con pickers inline */
+  var _origOpenPostView = window.openPostView;
+  window.openPostView = function(id) {
+    // Llamar al original para que renderice todo el contenido
+    if (_origOpenPostView) _origOpenPostView.call(this, id);
+
+    // Reemplazar el pv-comment-box por la versión con pickers inline
+    var wrap = $('post-view-wrap');
+    var cont = $('post-view-content');
+    if (!wrap || !cont || !wrap.classList.contains('on')) return;
+
+    // Encontrar el post (necesitamos el id real ya procesado)
+    var p = null;
+    var pId = parseInt(id, 10);
+    if (window.POSTS) {
+      p = window.POSTS.find(function(x) { return parseInt(x.id, 10) === pId; });
+    }
+    if (!p) return;
+
+    // Reemplazar el bloque pv-comment-box existente
+    var oldBox = cont.querySelector('.pv-comment-box');
+    if (oldBox) {
+      var newBox = document.createElement('div');
+      newBox.innerHTML = buildPvCommentBox(p.id);
+      oldBox.parentNode.replaceChild(newBox.firstChild, oldBox);
+    }
+  };
+
+  /* Re-inicializar cuando se abre el post view por cualquier vía */
+  var _origOpenPostThreadWindow = window.openPostThreadWindow;
+  // Note: openPostThreadWindow abre ventana nueva, no el modal → no necesita patch.
+  // El patch de openPostView es suficiente para el modal.
+
+  /* Parche para sendPostViewComment: asegurarse de que lea el input correcto
+     (el original ya usa 'pv-comment-input' así que no necesita cambio,
+     pero nos aseguramos de cerrar los pickers después de enviar) */
+  var _origSendPostViewComment = window.sendPostViewComment;
+  window.sendPostViewComment = function(postId) {
+    if (_origSendPostViewComment) _origSendPostViewComment.call(this, postId);
+    // Cerrar pickers inline después de enviar
+    var ep = $('pv-emoji-picker-' + postId);
+    var gp = $('pv-gif-picker-' + postId);
+    var eTb = $('pv-emoji-toggle-' + postId);
+    var gTb = $('pv-gif-toggle-' + postId);
+    if (ep) ep.classList.remove('on');
+    if (gp) gp.classList.remove('on');
+    if (eTb) eTb.classList.remove('on');
+    if (gTb) gTb.classList.remove('on');
+  };
+
+  /* ── Inicialización: pre-procesar posts con el nuevo sistema ── */
+  setTimeout(function() {
+    (window.POSTS || []).forEach(function(p) {
+      var isNews = !!(p.isNews || String(p.user && p.user.name || '').toLowerCase() === 'noticias_cl');
+      if (!isNews) {
+        rp19CleanComments(p, p.coms || (p.cd && p.cd.length) || 0);
+      }
+    });
+    if (window.renderFeed) window.renderFeed(window._currentFilter || null);
+    console.log('[RandomPlan V19] comentarios únicos por hilo + emoji/GIF inline en post view activos');
+  }, 1000);
+
+})();
+</script>
+
 </body>
 </html>
