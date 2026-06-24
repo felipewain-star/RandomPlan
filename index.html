@@ -166,6 +166,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .card.card-meme .ctitle{font-size:.9rem;margin-bottom:.2rem}
 .card.card-meme .cmeta{margin-bottom:.2rem}
 .ctitle:hover{color:var(--green)}
+.ctitle.news-click{color:var(--text1)}
+.ctitle.news-click:hover{color:var(--green);text-decoration:underline;text-underline-offset:3px}
+.news-source{color:var(--amber);font-size:.65rem;cursor:pointer;border:1px solid rgba(255,166,87,.25);padding:.05rem .32rem;border-radius:2px;background:rgba(255,166,87,.06)}
+.news-source:hover{border-color:var(--amber);color:var(--green)}
+.source-link{color:var(--amber)!important}
+.source-link:hover{color:var(--green)!important;border-color:var(--green)}
 .cprev{word-break:break-word;overflow-wrap:break-word;font-family:var(--sans);font-size:.86rem;color:var(--text2);line-height:1.5;margin-bottom:.42rem}
 .cactions{display:flex;align-items:center;gap:.1rem;flex-wrap:wrap}
 .cact{display:flex;align-items:center;gap:.22rem;padding:.23rem .48rem;border-radius:2px;border:none;background:none;font-family:var(--mono);font-size:.76rem;color:var(--text3);cursor:pointer;transition:all .1s}
@@ -1286,6 +1292,34 @@ function voteComment(btn, dir){
 function memeImgError(img){
   img.parentElement.innerHTML='<div class="meme-placeholder" style="font-size:2rem;padding:2rem;text-align:center;color:rgba(255,255,255,.15)">😂</div>';
 }
+
+function normalizeNewsUrl(url){
+  if(!url) return null;
+  url=String(url).trim();
+  // Evita javascript:, data:, rutas rotas o strings vacíos
+  if(!/^https?:\/\//i.test(url)) return null;
+  return url;
+}
+
+function jsStr(s){
+  return String(s||'')
+    .replace(/\\/g,'\\\\')
+    .replace(/'/g,"\\'")
+    .replace(/\n/g,' ')
+    .replace(/\r/g,' ');
+}
+
+function getDomain(url){
+  try{return new URL(url).hostname.replace(/^www\./,'');}
+  catch(e){return 'fuente';}
+}
+
+function openPostReference(url){
+  var u=normalizeNewsUrl(url);
+  if(!u){toast('sin referencia disponible');return;}
+  window.open(u,'_blank','noopener,noreferrer');
+}
+
 function renderPost(p){
   var voto=votes[p.id]||0;
   var v=p.votos+voto;
@@ -1332,7 +1366,13 @@ function renderPost(p){
   html+='<span>'+p.t+'</span>';
   html+='<span class="flair '+p.fc+'">'+p.flair+'</span>';
   html+='</div>';
-  html+='<div class="ctitle" onclick="toggleComs('+p.id+')">'+p.title+'</div>';
+  var refUrl=normalizeNewsUrl(p.url||p.link||p.source_url||p.reference_url||p.referencia);
+  var refJs=refUrl?jsStr(refUrl):'';
+  if(refUrl && p.isNews){
+    html+='<div class="ctitle news-click" title="abrir fuente" onclick="openPostReference(\''+refJs+'\')">'+p.title+'</div>';
+  } else {
+    html+='<div class="ctitle" onclick="toggleComs('+p.id+')">'+p.title+'</div>';
+  }
 
   // En memes no mostramos el texto prev (ya está la imagen)
   if(p.prev && !isMeme){
@@ -1351,6 +1391,9 @@ function renderPost(p){
   }
 
   html+='<div class="cactions">';
+  if(refUrl){
+    html+='<button class="cact source-link" onclick="event.stopPropagation();openPostReference(\''+refJs+'\')">// fuente: '+getDomain(refUrl)+' ↗</button>';
+  }
   html+='<button class="cact" onclick="toggleComs('+p.id+')">// '+p.coms+' comentarios</button>';
   html+='<button class="cact" onclick="toast(&quot;enlace copiado&quot;)">// compartir</button>';
   if(p.realId&&currentUser&&p.userId===currentUser.id) html+='<button class="cact com-del" onclick="deletePost('+p.id+','+p.realId+',this)">// borrar</button>';
@@ -4140,7 +4183,7 @@ async function loadNews(){
     items.forEach(function(n,i){
       if(!n.title||n.title.length<5)return;
       var cleanDesc=(n.desc||'').replace(/<[^>]+>/gi,'').replace(/&lt;.*?&gt;/gi,'').replace(/&amp;/gi,'&').replace(/\s+/g,' ').trim().slice(0,180);
-      POSTS.unshift({id:8500+i,sub:n.sub||'chile',ic:n.ic||'📰',user:{name:'noticia_cl',av:'📰'},t:'ahora',flair:'📡 LIVE',fc:'r',title:n.title,prev:cleanDesc||null,url:n.link||null,votos:Math.floor(Math.random()*12)+1,coms:Math.floor(Math.random()*6)+1,cd:[],isNews:true});
+      POSTS.unshift({id:8500+i,sub:n.sub||'chile',ic:n.ic||'📰',user:{name:'noticia_cl',av:'📰'},t:'ahora',flair:'📡 LIVE',fc:'r',title:n.title,prev:cleanDesc||null,url:n.link||n.url||n.source_url||n.reference_url||n.referencia||null,votos:Math.floor(Math.random()*12)+1,coms:Math.floor(Math.random()*6)+1,cd:[],isNews:true});
     });
     var f=document.getElementById('posts-feed');if(f)f.innerHTML=renderFeed(window._currentFilter||null);
     renderTrending();console.log('[RandomPlan] '+items.length+' noticias');
