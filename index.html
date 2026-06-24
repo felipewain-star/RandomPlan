@@ -147,7 +147,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .csub{color:var(--blue);cursor:pointer;font-weight:700}.csub:hover{text-decoration:underline}
 .cuser{color:var(--amber);cursor:pointer}.cuser:hover{text-decoration:underline}
 .dot{color:var(--border2)}
-.flair-news{background:rgba(255,59,48,.15);color:#ff3b30;border:1px solid rgba(255,59,48,.3)}
 .flair{padding:.04rem .33rem;border-radius:2px;font-size:.6rem;font-weight:700}
 .flair.r{background:rgba(255,123,114,.1);color:#ff7b72;border:1px solid rgba(255,123,114,.2)}
 .flair.b{background:rgba(121,192,255,.1);color:var(--blue);border:1px solid rgba(121,192,255,.2)}
@@ -1367,11 +1366,9 @@ function renderPost(p){
 
 function renderFeed(filter){
   var list=filter?POSTS.filter(function(p){return p.sub===filter}):POSTS;
-  if(!filter){var n=list.filter(function(p){return p.isNews;});var r=list.filter(function(p){return !p.isNews;});list=n.concat(r);}
   var html=list.map(renderPost).join('');
   if(!html)html='<div style="text-align:center;padding:2.5rem;color:var(--text3);font-size:.75rem;font-family:var(--mono)">// no hay posts aquí todavía<br><br>🌵</div>';
   document.getElementById('posts-feed').innerHTML=html;
-  return html;
 }
 
 // Mapeo permanente de posts semilla (ids JS) → IDs reales en Supabase
@@ -1418,13 +1415,6 @@ async function loadRealPosts(filter){
       coms: (p.comentarios&&p.comentarios[0]&&p.comentarios[0].count)||0,
       cd: []
     };
-  });
-  // agregar a POSTS para que openPostView los encuentre
-  // remover duplicados primero
-  converted.forEach(function(p){
-    var idx=POSTS.findIndex(function(x){return x.id===p.id;});
-    if(idx!==-1) POSTS.splice(idx,1);
-    POSTS.unshift(p);
   });
   // filter if needed
   var filtered=filter?converted.filter(function(p){return p.sub===filter;}):converted;
@@ -1785,7 +1775,6 @@ function voteComment(btn,dir){ vc(btn,dir); }
 
 
 function filterFeed(sub,el){
-  window._currentFilter=sub||null;
   document.querySelectorAll('.sf-item').forEach(function(i){i.classList.remove('on')});
   if(el)el.classList.add('on');
   var f=(!sub||sub==='inicio')?null:sub;
@@ -4130,23 +4119,6 @@ async function botActivityLoop() {
 }
 
 
-var _newsLoaded=false;
-async function loadNews(){
-  if(_newsLoaded)return;
-  try{
-    var r=await fetch('/api/news');if(!r.ok)return;
-    var d=await r.json();var items=d.items||[];if(!items.length)return;
-    _newsLoaded=true;
-    items.forEach(function(n,i){
-      if(!n.title||n.title.length<5)return;
-      var cleanDesc=(n.desc||'').replace(/<[^>]+>/gi,'').replace(/&lt;.*?&gt;/gi,'').replace(/&amp;/gi,'&').replace(/\s+/g,' ').trim().slice(0,180);
-      POSTS.unshift({id:8500+i,sub:n.sub||'chile',ic:n.ic||'📰',user:{name:'noticia_cl',av:'📰'},t:'ahora',flair:'📡 LIVE',fc:'r',title:n.title,prev:cleanDesc||null,url:n.link||null,votos:Math.floor(Math.random()*12)+1,coms:Math.floor(Math.random()*6)+1,cd:[],isNews:true});
-    });
-    var f=document.getElementById('posts-feed');if(f)f.innerHTML=renderFeed(window._currentFilter||null);
-    renderTrending();console.log('[RandomPlan] '+items.length+' noticias');
-  }catch(e){console.log('[RandomPlan] news error:',e.message);}
-}
-
 // Init
 addMsg(null,'// chat global activo · randomplan.cl',false,true);
 CHAT_INIT.forEach(function(m){addMsg(m.bot,m.txt,false,false)});
@@ -4157,7 +4129,6 @@ initSeedPostMap();renderFeed(null);renderTrending();renderComms();
 setInterval(tickVotes,8000);
 loadChatHistory();
 setInterval(pollChat,3000);
-setTimeout(loadNews,1500);
 loadRealPosts(null);
 // check existing session
 db.auth.getSession().then(function(r){
