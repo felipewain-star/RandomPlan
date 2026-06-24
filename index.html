@@ -4174,7 +4174,11 @@ function openPostView(postId){
   html+='<div class="post-view-meta">'+makeAvatar(p.user.name,'sm')+' <span data-u="'+p.user.name+'" onclick="showProfile(this.dataset.u)" style="cursor:pointer;color:var(--green);font-family:var(--mono);font-size:.72rem">u/'+p.user.name+'</span> · <span>'+p.t+'</span>';
   if(p.flair)html+=' <span class="flair '+(p.isNews?'flair-news':'fc-'+(p.fc||'g'))+'">'+p.flair+'</span>';
   html+='</div>';
-  html+='<div class="post-view-title">'+p.title+'</div>';
+  if(p.isNews&&p.url){
+    html+='<div class="post-view-title"><a href="'+p.url+'" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">'+p.title+' <span style="font-size:.7rem;color:var(--green)">↗</span></a></div>';
+  } else {
+    html+='<div class="post-view-title">'+p.title+'</div>';
+  }
   html+='<div class="post-view-content">';
   if(p.img)html+='<img class="post-view-img" src="'+p.img+'" alt="">';
   if(p.prev)html+='<div style="font-size:.88rem;color:var(--text2);line-height:1.6;word-break:break-word;margin-top:'+(p.img?'.8rem':'0')+'">'+p.prev+'</div>';
