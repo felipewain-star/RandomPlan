@@ -1417,10 +1417,11 @@ async function loadRealPosts(filter){
     };
   });
   // agregar a POSTS para que openPostView los encuentre
+  // remover duplicados primero
   converted.forEach(function(p){
-    if(!POSTS.find(function(x){return x.id===p.id;})){
-      POSTS.unshift(p);
-    }
+    var idx=POSTS.findIndex(function(x){return x.id===p.id;});
+    if(idx!==-1) POSTS.splice(idx,1);
+    POSTS.unshift(p);
   });
   // filter if needed
   var filtered=filter?converted.filter(function(p){return p.sub===filter;}):converted;
