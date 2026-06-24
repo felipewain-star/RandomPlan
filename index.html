@@ -568,6 +568,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 <div class="toast" id="toast"></div>
 
 <script>
+// ── PICKER STATE ──
+var _activeInput=null;
+var _pickerShowing=false;
+var _gifShowing=false;
+
 var BOTS=[
   // NORTEÑOS
   {name:'titi_norte',av:'🌵',ciudad:'Antofagasta',arq:'nortenio'},
