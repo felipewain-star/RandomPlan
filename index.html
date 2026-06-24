@@ -6643,5 +6643,257 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closePostVi
 })();
 </script>
 
+<script>
+/* ─────────────────────────────────────────────────────────────
+   RANDOMPLAN V17 — comentarios sin duplicados + media picker final
+   - Hilos con frases variadas, únicas y coherentes.
+   - Emoji inline estable; GIF solo en hilo/post abierto.
+   - Noticias_cl conserva conversación gradual, sin clonar frases.
+───────────────────────────────────────────────────────────── */
+(function(){
+  'use strict';
+  function $(id){return document.getElementById(id);}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function hash(s,mod){s=String(s||'');var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}h=Math.abs(h);return mod?h%mod:h;}
+  function norm(sub){
+    if(typeof window.normalizeCommunitySub==='function')return window.normalizeCommunitySub(sub);
+    sub=String(sub||'').toLowerCase().trim().replace(/^p\//,'').replace(/^r\//,'').replace(/^#/, '');
+    var a={inicio:null,home:null,feed:null,feria:'marketplace',market:'marketplace',marketplace:'marketplace',memes:'memescl',noticias:'contingencia',news:'contingencia',actualidad:'contingencia',polemicas:'debate','polémicas':'debate'};
+    return Object.prototype.hasOwnProperty.call(a,sub)?a[sub]:sub;
+  }
+  function normTxt(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9áéíóúñü\s]/gi,' ').replace(/\s+/g,' ').trim();}
+  function isNewsPost(p){return !!(p&&(p.isNews||String(p.user&&p.user.name||'').toLowerCase()==='noticias_cl'));}
+  function weakOrBad(txt){
+    var t=normTxt(txt);
+    if(!t||t.length<8)return true;
+    if({'wtf':1,'oof':1,'omg':1,'bruh':1,'cap':1,'no way':1,'lol':1,'si':1,'no':1,'demasiado real':1,'literal':1,'facts':1,'exacto':1,'obvio':1,'jajaja':1,'jajajaja':1}[t])return true;
+    return /(gana|ganan|ganara|va a ganar|van a ganar|marcador|resultado exacto|apuesto|apuesta|partido de hoy|juega hoy|juega manana|manana gana|sale campeon|campeon fijo|pronostico|prediccion|le metemos|les metemos)/i.test(t);
+  }
+  function botPool(sub){
+    sub=norm(sub)||'chile';
+    var wants={
+      chile:['chile','debate'],contingencia:['chile','debate','finanzas'],finanzas:['finanzas','chile'],
+      futbol:['futbol','chile'],marketplace:['chile','finanzas'],memescl:['memescl','chile'],debate:['debate','chile'],tecnologia:['tecnologia','chile']
+    }[sub]||[sub,'chile'];
+    var bots=(window.BOTS||[]).filter(function(b){var a=b.arq&&window.BOT_ARQUETIPOS?window.BOT_ARQUETIPOS[b.arq]:null;return a&&a.intereses&&wants.some(function(w){return a.intereses.indexOf(w)!==-1;});});
+    if(bots.length<10)bots=(window.BOTS||[]).slice();
+    return bots.length?bots:[{name:'usuario_cl',ciudad:'Chile',av:'👤'}];
+  }
+  function pickBot(p,i,used){
+    var bots=botPool(p&&p.sub),start=hash((p&&p.id)+'|'+(p&&p.title)+'|bot|'+i,bots.length);
+    for(var k=0;k<bots.length;k++){var b=bots[(start+k)%bots.length];if(!used||!used[b.name])return b;}
+    return bots[start%bots.length];
+  }
+  function topicBank(p){
+    var sub=norm(p&&p.sub)||'chile';
+    var s=(String(p&&p.title||'')+' '+String(p&&p.prev||'')).toLowerCase();
+    if(isNewsPost(p))return [
+      'La gracia es que acá queda la fuente visible y se puede discutir sin inventar versiones.',
+      'Yo partiría leyendo la nota completa, porque muchas veces el titular deja fuera el contexto.',
+      'Si aparecen más medios confirmando, este hilo puede servir para ordenar la información.',
+      'Me gusta que la noticia quede como conversación interna antes de mandar a todos fuera de la plataforma.',
+      'Ojo con comentar rápido: en temas nacionales la primera versión casi siempre viene incompleta.',
+      'Sería bueno que noticias_cl vaya acumulando actualizaciones si la historia cambia durante el día.',
+      'El resumen ayuda, pero la fuente original debería ser la base de cualquier opinión acá.',
+      'Esto puede funcionar muy bien si se separa noticia real, opinión y rumor.',
+      'Acá al menos tenemos una referencia concreta para discutir, no solo pantallazos de redes.',
+      'Yo miraría también qué dice otro medio antes de sacar una conclusión cerrada.'
+    ];
+    if(/registro civil|domicilio|clave|tramite|trámite|sii|afc|fonasa|licencia|municipal|banco|cartola|certificado|servicio público|servicio publico/.test(s))return [
+      'Cuando un trámite online falla, lo primero es guardar captura y número de solicitud.',
+      'A mí me ha pasado que estos sistemas funcionan mejor temprano y desde computador, no desde el celular.',
+      'Lo peor es que el trámite existe en línea, pero igual terminas dependiendo de soporte humano.',
+      'Antes de intentar de nuevo revisaría si quedó una solicitud pendiente bloqueando el proceso.',
+      'Si ya pasaron varios días, pediría ticket de atención para que quede respaldo.',
+      'El problema no es solo la página, es que muchas veces el error no explica qué dato está fallando.',
+      'Con servicios públicos chilenos conviene tener todo respaldado: fecha, hora, captura y folio.',
+      'Este tipo de trámites debería ser simple, pero termina siendo una prueba de paciencia.',
+      'Yo probaría navegador distinto y clave única recién iniciada, a veces la sesión vieja queda pegada.',
+      'Si el sistema te bota siempre en el mismo paso, probablemente hay un campo que no está validando bien.'
+    ];
+    if(sub==='futbol')return [
+      'Más que hablar de un partido puntual, el tema es formación y continuidad de procesos.',
+      'Si no se ordenan las canteras, siempre vamos a esperar salvadores de última hora.',
+      'La discusión debería partir por minutos reales para jugadores jóvenes en competencia local.',
+      'Hay que bajar el humo y mirar procesos largos, no titulares de una semana.',
+      'El fútbol chileno necesita planificación seria, no promesas de emergencia.',
+      'Clubes, dirigentes y técnicos tienen que remar para el mismo lado si se quiere recambio.',
+      'El problema no es solo la selección; el nivel de la liga también marca el techo.',
+      'Sin continuidad técnica, cada ciclo parte de cero y se repiten las mismas excusas.',
+      'Me interesa más discutir estructura que andar inventando marcadores o partidos que nadie confirmó.',
+      'La formación de juveniles debería ser tema central, no un comentario de emergencia cuando todo sale mal.'
+    ];
+    if(sub==='finanzas')return [
+      'En Chile el arriendo y la UF se comen cualquier presupuesto mal armado.',
+      'Antes de invertir, el primer paso es saber cuánto entra y cuánto sale cada mes.',
+      'El dólar importa aunque uno no invierta, porque termina pegando en precios importados.',
+      'Sin fondo de emergencia, cualquier imprevisto te obliga a endeudarte.',
+      'La educación financiera debería partir por presupuesto realista, no por promesas de rentabilidad.',
+      'El problema es que mucha gente habla de inversión sin tener ordenado el flujo de caja.',
+      'Una cosa es ahorrar y otra muy distinta es apostar plata que puedes necesitar el próximo mes.',
+      'La inflación chica pero constante termina pegando más que muchos gastos visibles.',
+      'Para mí lo primero es separar plata para vivir, deuda, emergencia e inversión.',
+      'Si el sueldo está justo, la estrategia financiera tiene que ser defensiva antes que ambiciosa.'
+    ];
+    if(sub==='marketplace')return [
+      'Precio claro, comuna y fotos reales deberían ser regla básica para publicar.',
+      'Sin reputación se llena de spam al tiro, sobre todo si empieza a moverse plata.',
+      'Las preguntas públicas ayudan a que otros compradores vean la misma información.',
+      'Sería bueno marcar vendidos y reportar publicaciones sospechosas desde el inicio.',
+      'La confianza se construye con historial, no solo con un botón de comprar.',
+      'También falta indicar forma de entrega: retiro, envío o punto de encuentro.',
+      'Si el marketplace crece, moderación y reputación van a ser más importantes que el diseño.',
+      'Me gusta la idea de feria digital, pero tiene que sentirse segura para usuarios nuevos.',
+      'Una ficha mínima con estado del producto evitaría muchas preguntas repetidas.',
+      'Los vendedores deberían responder en público para que quede registro.'
+    ];
+    if(sub==='memescl')return [
+      'Humor chileno de supervivencia: reír para no llorar.',
+      'Esto lo mandas al grupo familiar y se arma debate de una hora.',
+      'Me dio risa porque duele un poco reconocerlo.',
+      'El meme funciona porque todos hemos estado ahí.',
+      'Demasiado específico para ser mentira.',
+      'La risa nacional siempre aparece después de mirar la cuenta del banco.',
+      'Esto parece chiste, pero tiene una tesis social entera detrás.',
+      'Meme país, con la cantidad justa de trauma administrativo.',
+      'No sé si reírme o pedir un certificado en línea para confirmar.',
+      'El algoritmo chileno debería traer pañuelos y pan batido con esto.'
+    ];
+    if(sub==='debate')return [
+      'Buen debate si se mantiene con argumentos y no solo consignas.',
+      'El punto de fondo es cómo esto se vive distinto según la región.',
+      'Sin datos mínimos, la discusión se vuelve pura sensación.',
+      'Me interesa más leer propuestas concretas que peleas de siempre.',
+      'Hay varias capas acá: política, plata, territorio y gestión.',
+      'La experiencia personal importa, pero no reemplaza evidencia cuando hablamos de política pública.',
+      'Chile tiene muchos diagnósticos repetidos; el problema es ejecutar soluciones.',
+      'El centralismo aparece en casi todos los debates aunque no sea el tema inicial.',
+      'El tema da para discutirlo con calma, no solo desde la rabia del momento.',
+      'Si alguien trae datos o ejemplos concretos, el hilo puede subir mucho de nivel.'
+    ];
+    return [
+      'Este tema pega distinto según la región, no todo se vive desde Santiago.',
+      'Buen punto para abrir conversación sin quedarse solo en el titular.',
+      'Me interesa leer experiencias concretas, no solo opiniones rápidas.',
+      'Acá falta contexto, pero la discusión puede ponerse buena.',
+      'Ojalá el hilo junte datos y experiencias reales.',
+      'Lo interesante es que la gente comente casos propios y no solo frases hechas.',
+      'Si se mantiene el foco, puede quedar un hilo útil para otros usuarios.',
+      'Hay que mirar esto con contexto chileno, porque importarlo de otra realidad no calza.',
+      'Me gustaría que alguien de región también cuente cómo lo vive.',
+      'La conversación mejora cuando se mezcla experiencia, datos y un poco de humor.'
+    ];
+  }
+  function pickPhrase(p,i,used){
+    var bank=topicBank(p),idx=hash((p&&p.id)+'|'+(p&&p.title)+'|phrase|'+i,bank.length);
+    for(var k=0;k<bank.length;k++){var ph=bank[(idx+k)%bank.length];var key=normTxt(ph);if(!used[key])return ph;}
+    return null;
+  }
+  function cleanComments(p,target,gradual){
+    if(!p)return [];
+    p.cd=Array.isArray(p.cd)?p.cd:[];
+    var originalTarget=parseInt(target||p.coms||p.cd.length||0,10)||0;
+    if(!originalTarget)originalTarget=isNewsPost(p)?0:Math.min(5,Math.max(3,p.cd.length||3));
+    var maxTarget=Math.min(originalTarget, isNewsPost(p)?12:14);
+    var usedTxt={},usedBot={},out=[];
+    (p.cd||[]).forEach(function(c,i){
+      c=c||{};var txt=String(c.txt||c.texto||'').trim();var key=normTxt(txt);var bot=c.bot||{name:c.username||'',ciudad:c.ciudad||'Chile',av:'👤'};
+      var badName=!bot.name||/^u?\/?bot$/i.test(bot.name)||/^(anon|usuario_bot|random_bot)$/i.test(bot.name);
+      if(!key||weakOrBad(txt)||usedTxt[key]){txt='';key='';}
+      if(badName||usedBot[bot.name])bot=pickBot(p,i,usedBot);
+      if(!txt){txt=pickPhrase(p,i,usedTxt);key=normTxt(txt);}
+      if(!txt||usedTxt[key])return;
+      usedTxt[key]=1;if(bot&&bot.name)usedBot[bot.name]=1;
+      out.push({bot:bot||{name:'usuario_cl',ciudad:'Chile',av:'👤'},txt:txt,t:c.t||c.tiempo||['ahora','3min','8min','15min','27min','45min','1h','2h'][out.length%8],v:parseInt(c.v||c.votos||0,10)||1+hash((p&&p.id)+'v'+out.length,12),realComId:c.realComId,userId:c.userId});
+    });
+    var finalTarget=gradual?Math.min(maxTarget,out.length+1):maxTarget;
+    for(var j=out.length;j<finalTarget;j++){
+      var phrase=pickPhrase(p,j,usedTxt);if(!phrase)break;
+      var bot=pickBot(p,j,usedBot);var key2=normTxt(phrase);
+      usedTxt[key2]=1;if(bot&&bot.name)usedBot[bot.name]=1;
+      out.push({bot:bot||{name:'usuario_cl',ciudad:'Chile',av:'👤'},txt:phrase,t:['ahora','3min','8min','15min','27min','45min','1h','2h','3h'][j%9],v:1+hash((p&&p.id)+'vote'+j,12)});
+    }
+    p.cd=out;p.coms=out.length;return out;
+  }
+  window.RP_ensureLocalComments=function(p){return cleanComments(p,p&&p.coms,false);};
+  window.generateBotComments=function(count,existingCd){
+    var p=window.__rpCommentContextPost||{id:'tmp',sub:'chile',title:'tema chileno',prev:'',coms:count||5,cd:existingCd||[]};
+    return cleanComments(p,count||p.coms||5,false).slice(0,Math.min(count||p.coms||10,14));
+  };
+
+  // Media final: delegado, sin depender del onclick viejo.
+  var EMOJIS='😀 😃 😄 😁 😆 😂 🤣 😊 😍 😎 🤔 🙄 😬 😅 😭 😤 😡 🤯 🫡 👀 🙌 👏 🤝 👍 👎 💚 🔥 💀 🚀 💸 📉 📈 📰 🇨🇱 ⚽ 🛒 💬'.split(/\s+/);
+  var GIFS=[
+    ['risa laugh jajaja','https://media.giphy.com/media/10JhviFuU2gWD6/giphy.gif'],['aplauso clap bravo','https://media.giphy.com/media/3o6Zt481isNVuQI1l6/giphy.gif'],['pensar duda thinking','https://media.giphy.com/media/a5viI92PAF89q/giphy.gif'],['wow sorpresa','https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif'],['popcorn drama mirando','https://media.giphy.com/media/tyqcJoNjNv0Fq/giphy.gif'],['facepalm fail error','https://media.giphy.com/media/3o7TKqm1mNujcBPSpy/giphy.gif'],['chill tranqui relax','https://media.giphy.com/media/3o7aD2saalBwwftBIY/giphy.gif'],['enojo angry rage','https://media.giphy.com/media/11tTNkNy1SdXGg/giphy.gif'],['triste sad llanto','https://media.giphy.com/media/OPU6wzx8JrHna/giphy.gif'],['victoria win exito','https://media.giphy.com/media/26u4cqiYI30juCOGY/giphy.gif'],['money plata finanzas','https://media.giphy.com/media/xTiTnqUxyWbsAXq7Ju/giphy.gif'],['crypto bitcoin bolsa','https://media.giphy.com/media/YnkMcHgNIMW4Yfmjxr/giphy.gif'],['typing codigo escribir','https://media.giphy.com/media/13FrpeVH09Zrb2/giphy.gif'],['noticias news periodista','https://media.giphy.com/media/l0HlQ7LRalQqdWfao/giphy.gif'],['debate politica chile','https://media.giphy.com/media/3o6MbudZJtl8nNebaE0/giphy.gif'],['ok bueno thumbs','https://media.giphy.com/media/111ebonMs90YLu/giphy.gif'],['confusion what que','https://media.giphy.com/media/3o7btPCcdNniyf0ArS/giphy.gif'],['celebrar party','https://media.giphy.com/media/artj92V8o75VPL7AeQ/giphy.gif'],['correr rapido run','https://media.giphy.com/media/3o7ZetIsjtbkgNE1I4/giphy.gif'],['acuerdo deal negocio','https://media.giphy.com/media/l3q2XhfQ8oCkm1Ts4/giphy.gif'],['meme classic internet','https://media.giphy.com/media/12XDYvMJNcmLgQ/giphy.gif'],['boom hype explosion','https://media.giphy.com/media/laUY2MuoktHPy/giphy.gif']
+  ].map(function(x){return {tags:x[0],url:x[1]};});
+  function ensureMedia(){
+    var ep=$('global-emoji-picker');if(!ep){ep=document.createElement('div');ep.id='global-emoji-picker';document.body.appendChild(ep);}ep.style.cssText='display:none;position:fixed;z-index:999999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;max-width:330px;flex-wrap:wrap;gap:.12rem;max-height:220px;overflow-y:auto;box-shadow:0 4px 24px rgba(0,0,0,.85)';
+    ep.innerHTML=EMOJIS.map(function(e){return '<button type="button" class="rp17-emoji" style="background:none;border:none;font-size:1.18rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px;line-height:1.1">'+esc(e)+'</button>';}).join('');
+    var gp=$('global-gif-picker');if(!gp){gp=document.createElement('div');gp.id='global-gif-picker';document.body.appendChild(gp);}gp.style.cssText='display:none;position:fixed;z-index:999999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;width:350px;max-width:calc(100vw - 12px);box-shadow:0 4px 24px rgba(0,0,0,.85)';
+    gp.innerHTML='<input id="gif-search-global" placeholder="buscar GIF + Enter" style="width:100%;background:#0d1117;border:1px solid #2a3f55;border-radius:3px;padding:.4rem .6rem;font-family:monospace;font-size:.75rem;color:#e6edf3;outline:none;margin-bottom:.45rem;box-sizing:border-box"><div id="gif-grid-global" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.32rem;max-height:250px;overflow-y:auto"></div>';
+    var gs=$('gif-search-global');if(gs){gs.onkeydown=function(ev){if(ev.key==='Enter'){ev.preventDefault();drawGifs(gs.value||'meme chile');}};}
+  }
+  function activeInput(){var id=window._rpActiveMediaInput;return id?$(id):null;}
+  function insertText(txt){var inp=activeInput();if(!inp)return;var start=typeof inp.selectionStart==='number'?inp.selectionStart:inp.value.length,end=typeof inp.selectionEnd==='number'?inp.selectionEnd:inp.value.length,v=inp.value||'';var sp=(txt.indexOf('[gif:')===0&&v.slice(0,start)&&!/\s$/.test(v.slice(0,start)))?' ':'';inp.value=v.slice(0,start)+sp+txt+v.slice(end);var pos=start+sp.length+txt.length;inp.focus();try{inp.setSelectionRange(pos,pos);}catch(e){}inp.dispatchEvent(new Event('input',{bubbles:true}));}
+  function place(pop,anchor){var r=anchor&&anchor.getBoundingClientRect?anchor.getBoundingClientRect():null,w=pop.id==='global-gif-picker'?360:340;if(r){pop.style.top=Math.min(window.innerHeight-45,r.bottom+8)+'px';pop.style.left=Math.max(6,Math.min(r.left,window.innerWidth-w-6))+'px';}else{pop.style.top='80px';pop.style.left='12px';}}
+  function drawGifs(query,extra){ensureMedia();query=String(query||'meme chile').toLowerCase();var words=query.split(/\s+/).filter(Boolean);var base=GIFS.filter(function(g){return !words.length||query==='meme chile'||words.some(function(w){return g.tags.indexOf(w)!==-1;});});if(!base.length)base=GIFS.slice();var seen={},arr=[];base.concat(extra||[]).forEach(function(g){if(g&&g.url&&!seen[g.url]){seen[g.url]=1;arr.push(g);}});var grid=$('gif-grid-global');if(!grid)return;grid.innerHTML=arr.slice(0,36).map(function(g){return '<img src="'+esc(g.thumb||g.url)+'" data-url="'+esc(g.url)+'" class="gif-thumb rp17-gif-thumb" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:76px;object-fit:cover;border:1px solid transparent;border-radius:3px;cursor:pointer;background:#080b0f">';}).join('');}
+  window.loadGlobalGifs=function(q){q=q||'meme chile';drawGifs(q);fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q)+'&key=LIVDSRZULELA&client_key=randomplan&limit=18&media_filter=gif,tinygif',{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('tenor');return r.json();}).then(function(d){var arr=(d.results||[]).map(function(it){var mf=it.media_formats||{},th=(mf.tinygif&&mf.tinygif.url)||(mf.gif&&mf.gif.url)||'',fu=(mf.gif&&mf.gif.url)||th;return {url:fu,thumb:th};}).filter(function(x){return x.url;});if(arr.length)drawGifs(q,arr);}).catch(function(){});};
+  window.buscarGif=window.loadGlobalGifs;
+  window.showEmojiPicker=function(inputId,anchor){ensureMedia();window._rpActiveMediaInput=inputId;var ep=$('global-emoji-picker'),gp=$('global-gif-picker');if(gp)gp.style.display='none';place(ep,anchor||$(inputId));ep.style.display=(ep.style.display==='flex'?'none':'flex');};
+  window.showGifPicker=function(inputId,anchor){ensureMedia();window._rpActiveMediaInput=inputId;var ep=$('global-emoji-picker'),gp=$('global-gif-picker');if(ep)ep.style.display='none';place(gp,anchor||$(inputId));gp.style.display=(gp.style.display==='block'?'none':'block');if(gp.style.display==='block')window.loadGlobalGifs(($('gif-search-global')&&$('gif-search-global').value)||'meme chile');};
+  window.buildMediaBar=function(inputId){var inline=/^cinp-/.test(String(inputId||''));return '<div class="media-bar"><button class="media-btn" type="button" data-rp-media="emoji" data-rp-target="'+esc(inputId)+'">😊</button>'+(inline?'':'<button class="media-btn" type="button" data-rp-media="gif" data-rp-target="'+esc(inputId)+'">GIF</button>')+'</div>';};
+  document.addEventListener('click',function(ev){
+    var b=ev.target.closest&&ev.target.closest('[data-rp-media], .media-btn');
+    if(b){
+      var target=b.getAttribute('data-rp-target')||b.getAttribute('data-inp')||b.dataset.inp;
+      if(!target){var wrap=b.closest('.com-write,.pv-comment-box,.comment-box');var inp=wrap&&wrap.querySelector('input');target=inp&&inp.id;}
+      var mode=b.getAttribute('data-rp-media')||(/gif/i.test(b.textContent||'')?'gif':'emoji');
+      if(target){ev.preventDefault();ev.stopImmediatePropagation();if(mode==='gif')window.showGifPicker(target,b);else window.showEmojiPicker(target,b);return;}
+    }
+    var emo=ev.target.closest&&ev.target.closest('.rp17-emoji');if(emo){ev.preventDefault();ev.stopImmediatePropagation();insertText(emo.textContent);var ep=$('global-emoji-picker');if(ep)ep.style.display='none';return;}
+    var gif=ev.target.closest&&ev.target.closest('.rp17-gif-thumb,.gif-thumb');if(gif&&gif.dataset&&gif.dataset.url){ev.preventDefault();ev.stopImmediatePropagation();insertText('[gif:'+gif.dataset.url+']');var gp=$('global-gif-picker');if(gp)gp.style.display='none';return;}
+    var ep2=$('global-emoji-picker'),gp2=$('global-gif-picker');
+    if(ep2&&!ev.target.closest('#global-emoji-picker')&&!ev.target.closest('.media-btn'))ep2.style.display='none';
+    if(gp2&&!ev.target.closest('#global-gif-picker')&&!ev.target.closest('.media-btn'))gp2.style.display='none';
+  },true);
+
+  // Re-render comments using V17 unique set in inline + post detail.
+  window.renderPostViewComments=function(postId,sort){
+    var p=(window.POSTS||[]).find(function(x){return parseInt(x.id,10)===parseInt(postId,10);});var list=$('pv-comments-list');if(!p||!list)return;sort=sort||'top';
+    var all=cleanComments(p,p.coms||p.cd.length||0,false).slice();if(sort==='new')all=all.reverse();else if(sort==='top')all=all.sort(function(a,b){return (b.v||0)-(a.v||0);});
+    list.innerHTML=all.length?all.map(function(c){var bot=c.bot||{name:c.username||'usuario_cl'};return '<div class="pv-comment"><div class="pv-comment-v"><button onclick="pvVote(this,1)">▲</button><strong>'+esc(parseInt(c.v||c.votos||0,10)||0)+'</strong><button onclick="pvVote(this,-1)">▼</button></div><div><div class="pv-comment-meta"><span class="u">u/'+esc(bot.name||'usuario_cl')+'</span> · '+esc(c.t||c.tiempo||'ahora')+'</div><div class="pv-comment-text">'+(typeof window.linkify==='function'?window.linkify(c.txt||c.texto||''):esc(c.txt||c.texto||''))+'</div></div></div>';}).join(''):'<div class="pv-empty">// todavía no hay comentarios</div>';
+  };
+  window.loadComments=function(postId,sort,offset){
+    var list=$('clist-'+postId);if(!list)return;offset=offset||0;sort=sort||'top';var LIMIT=10,more=$('cmore-'+postId);
+    var p=(window.POSTS||[]).find(function(x){return parseInt(x.id,10)===parseInt(postId,10);});if(!p){list.innerHTML='';return;}
+    var all=cleanComments(p,p.coms||p.cd.length||0,false).slice();if(sort==='new')all=all.reverse();else if(sort==='top')all=all.sort(function(a,b){return (b.v||0)-(a.v||0);});
+    var page=all.slice(offset,offset+LIMIT),html='';
+    page.forEach(function(c){var bot=c.bot||{name:c.username||'usuario_cl',ciudad:'Chile'};html+=(typeof window.renderCommentHTML==='function'?window.renderCommentHTML('lc-'+hash(postId+'-'+(c.txt||c.texto)+'-'+offset),bot.name||'usuario_cl',bot.ciudad||'Chile',c.t||c.tiempo||'ahora',c.txt||c.texto||'',c.v||c.votos||0,false):'<div class="comment"><div class="cctext">'+esc(c.txt||c.texto||'')+'</div></div>');});
+    list.innerHTML=offset===0?html:(list.innerHTML+html);if(more)more.innerHTML=all.length>offset+LIMIT?'<button class="com-more-btn" onclick="loadComments('+postId+',\''+sort+'\','+(offset+LIMIT)+')">ver más comentarios ('+(all.length-offset-LIMIT)+' restantes)</button>':'';
+  };
+
+  // Noticias: conversación gradual, única, sin frases repetidas.
+  function updateNewsVisible(p){
+    var btn=document.querySelector('#post-'+p.id+' .comments-toggle-btn');if(btn)btn.textContent=(window.openComs&&openComs[p.id])?'// cerrar comentarios':'// '+(p.coms||0)+' comentarios';
+    if(window.openComs&&openComs[p.id]&&$('clist-'+p.id))window.loadComments(p.id,'new',0);
+    if($('pv-comments-list')&&$('post-view-wrap')&&$('post-view-wrap').classList.contains('on'))window.renderPostViewComments(p.id,'new');
+  }
+  function startNewsConversation(p){
+    if(!isNewsPost(p)||p._rp17ConversationStarted)return;p._rp17ConversationStarted=true;p.cd=Array.isArray(p.cd)?p.cd:[];p.cd=[];p.coms=0;
+    var target=3+hash(p.id+'target17',6);var delay=1600+hash(p.id,2600);
+    function step(){if(p.cd.length>=target)return;cleanComments(p,p.cd.length+1,true);updateNewsVisible(p);if(p.cd.length<target)setTimeout(step,6500+hash(p.id+'-'+p.cd.length,7000));}
+    setTimeout(step,delay);
+  }
+  var oldLoadNews=window.loadNews;
+  if(oldLoadNews&&!oldLoadNews.__rp17){window.loadNews=async function(){var r=await oldLoadNews.apply(this,arguments);(window.POSTS||[]).forEach(startNewsConversation);return r;};window.loadNews.__rp17=true;}
+  var oldRenderFeed=window.renderFeed;
+  if(oldRenderFeed&&!oldRenderFeed.__rp17){window.renderFeed=function(filter){(window.POSTS||[]).forEach(function(p){if(!isNewsPost(p))cleanComments(p,p.coms||p.cd&&p.cd.length||0,false);});return oldRenderFeed.call(this,norm(filter));};window.renderFeed.__rp17=true;}
+
+  var st=document.createElement('style');st.textContent='.rp17-gif-thumb:hover{border-color:#00ff88!important}.inserted-gif,.rp16-gif{max-width:280px;max-height:220px;border-radius:5px;margin:.35rem 0;display:block}.com-write .media-bar{margin-top:0}.media-btn{user-select:none}';document.head.appendChild(st);
+  setTimeout(function(){ensureMedia();(window.POSTS||[]).forEach(function(p){if(isNewsPost(p))startNewsConversation(p);else cleanComments(p,p.coms||p.cd&&p.cd.length||0,false);});if(window.renderFeed)window.renderFeed(norm(window._currentFilter)||null);},850);
+  console.log('[RandomPlan V17] comentarios únicos + media picker final cargado');
+})();
+</script>
+
 </body>
 </html>
