@@ -173,7 +173,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .source-link{color:var(--amber)!important}
 .source-link:hover{color:var(--green)!important;border-color:var(--green)}
 
-/* POST DETAIL VIEW - noticias_cl */
+/* POST DETAIL VIEW - hilo interno */
 .post-view-lock{overflow:hidden}
 .post-view-wrap{display:none;position:fixed;inset:0;z-index:650;background:rgba(0,0,0,.86);backdrop-filter:blur(4px);align-items:flex-start;justify-content:center;padding:3.8rem .8rem 1.2rem;overflow-y:auto}
 .post-view-wrap.on{display:flex}
@@ -199,7 +199,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .pv-sort{display:flex;align-items:center;gap:.3rem}
 .pv-sort button{background:none;border:1px solid var(--border);color:var(--text3);border-radius:2px;font-size:.64rem;font-family:var(--mono);cursor:pointer;padding:.18rem .45rem;transition:all .12s}
 .pv-sort button:hover,.pv-sort button.on{border-color:var(--green);color:var(--green)}
-.pv-comment-box{display:flex;gap:.45rem;margin:.75rem 0 .85rem;background:var(--bg0);border:1px solid var(--border);border-radius:4px;padding:.55rem}
+.pv-comment-box{display:flex;flex-direction:column;gap:.45rem;margin:.75rem 0 .85rem;background:var(--bg0);border:1px solid var(--border);border-radius:4px;padding:.55rem}
+.pv-comment-input-row{display:flex;gap:.45rem;align-items:center}
 .pv-comment-box input{flex:1;background:transparent;border:none;outline:none;color:var(--text1);font-family:var(--mono);font-size:.8rem;min-width:120px}
 .pv-comment-send{background:none;border:1px solid var(--green);color:var(--green);border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer;padding:.25rem .55rem;font-weight:700}
 .pv-comments-list{display:flex;flex-direction:column;gap:.1rem}
@@ -600,11 +601,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 </div>
 
 
-<!-- POST DETAIL VIEW: noticias_cl -->
+<!-- POST DETAIL VIEW: hilo interno -->
 <div class="post-view-wrap" id="post-view-wrap" onclick="closePostViewBg(event)">
-  <div class="post-view" role="dialog" aria-modal="true" aria-label="Vista de noticia">
+  <div class="post-view" role="dialog" aria-modal="true" aria-label="Vista de post">
     <div class="post-view-top">
-      <div class="post-view-label">hilo de noticia</div>
+      <div class="post-view-label">hilo interno</div>
       <button class="post-view-x" onclick="closePostView()">ESC / cerrar</button>
     </div>
     <div class="post-view-body" id="post-view-content"></div>
@@ -1387,6 +1388,30 @@ function getPostReference(p){
   );
 }
 
+
+
+function renderPostThreadBodyHTML(p){
+  if(!p) return '<span class="muted">// sin contenido disponible</span>';
+  var raw=String(p.prev||p.contenido||'');
+  var imgSrc=p.img||null;
+  var imgMatch=raw.match(/\[img:(https?:\/\/[^\]]+)\]/i);
+  if(imgMatch){
+    imgSrc=imgMatch[1];
+    raw=raw.replace(imgMatch[0],'').trim();
+  }
+  var html='';
+  if(imgSrc){
+    html+='<img src="'+escHtml(imgSrc)+'" class="rp-main-img" loading="lazy" alt="media del post">';
+  }
+  if(raw){
+    html+='<div class="rp-thread-copy">'+linkify(raw)+'</div>';
+  }
+  if(!html){
+    html='<span class="muted">// sin bajada disponible</span>';
+  }
+  return html;
+}
+
 function openPostReference(url){
   var u=normalizeNewsUrl(url);
   if(!u){toast('sin referencia disponible');return;}
@@ -1412,37 +1437,55 @@ function renderPostThreadCommentHTML(c){
 function buildPostThreadWindowHTML(p, refUrl, commentsHtml){
   var title=escHtml(p.title||'sin título');
   var user=escHtml(getPostUserName(p));
-  var sub=escHtml((p.ic||'')+' '+(p.sub||''));
+  var subPlain=(p.ic||'')+' '+(p.sub||'');
+  var sub=escHtml(subPlain);
   var time=escHtml(p.t||'ahora');
   var flair=escHtml(p.flair||'post');
-  var domain=refUrl?escHtml(getDomain(refUrl)):'sin fuente';
-  var sourceBlock=refUrl
-    ? '<div class="rp-source"><div><span>fuente externa</span><strong>'+domain+'</strong></div><a href="'+escHtml(refUrl)+'" target="_blank" rel="noopener noreferrer">leer fuente original ↗</a></div>'
-    : '<div class="rp-source"><div><span>fuente externa</span><strong>Este post no trae una URL válida.</strong></div></div>';
-  var bodyText=p.prev||p.contenido||'';
-  var bodyHtml=bodyText?linkify(bodyText):'<span class="muted">// sin bajada disponible</span>';
+  var isNews=(p.isNews===true)||isNewsBotPost(p);
+  var domain=refUrl?escHtml(getDomain(refUrl)):'';
+  var sourceBlock='';
+  if(refUrl){
+    sourceBlock='<div class="rp-source"><div><span>'+(isNews?'fuente externa':'link externo')+'</span><strong>'+domain+'</strong></div><a href="'+escHtml(refUrl)+'" target="_blank" rel="noopener noreferrer">'+(isNews?'leer fuente original ↗':'abrir enlace externo ↗')+'</a></div>';
+  } else if(isNews){
+    sourceBlock='<div class="rp-source"><div><span>fuente externa</span><strong>Este post de noticias_cl no trae una URL válida.</strong></div></div>';
+  }
+  var bodyHtml=renderPostThreadBodyHTML(p);
   var voteTotal=(p.votos||0)+(votes[p.id]||0);
   var commentsCount=(commentsHtml.match(/rp-thread-comment/g)||[]).length;
-  return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>'+title+' — RandomPlan</title>'+
-    '<style>'+
-    '@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap");'+
-    '*{box-sizing:border-box}body{margin:0;background:#080b0f;color:#e6edf3;font-family:"JetBrains Mono",monospace;min-height:100vh}a{color:inherit}'+
-    'body:before{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.035) 2px,rgba(0,0,0,.035) 4px)}'+
-    '.top{position:sticky;top:0;background:#080b0f;border-bottom:1px solid #1e2d3d;height:52px;display:flex;align-items:center;gap:.7rem;padding:0 1rem;z-index:2}'+
-    '.logo{font-weight:700}.logo span{color:#00ff88}.pill{font-size:.65rem;color:#8b949e;border:1px solid #2a3f55;padding:.18rem .5rem;border-radius:3px}.close{margin-left:auto;background:none;border:1px solid #2a3f55;color:#8b949e;border-radius:3px;padding:.25rem .6rem;font-family:inherit;cursor:pointer}.close:hover{border-color:#ff3333;color:#ff3333}'+
-    '.wrap{max-width:980px;margin:0 auto;padding:1rem}.thread{background:#0d1117;border:1px solid #1e2d3d;border-radius:4px;overflow:hidden}.post{display:flex}.votes{width:46px;background:#080b0f;border-right:1px solid #1e2d3d;display:flex;flex-direction:column;align-items:center;padding:.75rem .25rem;gap:.2rem;color:#8b949e}.votes button{background:none;border:none;color:#484f58;font-size:1rem;cursor:pointer}.votes strong{font-size:.78rem;color:#00ff88}.body{flex:1;padding:1rem 1.05rem}.meta{display:flex;gap:.42rem;align-items:center;flex-wrap:wrap;font-size:.75rem;color:#484f58;margin-bottom:.55rem}.sub{color:#79c0ff;font-weight:700}.user{color:#ffa657}.flair{color:#ff7b72;border:1px solid rgba(255,123,114,.25);background:rgba(255,123,114,.08);padding:.05rem .34rem;border-radius:2px;font-size:.65rem}.title{font-family:"Space Grotesk",sans-serif;font-size:1.65rem;line-height:1.18;margin:.15rem 0 .75rem;font-weight:700;color:#e6edf3}.excerpt{font-family:"Space Grotesk",sans-serif;color:#8b949e;font-size:.98rem;line-height:1.65;border-left:2px solid #2a3f55;padding-left:.85rem;margin:.75rem 0 1rem;word-break:break-word}.muted{color:#484f58}.rp-source{background:#080b0f;border:1px solid #2a3f55;border-radius:4px;padding:.75rem;display:flex;justify-content:space-between;gap:.75rem;align-items:center;flex-wrap:wrap;margin:.9rem 0 1rem}.rp-source span{display:block;font-size:.65rem;color:#484f58;text-transform:uppercase;letter-spacing:.08em}.rp-source strong{display:block;margin-top:.1rem;color:#ffa657;font-size:.82rem}.rp-source a{background:rgba(0,255,136,.08);border:1px solid #00ff88;color:#00ff88;text-decoration:none;padding:.48rem .8rem;border-radius:3px;font-size:.78rem;font-weight:700}.rp-source a:hover{background:rgba(0,255,136,.18)}'+
-    '.actions{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.6rem}.act{font-size:.72rem;color:#484f58;border:1px solid #1e2d3d;padding:.25rem .5rem;border-radius:2px}.comments{border-top:1px solid #1e2d3d;padding:.9rem 1.05rem 1.2rem;background:#0d1117}.comments-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.75rem}.comments h2{font-size:.82rem;color:#00ff88;text-transform:uppercase;letter-spacing:.08em;margin:0}.sort{font-size:.65rem;color:#484f58}.comment-box{display:flex;gap:.45rem;margin-bottom:.9rem}.comment-box input{flex:1;background:#080b0f;border:1px solid #2a3f55;border-radius:3px;color:#e6edf3;padding:.52rem .7rem;font-family:inherit;outline:none}.comment-box input:focus{border-color:#00ff88}.comment-box button{background:rgba(0,255,136,.08);border:1px solid #00ff88;color:#00ff88;border-radius:3px;padding:.45rem .75rem;font-family:inherit;font-weight:700;cursor:pointer}.rp-thread-comment{display:flex;gap:.65rem;border-left:1px solid #1e2d3d;margin:.55rem 0 0 .25rem;padding:.15rem 0 .45rem .65rem}.rp-thread-votes{width:30px;display:flex;flex-direction:column;align-items:center;gap:.1rem;color:#484f58}.rp-thread-votes button{background:none;border:none;color:#484f58;cursor:pointer;font-size:.75rem}.rp-thread-votes strong{font-size:.68rem;color:#00ff88}.rp-thread-comment-body{flex:1}.rp-thread-comment-meta{font-size:.72rem;color:#484f58;margin-bottom:.16rem}.rp-thread-comment-text{font-family:"Space Grotesk",sans-serif;font-size:.92rem;line-height:1.5;color:#e6edf3;word-break:break-word}.inline-link{color:#79c0ff}.inserted-gif{max-width:280px;border-radius:4px;margin-top:.4rem;display:block}.empty{color:#484f58;font-size:.75rem;padding:.8rem 0}@media(max-width:640px){.wrap{padding:.5rem}.post{display:block}.votes{width:100%;height:36px;flex-direction:row;border-right:none;border-bottom:1px solid #1e2d3d;justify-content:flex-start;padding:.35rem .8rem}.title{font-size:1.28rem}.body,.comments{padding:.8rem}}'+
-    '</style></head><body>'+
-    '<div class="top"><div class="logo"><span>Random</span>Plan</div><div class="pill">hilo interno</div><div class="pill">noticias_cl</div><button class="close" onclick="window.close()">cerrar</button></div>'+
-    '<div class="wrap"><div class="thread"><div class="post"><div class="votes"><button>▲</button><strong>'+escHtml(fmtV(voteTotal))+'</strong><button>▼</button></div><div class="body">'+
-    '<div class="meta"><span class="sub">'+sub+'</span><span>::</span><span class="user">u/'+user+'</span><span>::</span><span>'+time+'</span><span class="flair">'+flair+'</span></div>'+
-    '<h1 class="title">'+title+'</h1><div class="excerpt">'+bodyHtml+'</div>'+sourceBlock+'<div class="actions"><span class="act">// '+escHtml(String(p.coms||commentsCount||0))+' comentarios</span><span class="act">// compartir hilo</span></div></div></div>'+
-    '<div class="comments"><div class="comments-head"><h2>// comentarios</h2><div class="sort">destacados · recientes · antiguos</div></div><div class="comment-box"><input id="rpNewComment" placeholder="comentar en el hilo..." onkeydown="if(event.key===\'Enter\')rpAddComment()"><button onclick="rpAddComment()">SEND</button></div><div id="rpComments">'+(commentsHtml||'<div class="empty">// todavía no hay comentarios</div>')+'</div></div></div></div>'+
-    '<script>function rpEsc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/\'/g,"&#39;")}function rpAddComment(){var i=document.getElementById("rpNewComment"),v=i.value.trim();if(!v)return;var box=document.getElementById("rpComments");var d=document.createElement("div");d.className="rp-thread-comment";d.innerHTML="<div class=\\"rp-thread-votes\\"><button>▲</button><strong>0</strong><button>▼</button></div><div class=\\"rp-thread-comment-body\\"><div class=\\"rp-thread-comment-meta\\">u/tu_usuario · ahora</div><div class=\\"rp-thread-comment-text\\">"+rpEsc(v)+"</div></div>";box.insertBefore(d,box.firstChild);i.value="";}<\/script>'+
-    '</body></html>';
+  var pillUser=isNews?'noticias_cl':'u/'+user;
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${title} — RandomPlan</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap");
+*{box-sizing:border-box}body{margin:0;background:#080b0f;color:#e6edf3;font-family:"JetBrains Mono",monospace;min-height:100vh}a{color:inherit}button{font-family:inherit}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.035) 2px,rgba(0,0,0,.035) 4px)}
+.top{position:sticky;top:0;background:#080b0f;border-bottom:1px solid #1e2d3d;height:52px;display:flex;align-items:center;gap:.7rem;padding:0 1rem;z-index:5}
+.logo{font-weight:700}.logo span{color:#00ff88}.pill{font-size:.65rem;color:#8b949e;border:1px solid #2a3f55;padding:.18rem .5rem;border-radius:3px;white-space:nowrap}.close{margin-left:auto;background:none;border:1px solid #2a3f55;color:#8b949e;border-radius:3px;padding:.25rem .6rem;cursor:pointer}.close:hover{border-color:#ff3333;color:#ff3333}
+.wrap{max-width:980px;margin:0 auto;padding:1rem}.thread{background:#0d1117;border:1px solid #1e2d3d;border-radius:4px;overflow:hidden}.post{display:flex}.votes{width:46px;background:#080b0f;border-right:1px solid #1e2d3d;display:flex;flex-direction:column;align-items:center;padding:.75rem .25rem;gap:.2rem;color:#8b949e}.votes button{background:none;border:none;color:#484f58;font-size:1rem;cursor:pointer}.votes strong{font-size:.78rem;color:#00ff88}.body{flex:1;padding:1rem 1.05rem}.meta{display:flex;gap:.42rem;align-items:center;flex-wrap:wrap;font-size:.75rem;color:#484f58;margin-bottom:.55rem}.sub{color:#79c0ff;font-weight:700}.user{color:#ffa657}.flair{color:#ff7b72;border:1px solid rgba(255,123,114,.25);background:rgba(255,123,114,.08);padding:.05rem .34rem;border-radius:2px;font-size:.65rem}.title{font-family:"Space Grotesk",sans-serif;font-size:1.65rem;line-height:1.18;margin:.15rem 0 .75rem;font-weight:700;color:#e6edf3}.excerpt{font-family:"Space Grotesk",sans-serif;color:#8b949e;font-size:.98rem;line-height:1.65;border-left:2px solid #2a3f55;padding-left:.85rem;margin:.75rem 0 1rem;word-break:break-word}.rp-thread-copy{margin-top:.35rem}.rp-main-img{max-width:100%;max-height:460px;object-fit:contain;display:block;border-radius:4px;border:1px solid #1e2d3d;background:#080b0f;margin:.25rem 0 .7rem}.muted{color:#484f58}.rp-source{background:#080b0f;border:1px solid #2a3f55;border-radius:4px;padding:.75rem;display:flex;justify-content:space-between;gap:.75rem;align-items:center;flex-wrap:wrap;margin:.9rem 0 1rem}.rp-source span{display:block;font-size:.65rem;color:#484f58;text-transform:uppercase;letter-spacing:.08em}.rp-source strong{display:block;margin-top:.1rem;color:#ffa657;font-size:.82rem}.rp-source a{background:rgba(0,255,136,.08);border:1px solid #00ff88;color:#00ff88;text-decoration:none;padding:.48rem .8rem;border-radius:3px;font-size:.78rem;font-weight:700}.rp-source a:hover{background:rgba(0,255,136,.18)}
+.actions{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.6rem}.act{font-size:.72rem;color:#484f58;border:1px solid #1e2d3d;padding:.25rem .5rem;border-radius:2px}.comments{border-top:1px solid #1e2d3d;padding:.9rem 1.05rem 1.2rem;background:#0d1117}.comments-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.75rem}.comments h2{font-size:.82rem;color:#00ff88;text-transform:uppercase;letter-spacing:.08em;margin:0}.sort{font-size:.65rem;color:#484f58}.comment-box{margin-bottom:.9rem;background:#080b0f;border:1px solid #1e2d3d;border-radius:4px;padding:.55rem}.comment-row{display:flex;gap:.45rem;align-items:center}.comment-row input{flex:1;background:#080b0f;border:1px solid #2a3f55;border-radius:3px;color:#e6edf3;padding:.52rem .7rem;outline:none;min-width:120px}.comment-row input:focus{border-color:#00ff88}.comment-row button,.media-btn{background:rgba(0,255,136,.08);border:1px solid #00ff88;color:#00ff88;border-radius:3px;padding:.45rem .75rem;font-weight:700;cursor:pointer}.media-bar{display:flex;gap:.35rem;align-items:center;margin-top:.45rem}.media-btn{padding:.25rem .55rem;color:#8b949e;border-color:#2a3f55;background:transparent;font-size:.72rem}.media-btn:hover{color:#00ff88;border-color:#00ff88}.emoji-picker{display:none;gap:.1rem;flex-wrap:wrap;margin-top:.45rem;padding:.4rem;border:1px solid #2a3f55;border-radius:4px;background:#141c25;max-height:150px;overflow:auto}.emoji-picker button{background:transparent;border:none;font-size:1.15rem;padding:.18rem .24rem;cursor:pointer;border-radius:3px}.emoji-picker button:hover{background:#1c2733}.gif-picker{display:none;margin-top:.45rem;padding:.45rem;border:1px solid #2a3f55;border-radius:4px;background:#141c25}.gif-picker input{width:100%;background:#080b0f;border:1px solid #2a3f55;border-radius:3px;color:#e6edf3;padding:.42rem .6rem;margin-bottom:.45rem;outline:none}.gif-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.32rem;max-height:170px;overflow:auto}.gif-thumb{width:100%;height:76px;object-fit:cover;border:1px solid transparent;border-radius:3px;cursor:pointer}.gif-thumb:hover{border-color:#00ff88}
+.rp-thread-comment{display:flex;gap:.65rem;border-left:1px solid #1e2d3d;margin:.55rem 0 0 .25rem;padding:.15rem 0 .45rem .65rem}.rp-thread-votes{width:30px;display:flex;flex-direction:column;align-items:center;gap:.1rem;color:#484f58}.rp-thread-votes button{background:none;border:none;color:#484f58;cursor:pointer;font-size:.75rem}.rp-thread-votes strong{font-size:.68rem;color:#00ff88}.rp-thread-comment-body{flex:1}.rp-thread-comment-meta{font-size:.72rem;color:#484f58;margin-bottom:.16rem}.rp-thread-comment-text{font-family:"Space Grotesk",sans-serif;font-size:.92rem;line-height:1.5;color:#e6edf3;word-break:break-word}.inline-link{color:#79c0ff}.inserted-gif{max-width:280px;border-radius:4px;margin-top:.4rem;display:block}.empty{color:#484f58;font-size:.75rem;padding:.8rem 0}@media(max-width:640px){.wrap{padding:.5rem}.post{display:block}.votes{width:100%;height:36px;flex-direction:row;border-right:none;border-bottom:1px solid #1e2d3d;justify-content:flex-start;padding:.35rem .8rem}.title{font-size:1.28rem}.body,.comments{padding:.8rem}.top{gap:.35rem}.pill{display:none}.comment-row{flex-wrap:wrap}.comment-row button{width:100%}}
+</style></head><body>
+<div class="top"><div class="logo"><span>Random</span>Plan</div><div class="pill">hilo interno</div><div class="pill">${subPlain}</div><div class="pill">${pillUser}</div><button class="close" onclick="window.close()">cerrar</button></div>
+<div class="wrap"><div class="thread"><div class="post"><div class="votes"><button>▲</button><strong>${escHtml(fmtV(voteTotal))}</strong><button>▼</button></div><div class="body">
+<div class="meta"><span class="sub">${sub}</span><span>::</span><span class="user">u/${user}</span><span>::</span><span>${time}</span><span class="flair">${flair}</span></div>
+<h1 class="title">${title}</h1><div class="excerpt">${bodyHtml}</div>${sourceBlock}<div class="actions"><span class="act">// ${escHtml(String(p.coms||commentsCount||0))} comentarios</span><span class="act">// compartir hilo</span></div></div></div>
+<div class="comments"><div class="comments-head"><h2>// comentarios</h2><div class="sort">destacados · recientes · antiguos</div></div>
+<div class="comment-box"><div class="comment-row"><input id="rpNewComment" placeholder="comentar en el hilo..." onkeydown="if(event.key==='Enter')rpAddComment()"><button onclick="rpAddComment()">SEND</button></div><div class="media-bar"><button class="media-btn" onclick="rpToggleEmoji()">😊</button><button class="media-btn" onclick="rpToggleGif()">GIF</button></div><div id="rpEmojiPicker" class="emoji-picker"></div><div id="rpGifPicker" class="gif-picker"><input id="rpGifSearch" placeholder="buscar GIF + Enter" onkeydown="if(event.key==='Enter')rpBuscarGif(this.value)"><div id="rpGifGrid" class="gif-grid"></div></div></div>
+<div id="rpComments">${commentsHtml||'<div class="empty">// todavía no hay comentarios</div>'}</div></div></div></div>
+<script>
+var RP_EMOJIS='😂,🔥,💀,🤣,😭,🤯,👀,😤,🫡,🤔,💯,🎯,🤙,👊,😎,🥲,😬,🤦,🙄,👏,🫠,😅,🤡,💪,🫶,❤️,🖤,⚡,🌊,🏔,🐍,🦅,🦁,🐺,💻,📱,🎮,🏆,💰,📈,📉,🔑,⚠️,❌,✅,🚀,🌙,☀️,🌧,❄️,🍺,🍕,🌮,☕,🤝,🙏,👋,✌️,🤞,🧠,💬,🔊,🎵,🎶'.split(',');
+function rpEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function rpLinkify(text){var parts=[],re=/\[gif:(https?[^\]]+)\]/g,last=0,m; text=String(text||''); while((m=re.exec(text))!==null){parts.push({t:'text',v:text.slice(last,m.index)});parts.push({t:'gif',v:m[1]});last=m.index+m[0].length;}parts.push({t:'text',v:text.slice(last)});var out='';parts.forEach(function(p){if(p.t==='gif'){out+='<img src="'+rpEsc(p.v)+'" class="inserted-gif" loading="lazy">'}else{var s=rpEsc(p.v);s=s.replace(/(https?:\/\/[^\s<>"]+)/g,function(url){var short=url.length>50?url.slice(0,50)+'...':url;if(/\.(gif|webp|mp4)(\?|$)/i.test(url)||url.indexOf('media.tenor.com')!==-1||url.indexOf('c.tenor.com')!==-1){return '<img src="'+rpEsc(url)+'" class="inserted-gif" loading="lazy">'}return '<a href="'+rpEsc(url)+'" target="_blank" rel="noopener noreferrer" class="inline-link">'+rpEsc(short)+'</a>'});out+=s;}});return out;}
+function rpInsert(txt){var i=document.getElementById('rpNewComment');if(!i)return;var p=i.selectionStart||i.value.length;i.value=i.value.slice(0,p)+txt+i.value.slice(p);i.focus();try{i.selectionStart=i.selectionEnd=p+txt.length}catch(e){}}
+function rpInitEmoji(){var box=document.getElementById('rpEmojiPicker');if(!box||box.dataset.init)return;box.dataset.init='1';RP_EMOJIS.forEach(function(e){var b=document.createElement('button');b.textContent=e;b.onclick=function(){rpInsert(e);box.style.display='none'};box.appendChild(b);});}
+function rpToggleEmoji(){rpInitEmoji();var e=document.getElementById('rpEmojiPicker'),g=document.getElementById('rpGifPicker');if(g)g.style.display='none';e.style.display=e.style.display==='flex'?'none':'flex';}
+function rpToggleGif(){var g=document.getElementById('rpGifPicker'),e=document.getElementById('rpEmojiPicker');if(e)e.style.display='none';g.style.display=g.style.display==='block'?'none':'block';var grid=document.getElementById('rpGifGrid');if(grid&&!grid.dataset.loaded){grid.dataset.loaded='1';rpBuscarGif('meme chile')}}
+async function rpBuscarGif(q){var grid=document.getElementById('rpGifGrid');if(!grid)return;grid.innerHTML='<span class="empty">// buscando...</span>';try{var r=await fetch('https://api.tenor.com/v1/search?q='+encodeURIComponent(q||'meme chile')+'&key=LIVDSRZULELA&limit=9&media_filter=minimal');if(!r.ok)throw new Error('tenor '+r.status);var d=await r.json();var results=d.results||[];grid.innerHTML='';results.forEach(function(item){var m=item.media&&item.media[0]||{};var thumb=(m.tinygif||m.gif||{}).url||'';var full=(m.gif||m.tinygif||{}).url||thumb;if(!thumb)return;var img=document.createElement('img');img.src=thumb;img.className='gif-thumb';img.onclick=function(){rpInsert(' [gif:'+full+']');document.getElementById('rpGifPicker').style.display='none'};grid.appendChild(img);});if(!results.length)grid.innerHTML='<span class="empty">// sin resultados</span>';}catch(e){grid.innerHTML='<span class="empty">// error GIF</span>';}}
+function rpAddComment(){var i=document.getElementById('rpNewComment'),v=i.value.trim();if(!v)return;var box=document.getElementById('rpComments');var empty=box.querySelector('.empty');if(empty)empty.remove();var d=document.createElement('div');d.className='rp-thread-comment';d.innerHTML='<div class="rp-thread-votes"><button>▲</button><strong>0</strong><button>▼</button></div><div class="rp-thread-comment-body"><div class="rp-thread-comment-meta">u/tu_usuario · ahora</div><div class="rp-thread-comment-text">'+rpLinkify(v)+'</div></div>';box.insertBefore(d,box.firstChild);i.value='';}
+<\/script>
+</body></html>`;
 }
 
-function openNewsThreadWindow(id){
+function openPostThreadWindow(id){
   var p=getPostById(id);
   if(!p){toast('post no encontrado');return;}
   var refUrl=getPostReference(p);
@@ -1451,12 +1494,14 @@ function openNewsThreadWindow(id){
   var commentsHtml=allComs.length?allComs.map(renderPostThreadCommentHTML).join(''):'<div class="empty">// todavía no hay comentarios</div>';
   var w=window.open('', '_blank');
   if(!w){openPostView(id);toast('popup bloqueado: abrí el hilo interno');return;}
-  try{w.opener=null;}catch(e){}
   w.document.open();
   w.document.write(buildPostThreadWindowHTML(p, refUrl, commentsHtml));
   w.document.close();
 }
 
+function openNewsThreadWindow(id){
+  openPostThreadWindow(id);
+}
 
 function escHtml(s){
   return String(s||'')
@@ -1520,8 +1565,11 @@ function openPostView(id){
       '</div>'+
     '</div>'+
     '<div class="pv-comment-box">'+
-      '<input id="pv-comment-input" placeholder="comentar en el hilo..." onkeydown="if(event.key===\'Enter\')sendPostViewComment('+p.id+')">'+
-      '<button class="pv-comment-send" onclick="sendPostViewComment('+p.id+')">SEND</button>'+
+      '<div class="pv-comment-input-row">'+
+        '<input id="pv-comment-input" placeholder="comentar en el hilo..." onkeydown="if(event.key===\'Enter\')sendPostViewComment('+p.id+')">'+
+        '<button class="pv-comment-send" onclick="sendPostViewComment('+p.id+')">SEND</button>'+
+      '</div>'+
+      buildMediaBar('pv-comment-input')+
     '</div>'+
     '<div class="pv-comments-list" id="pv-comments-list"></div>';
   wrap.classList.add('on');
@@ -1649,14 +1697,14 @@ function renderPost(p){
 
   // VOTE COL — horizontal en memes, vertical en el resto
   html+='<div class="vote-col">';
-  html+='<button class="vbtn up '+(voto===1?'on':'')+'" onclick="vote('+p.id+',1)">▲</button>';
+  html+='<button class="vbtn up '+(voto===1?'on':'')+'" onclick="event.stopPropagation();vote('+p.id+',1)">▲</button>';
   html+='<span class="vcount" id="vc-'+p.id+'">'+fmtV(v)+'</span>';
-  html+='<button class="vbtn down '+(voto===-1?'on':'')+'" onclick="vote('+p.id+',-1)">▼</button>';
+  html+='<button class="vbtn down '+(voto===-1?'on':'')+'" onclick="event.stopPropagation();vote('+p.id+',-1)">▼</button>';
   html+='</div>';
 
   // IMAGEN PROTAGONISTA en memes
   if(isMeme){
-    html+='<div class="meme-img-wrap" onclick="toggleComs('+p.id+')">';
+    html+='<div class="meme-img-wrap" onclick="openPostThreadWindow('+p.id+')" title="abrir hilo con comentarios">';
     // detectar [gif:url], [img:url] en prev/contenido, o campo img directo
     var src = null;
     var rawContent = p.prev || p.contenido || '';
@@ -1679,21 +1727,19 @@ function renderPost(p){
 
   html+='<div class="cbody">';
   html+='<div class="cmeta">';
-  html+='<span class="csub" onclick="filterFeedSub(this.dataset.sub)" data-sub="'+p.sub+'">'+p.ic+' '+p.sub+'</span>';
+  html+='<span class="csub" onclick="event.stopPropagation();filterFeedSub(this.dataset.sub)" data-sub="'+p.sub+'">'+p.ic+' '+p.sub+'</span>';
   html+='<span class="dot">::</span>';
   html+='<span class="cuser">'+makeAvatar(p.user.name,'sm')+' u/'+p.user.name+'</span>';
   html+='<span class="dot">::</span>';
   html+='<span>'+p.t+'</span>';
   html+='<span class="flair '+p.fc+'">'+p.flair+'</span>';
   html+='</div>';
+
   var refUrl=getPostReference(p);
   var isNewsClickable=(p.isNews===true)||isNewsBotPost(p);
-  var refJs=refUrl?jsStr(refUrl):'';
-  if(refUrl && isNewsClickable){
-    html+='<div class="ctitle news-click" title="abrir hilo de noticia con comentarios" onclick="openNewsThreadWindow('+p.id+')">'+p.title+' <span style="color:var(--text3);font-size:.72rem">// hilo</span></div>';
-  } else {
-    html+='<div class="ctitle" onclick="toggleComs('+p.id+')">'+p.title+'</div>';
-  }
+  var titleClass=isNewsClickable?'ctitle news-click':'ctitle';
+  var titleHint=isNewsClickable?'abrir hilo de noticia con comentarios':'abrir hilo con comentarios';
+  html+='<div class="'+titleClass+'" title="'+titleHint+'" onclick="openPostThreadWindow('+p.id+')">'+p.title+' <span style="color:var(--text3);font-size:.72rem">// hilo</span></div>';
 
   // En memes no mostramos el texto prev (ya está la imagen)
   if(p.prev && !isMeme){
@@ -1705,21 +1751,19 @@ function renderPost(p){
       window._prevMap=window._prevMap||{};
       window._prevMap[pid]=p.prev;
       html+='<div class="cprev" id="'+pid+'">'+shortText+
-        ' <button class="show-more-btn" onclick="togglePrev(this,\''+pid+'\')" >mostrar más</button></div>';
+        ' <button class="show-more-btn" onclick="event.stopPropagation();togglePrev(this,\''+pid+'\')" >mostrar más</button></div>';
     } else {
       html+='<div class="cprev">'+prevText+'</div>';
     }
   }
 
   html+='<div class="cactions">';
-  if(refUrl && isNewsClickable){
-    html+='<button class="cact source-link" onclick="event.stopPropagation();openNewsThreadWindow('+p.id+')">// abrir hilo + fuente</button>';
-  } else if(refUrl){
-    html+='<button class="cact source-link" onclick="event.stopPropagation();openPostReference(\''+refJs+'\')">// fuente: '+getDomain(refUrl)+' ↗</button>';
+  if(refUrl){
+    html+='<button class="cact source-link" onclick="event.stopPropagation();openPostThreadWindow('+p.id+')">// abrir hilo + '+(isNewsClickable?'fuente':'link')+'</button>';
   }
-  html+='<button class="cact" onclick="'+(isNewsClickable?'openNewsThreadWindow('+p.id+')':'toggleComs('+p.id+')')+'">// '+p.coms+' comentarios</button>';
-  html+='<button class="cact" onclick="toast(&quot;enlace copiado&quot;)">// compartir</button>';
-  if(p.realId&&currentUser&&p.userId===currentUser.id) html+='<button class="cact com-del" onclick="deletePost('+p.id+','+p.realId+',this)">// borrar</button>';
+  html+='<button class="cact" onclick="event.stopPropagation();openPostThreadWindow('+p.id+')">// '+p.coms+' comentarios</button>';
+  html+='<button class="cact" onclick="event.stopPropagation();toast(&quot;enlace copiado&quot;)">// compartir</button>';
+  if(p.realId&&currentUser&&p.userId===currentUser.id) html+='<button class="cact com-del" onclick="event.stopPropagation();deletePost('+p.id+','+p.realId+',this)">// borrar</button>';
   html+='</div>';
   html+='<div class="comments-section" id="cs-'+p.id+'">';
   html+='<div class="comment-box" id="cbox-'+p.id+'" onclick="openCommentBox('+p.id+')">escribe un comentario...</div>';
