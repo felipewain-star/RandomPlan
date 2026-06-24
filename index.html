@@ -4185,10 +4185,8 @@ function openPostView(postId){
   html+='</div>';
   if(p.isNews&&p.url) html+='<a href="'+p.url+'" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--green);font-family:var(--mono);font-size:.75rem;text-decoration:none;border:1px solid var(--green);padding:.3rem .7rem;border-radius:3px;margin-bottom:1rem">↗ leer nota completa</a>';
   html+='<hr class="post-view-divider">';
-  if(currentUser){
-    html+='<div class="post-view-comment-box"><textarea id="pv-inp-'+postId+'" placeholder="escribe un comentario..." style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:3px;padding:.5rem .7rem;font-family:var(--sans);font-size:.84rem;color:var(--text1);outline:none;resize:vertical;min-height:70px;box-sizing:border-box"></textarea>';
-    html+='<div style="display:flex;justify-content:flex-end;margin-top:.4rem;gap:.5rem"><button class="media-btn" onclick="showEmoji(this)" data-inp="pv-inp-'+postId+'">😊</button><button style="background:var(--green);color:#000;border:none;border-radius:3px;padding:.35rem .9rem;font-family:var(--mono);font-size:.75rem;cursor:pointer;font-weight:700" onclick="sendPVComment('+postId+')">ENVIAR</button></div></div>';
-  }
+  html+='<div class="post-view-comment-box"><textarea id="pv-inp-'+postId+'" placeholder="'+(currentUser?'escribe un comentario...':'inicia sesión para comentar')+'" '+(currentUser?'':'readonly')+' style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:3px;padding:.5rem .7rem;font-family:var(--sans);font-size:.84rem;color:var(--text1);outline:none;resize:vertical;min-height:70px;box-sizing:border-box"></textarea>';
+  html+='<div style="display:flex;justify-content:flex-end;margin-top:.4rem;gap:.5rem"><button class="media-btn" onclick="showEmoji(this)" data-inp="pv-inp-'+postId+'">😊</button><button style="background:var(--green);color:#000;border:none;border-radius:3px;padding:.35rem .9rem;font-family:var(--mono);font-size:.75rem;cursor:pointer;font-weight:700" onclick="sendPVComment('+postId+')">ENVIAR</button></div></div>';
   html+='<div class="post-view-comments-title">// '+(p.coms||0)+' comentarios</div>';
   html+='<div id="pv-list-'+postId+'"><div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// cargando...</div></div>';
   body.innerHTML=html;
@@ -4204,9 +4202,17 @@ async function loadPVComments(postId){
   var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
   var html='';
   if(!realId){
-    var coms=generateBotComments(p.coms||5,p.cd||[],p.sub);
-    coms.forEach(function(c){html+=renderCommentHTML('pvc-'+Math.random().toString(36).slice(2),c.bot.name,'',c.t,linkify(c.txt),c.v,false,null);});
-    list.innerHTML=html||'<div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// sin comentarios aún</div>';
+    var numComs=Math.max(p.coms||5, 5);
+    var coms=generateBotComments(numComs, p.cd||[], p.sub);
+    if(!coms.length){list.innerHTML='<div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// sin comentarios aún</div>';return;}
+    coms.forEach(function(c){
+      var botName=c.bot?c.bot.name:'anon';
+      var txt=c.txt||'';
+      var v=c.v||0;
+      var t=c.t||'ahora';
+      html+=renderCommentHTML('pvc-'+Math.random().toString(36).slice(2),botName,'',t,linkify(txt),v,false,null);
+    });
+    list.innerHTML=html;
     return;
   }
   var r=await db.from('comentarios').select('*,perfiles(username)').eq('post_id',realId).order('votos',{ascending:false}).limit(50);
