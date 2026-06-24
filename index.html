@@ -1915,8 +1915,8 @@ function renderComSection(postId, sort){
     inner.innerHTML=
       '<div class="com-write" id="cwrite-'+postId+'">'+
         '<input type="text" id="'+inputId+'" placeholder="escribe un comentario..." onkeydown="if(event.key===\'Enter\')sendCommentInline('+postId+')" style="flex:1;background:var(--bg0);border:1px solid var(--border);border-radius:3px;padding:.38rem .6rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none">'+
-        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmojiPicker(this.dataset.inp)">😊</button>'+
-        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGifPicker(this.dataset.inp)">GIF</button>'+
+        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="event.stopPropagation();showEmojiPicker(this.dataset.inp,this)">😊</button>'+
+        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="event.stopPropagation();showGifPicker(this.dataset.inp,this)">GIF</button>'+
         '<button class="com-send-btn" onclick="sendCommentInline('+postId+')">SEND</button>'+
       '</div>'+
       '<div class="com-sort-bar">'+
@@ -1938,8 +1938,8 @@ function renderComSection(postId, sort){
       writeDiv.id='cwrite-'+postId;
       writeDiv.innerHTML=
         '<input type="text" id="'+inputId+'" placeholder="escribe un comentario..." onkeydown="if(event.key===\'Enter\')sendCommentInline('+postId+')" style="flex:1;background:var(--bg0);border:1px solid var(--border);border-radius:3px;padding:.38rem .6rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none">'+
-        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmojiPicker(this.dataset.inp)">😊</button>'+
-        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGifPicker(this.dataset.inp)">GIF</button>'+
+        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="event.stopPropagation();showEmojiPicker(this.dataset.inp,this)">😊</button>'+
+        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="event.stopPropagation();showGifPicker(this.dataset.inp,this)">GIF</button>'+
         '<button class="com-send-btn" onclick="sendCommentInline('+postId+')">SEND</button>';
       existing.insertBefore(writeDiv, existing.querySelector('.com-list'));
     }
@@ -2154,7 +2154,7 @@ async function sendCommentInline(postId){
   var list=document.getElementById('clist-'+postId);
   if(list){
     var newCid='new-'+Date.now();
-    var newHtml=renderCommentHTML(newCid, username, ciudad, 'ahora', linkify(texto), 0, true, null);
+    var newHtml=renderCommentHTML(newCid, username, ciudad, 'ahora', texto, 0, true, null);
     list.innerHTML=newHtml+list.innerHTML;
     setTimeout(function(){attachDelBtn(newCid);},0);
   }
@@ -2184,7 +2184,7 @@ async function sendComment(postId){
     var safeUsername=currentPerfil?currentPerfil.username:(username||'anon');
     var safeCiudad=currentPerfil?currentPerfil.ciudad:(ciudad||'Chile');
     var newCid='new-'+Date.now();
-    var newHtml=renderCommentHTML(newCid, safeUsername, safeCiudad, 'ahora', linkify(texto), 0, true, null);
+    var newHtml=renderCommentHTML(newCid, safeUsername, safeCiudad, 'ahora', texto, 0, true, null);
     list.innerHTML=newHtml+list.innerHTML;
     setTimeout(function(){attachDelBtn(newCid);},0);
   }
@@ -2741,7 +2741,7 @@ async function sendCommentInline(postId){
   var list=document.getElementById('clist-'+postId);
   if(list){
     var newCid='new-'+Date.now();
-    var newHtml=renderCommentHTML(newCid, username, ciudad, 'ahora', linkify(texto), 0, true, null);
+    var newHtml=renderCommentHTML(newCid, username, ciudad, 'ahora', texto, 0, true, null);
     list.innerHTML=newHtml+list.innerHTML;
     setTimeout(function(){attachDelBtn(newCid);},0);
   }
@@ -3419,8 +3419,8 @@ async function buscarGif(q){
 
 function buildMediaBar(inputId){
   return '<div class="media-bar">'+
-    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmojiPicker(this.dataset.inp)">😊</button>'+
-    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGifPicker(this.dataset.inp)">GIF</button>'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="event.stopPropagation();showEmojiPicker(this.dataset.inp,this)">😊</button>'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="event.stopPropagation();showGifPicker(this.dataset.inp,this)">GIF</button>'+
   '</div>';
 }
 
@@ -3726,7 +3726,7 @@ async function sendCommentInline(postId){
   var list=document.getElementById('clist-'+postId);
   if(list){
     var newCid='new-'+Date.now();
-    var newHtml=renderCommentHTML(newCid, username, ciudad, 'ahora', linkify(texto), 0, true, null);
+    var newHtml=renderCommentHTML(newCid, username, ciudad, 'ahora', texto, 0, true, null);
     list.innerHTML=newHtml+list.innerHTML;
     setTimeout(function(){attachDelBtn(newCid);},0);
   }
@@ -4502,6 +4502,193 @@ async function loadGlobalGifs(query){
   }
 }
 
+
+
+// ─────────────────────────────────────────────────────────────
+// RANDOMPLAN FINAL MEDIA FIX — emoji/GIF estable en TODO el sitio
+// Esta versión sobreescribe las funciones duplicadas anteriores.
+// Funciona para comentarios inline, vista interna y botones generados dinámicamente.
+// ─────────────────────────────────────────────────────────────
+(function(){
+  var RP_EMOJI_LIST = ['😂','🔥','💀','🤣','😭','🤯','👀','😤','🫡','🤔','💯','🎯','🤙','👊','😎','🥲','😬','🤦','🙄','👏','🫠','😅','🤡','💪','🫶','❤️','🖤','⚡','🌊','🏔','🐍','🦅','🦁','🐺','💻','📱','🎮','🏆','💰','📈','📉','🔑','⚠️','❌','✅','🚀','🌙','☀️','🌧','❄️','🍺','🍕','🌮','☕','🤝','🙏','👋','✌️','🤞','🧠','💬','🔊','🎵','🎶'];
+  var RP_GIFS = [
+    {tags:'risa laugh jajaja meme chile', url:'https://media.giphy.com/media/3oEjHI8WJv4x6UPDB6/giphy.gif'},
+    {tags:'esperar waiting paciencia meme', url:'https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif'},
+    {tags:'sorprendido shocked mind blown', url:'https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif'},
+    {tags:'si yes approve ok', url:'https://media.giphy.com/media/111ebonMs90YLu/giphy.gif'},
+    {tags:'fuego fire hype', url:'https://media.giphy.com/media/5VKbvrjxpVJCM/giphy.gif'},
+    {tags:'baile dance fiesta', url:'https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif'},
+    {tags:'money plata finanzas', url:'https://media.giphy.com/media/LCdPNT81vlv3y/giphy.gif'},
+    {tags:'gato cat', url:'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif'},
+    {tags:'facepalm fail error', url:'https://media.giphy.com/media/3o7TKr3nzbh5WgCFxe/giphy.gif'},
+    {tags:'no nope', url:'https://media.giphy.com/media/ToMjGpKniGqRNLGBrhu/giphy.gif'},
+    {tags:'ok entiendo fine', url:'https://media.giphy.com/media/GCvktC0KFy9l6/giphy.gif'},
+    {tags:'tech computador computer', url:'https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif'}
+  ];
+  window._rpActiveMediaInput = null;
+
+  function byId(id){ return document.getElementById(id); }
+
+  function ensurePickerDom(){
+    var ep=byId('global-emoji-picker');
+    if(!ep){
+      ep=document.createElement('div');
+      ep.id='global-emoji-picker';
+      ep.style.cssText='display:none;position:fixed;z-index:99999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;max-width:270px;flex-wrap:wrap;gap:.1rem;max-height:190px;overflow-y:auto;box-shadow:0 4px 24px rgba(0,0,0,.8)';
+      document.body.appendChild(ep);
+    }
+    var gp=byId('global-gif-picker');
+    if(!gp){
+      gp=document.createElement('div');
+      gp.id='global-gif-picker';
+      gp.style.cssText='display:none;position:fixed;z-index:99999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;width:280px;box-shadow:0 4px 24px rgba(0,0,0,.8)';
+      gp.innerHTML='<input id="gif-search-global" placeholder="buscar GIF + Enter" style="width:100%;background:#0d1117;border:1px solid #2a3f55;border-radius:3px;padding:.38rem .6rem;font-family:monospace;font-size:.75rem;color:#e6edf3;outline:none;margin-bottom:.4rem;box-sizing:border-box"><div id="gif-grid-global" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:165px;overflow-y:auto"></div>';
+      document.body.appendChild(gp);
+    }
+    var search=byId('gif-search-global');
+    if(search && !search.dataset.rpBound){
+      search.dataset.rpBound='1';
+      search.addEventListener('keydown',function(ev){
+        if(ev.key==='Enter'){
+          ev.preventDefault();
+          window.loadGlobalGifs(search.value||'meme chile');
+        }
+      });
+    }
+  }
+
+  function placePicker(picker, inputId, anchor){
+    var node=anchor || (window.event && (window.event.currentTarget || window.event.target)) || byId(inputId);
+    var r=node && node.getBoundingClientRect ? node.getBoundingClientRect() : null;
+    var w=picker.id==='global-gif-picker'?300:285;
+    if(r){
+      picker.style.top=Math.min(window.innerHeight-40, r.bottom+8)+'px';
+      picker.style.left=Math.max(6,Math.min(r.left,window.innerWidth-w))+'px';
+    }else{
+      picker.style.top='80px';
+      picker.style.left='12px';
+    }
+  }
+
+  function insertIntoActive(text){
+    var id=window._rpActiveMediaInput;
+    var inp=byId(id);
+    if(!inp) return;
+    var add=String(text||'');
+    var pos=typeof inp.selectionStart==='number' ? inp.selectionStart : inp.value.length;
+    var before=inp.value.slice(0,pos);
+    var after=inp.value.slice(pos);
+    inp.value=before+add+after;
+    inp.focus();
+    try{ inp.selectionStart=inp.selectionEnd=pos+add.length; }catch(e){}
+    inp.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+
+  function initEmojiButtons(){
+    ensurePickerDom();
+    var ep=byId('global-emoji-picker');
+    if(!ep || ep.dataset.rpReady) return;
+    ep.dataset.rpReady='1';
+    ep.innerHTML='';
+    RP_EMOJI_LIST.forEach(function(e){
+      var b=document.createElement('button');
+      b.type='button';
+      b.textContent=e;
+      b.style.cssText='background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px;line-height:1.1';
+      b.addEventListener('mouseover',function(){b.style.background='#1c2733'});
+      b.addEventListener('mouseout',function(){b.style.background='none'});
+      b.addEventListener('click',function(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        insertIntoActive(e);
+        ep.style.display='none';
+      });
+      ep.appendChild(b);
+    });
+  }
+
+  window.showEmojiPicker = function(inputId, anchor){
+    if(!inputId) return;
+    ensurePickerDom();
+    initEmojiButtons();
+    window._rpActiveMediaInput=inputId;
+    var ep=byId('global-emoji-picker');
+    var gp=byId('global-gif-picker');
+    if(gp) gp.style.display='none';
+    if(!ep) return;
+    if(ep.style.display==='flex' && ep.dataset.input===inputId){ ep.style.display='none'; return; }
+    ep.dataset.input=inputId;
+    placePicker(ep,inputId,anchor);
+    ep.style.display='flex';
+  };
+
+  window.showGifPicker = function(inputId, anchor){
+    if(!inputId) return;
+    ensurePickerDom();
+    window._rpActiveMediaInput=inputId;
+    var ep=byId('global-emoji-picker');
+    var gp=byId('global-gif-picker');
+    if(ep) ep.style.display='none';
+    if(!gp) return;
+    if(gp.style.display==='block' && gp.dataset.input===inputId){ gp.style.display='none'; return; }
+    gp.dataset.input=inputId;
+    placePicker(gp,inputId,anchor);
+    gp.style.display='block';
+    window.loadGlobalGifs((byId('gif-search-global')&&byId('gif-search-global').value)||'meme chile');
+  };
+
+  function renderLocalGifs(query){
+    ensurePickerDom();
+    var grid=byId('gif-grid-global');
+    if(!grid) return;
+    var q=String(query||'').toLowerCase().trim();
+    var words=q.split(/\s+/).filter(Boolean);
+    var items=RP_GIFS.filter(function(x){
+      if(!words.length) return true;
+      return words.some(function(w){ return x.tags.indexOf(w)!==-1; });
+    });
+    if(!items.length) items=RP_GIFS;
+    grid.innerHTML='';
+    items.slice(0,12).forEach(function(item){
+      var img=document.createElement('img');
+      img.src=item.url;
+      img.className='gif-thumb';
+      img.alt='GIF';
+      img.loading='lazy';
+      img.style.cursor='pointer';
+      img.addEventListener('click',function(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        insertIntoActive((byId(window._rpActiveMediaInput)&&byId(window._rpActiveMediaInput).value?' ':'')+'[gif:'+item.url+']');
+        var gp=byId('global-gif-picker'); if(gp) gp.style.display='none';
+      });
+      grid.appendChild(img);
+    });
+  }
+
+  window.loadGlobalGifs = function(query){
+    // Prioridad: mostrar GIFs locales al instante. Esto evita que Tenor/API/CORS deje muerto el picker.
+    renderLocalGifs(query||'meme chile');
+  };
+
+  window.buildMediaBar = function(inputId){
+    return '<div class="media-bar">'+
+      '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="event.preventDefault();event.stopPropagation();showEmojiPicker(this.dataset.inp,this)">😊</button>'+
+      '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="event.preventDefault();event.stopPropagation();showGifPicker(this.dataset.inp,this)">GIF</button>'+
+    '</div>';
+  };
+
+  // Compatibilidad con botones antiguos que pasan el botón completo.
+  window.showEmoji = function(btn){ var id=btn && btn.dataset ? btn.dataset.inp : null; if(id) window.showEmojiPicker(id,btn); };
+  window.showGif = function(btn){ var id=btn && btn.dataset ? btn.dataset.inp : null; if(id) window.showGifPicker(id,btn); };
+
+  document.addEventListener('click',function(ev){
+    var ep=byId('global-emoji-picker'), gp=byId('global-gif-picker');
+    if(ep && !ep.contains(ev.target) && !ev.target.closest('.media-btn')) ep.style.display='none';
+    if(gp && !gp.contains(ev.target) && !ev.target.closest('.media-btn')) gp.style.display='none';
+  },true);
+
+  setTimeout(function(){ ensurePickerDom(); initEmojiButtons(); },0);
+})();
+
 var _botCommentedPosts = {};
 var _botPostsToday = 0;
 var _botPostsLastReset = new Date().toDateString();
@@ -4543,7 +4730,7 @@ async function botCommentRealPost(postId, postTitle, postContenido, postSub, fak
       if (clist) {
         clist.innerHTML += renderCommentHTML(
           'bot-' + Date.now(), botData.name, botData.ciudad,
-          'ahora', linkify(txt), Math.floor(Math.random() * 8), false, null
+          'ahora', txt, Math.floor(Math.random() * 8), false, null
         );
       }
     }
