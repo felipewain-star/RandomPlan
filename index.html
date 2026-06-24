@@ -4205,8 +4205,9 @@ async function loadPVComments(postId){
   var list=document.getElementById('pv-list-'+postId);if(!list)return;
   var p=POSTS.find(function(x){return x.id===postId;});if(!p){list.innerHTML='';return;}
   var html='';
-  // posts de bots (id<8000) y noticias (id>=8500) siempre usan comentarios de bots
-  var useBot=(postId<8000||postId>=8500);
+  // check if post exists in Supabase via realPostIdMap
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
+  var useBot=!realId||p.isNews;
   if(useBot){
     var numComs=Math.max(p.coms||5,5);
     var coms=generateBotComments(numComs,p.cd||[],p.sub);
@@ -4214,7 +4215,6 @@ async function loadPVComments(postId){
     coms.forEach(function(c){html+=renderCommentHTML('pvc-'+Math.random().toString(36).slice(2),c.bot?c.bot.name:'anon','',c.t||'ahora',linkify(c.txt||''),c.v||0,false,null);});
     list.innerHTML=html;return;
   }
-  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
   if(!realId){list.innerHTML='<div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// sin comentarios aún</div>';return;}
   var r=await db.from('comentarios').select('*,perfiles(username)').eq('post_id',realId).order('votos',{ascending:false}).limit(50);
   if(r.error||!r.data||!r.data.length){list.innerHTML='<div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// sin comentarios aún</div>';return;}
