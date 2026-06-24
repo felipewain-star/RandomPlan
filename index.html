@@ -6895,5 +6895,328 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closePostVi
 })();
 </script>
 
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   RANDOMPLAN V18 — banco amplio de frases bot (~500+ variaciones)
+   - Más variedad por tema, longitud y tono.
+   - Mantiene comentarios del usuario.
+   - Evita predicciones deportivas, marcadores inventados y frases repetidas.
+───────────────────────────────────────────────────────────── */
+(function(){
+  'use strict';
+  function $(id){return document.getElementById(id);}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function h(s,mod){s=String(s||'');var x=0;for(var i=0;i<s.length;i++){x=((x<<5)-x)+s.charCodeAt(i);x|=0;}x=Math.abs(x);return mod?x%mod:x;}
+  function nsub(s){
+    if(typeof window.normalizeCommunitySub==='function')return window.normalizeCommunitySub(s);
+    s=String(s||'').toLowerCase().trim().replace(/^p\//,'');
+    var map={feria:'marketplace',market:'marketplace',memes:'memescl',noticias:'contingencia',actualidad:'contingencia',polemicas:'debate','polémicas':'debate',home:null,inicio:null};
+    return Object.prototype.hasOwnProperty.call(map,s)?map[s]:s;
+  }
+  function ntxt(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9ñ\s]/gi,' ').replace(/\s+/g,' ').trim();}
+  function isNews(p){return !!(p&&(p.isNews||String(p.user&&p.user.name||'').toLowerCase()==='noticias_cl'));}
+  function isUserComment(c){
+    var b=c&&c.bot||{};var name=String(b.name||c.username||'').toLowerCase();
+    return !!(c&&(c.realComId||c.userId||c.isUser||c.fromUser||name==='tu_usuario'||(window.currentPerfil&&name===String(currentPerfil.username||'').toLowerCase())));
+  }
+  function bad(txt){
+    var t=ntxt(txt);
+    if(!t||t.length<8)return true;
+    if({'wtf':1,'oof':1,'omg':1,'bruh':1,'cap':1,'no way':1,'lol':1,'si':1,'no':1,'demasiado real':1,'literal':1,'facts':1,'exacto':1,'obvio':1,'jajaja':1,'jajajaja':1}[t])return true;
+    return /(gana|ganan|ganara|ganará|va a ganar|van a ganar|marcador|resultado exacto|apuesto|apuesta|partido de hoy|juega hoy|juega manana|juega mañana|sale campeon|sale campeón|campeon fijo|campeón fijo|pronostico|pronóstico|prediccion|predicción|le metemos|les metemos)/i.test(t);
+  }
+  function dedupe(arr){var seen={},out=[];arr.forEach(function(x){x=String(x||'').trim();var k=ntxt(x);if(x&&k&&!seen[k]){seen[k]=1;out.push(x);}});return out;}
+  function make(seed,openers,subjects,closers,limit){
+    var out=seed.slice(),i=0;
+    outer:for(var a=0;a<openers.length;a++)for(var b=0;b<subjects.length;b++)for(var c=0;c<closers.length;c++){
+      out.push(openers[a].replace('{s}',subjects[(b+a)%subjects.length]).replace('{c}',closers[(c+b)%closers.length]));
+      i++; if(out.length>=limit)break outer;
+    }
+    return dedupe(out).slice(0,limit);
+  }
+  var RP18_BANKS=(function(){
+    var commonOpen=[
+      'Buen punto: {s}, {c}.','A mí me parece que {s}, {c}.','El detalle acá es {s}; {c}.','Ojo con {s}: {c}.',
+      'Esto no se entiende sin mirar {s}; {c}.','La conversación mejora cuando aparece {s}, porque {c}.','Acá el foco debería ser {s}; {c}.',
+      'Si se mira con calma, {s} termina siendo clave: {c}.','No es menor lo de {s}; {c}.','Lo interesante es {s}, sobre todo porque {c}.'
+    ];
+    return {
+      noticias: make([
+        'Primero leería la fuente completa antes de sacar conclusiones grandes.',
+        'Me gusta que la noticia quede como hilo interno y no como puro link suelto.',
+        'Si esto sigue avanzando, sería útil que el bot actualice el hilo y no abra otro igual.',
+        'La fuente visible ayuda harto a separar noticia real de rumor de redes.',
+        'Un titular solo no alcanza; la bajada y el medio importan mucho.',
+        'Esto da para comentar con cuidado, porque las primeras versiones suelen venir incompletas.',
+        'Buen formato: noticia, resumen, comentarios y después salida a la fuente.',
+        'Yo miraría si otro medio chileno confirma lo mismo antes de cerrar postura.',
+        'Así sí sirve noticias_cl: trae tema y deja registro de dónde viene.',
+        'La gracia es discutir la noticia, no inventar una versión paralela.',
+        'Si la historia cambia durante el día, convendría que el hilo lo refleje.',
+        'Esto puede ordenar mucho la conversación nacional si se modera bien.',
+        'Me gustaría ver fecha y fuente siempre arriba, para evitar noticias recicladas.',
+        'La noticia parece chica, pero puede tener efectos más amplios según el sector.',
+        'El debate parte mejor cuando todos están mirando la misma referencia.'
+      ],commonOpen,
+      ['la fuente original','el contexto nacional','la fecha de publicación','el medio que lo informa','la bajada de la nota','la actualización del día','la diferencia entre hecho y opinión','la reacción pública','el impacto regional','el hilo de seguimiento','el dato verificable','la trazabilidad de la noticia'],
+      ['evita que la discusión se transforme en rumor','ayuda a comentar con más base','ordena mejor el debate','le da más confianza al hilo','permite comparar versiones','baja el ruido de redes sociales','hace más útil la portada','sirve para volver después y revisar','evita conclusiones apuradas','separa información de interpretación'],70),
+      tramites: make([
+        'Si un trámite online falla, lo primero es guardar captura y hora del intento.',
+        'En servicios públicos chilenos el folio vale oro cuando toca reclamar.',
+        'A veces el problema no es el usuario, es una validación mal explicada por el sistema.',
+        'Probaría desde computador y con sesión de ClaveÚnica recién iniciada.',
+        'Cuando la página te bota siempre en el mismo paso, algo quedó mal validado.',
+        'Pediría ticket de soporte para que no quede como intento invisible.',
+        'Lo peor de estos trámites es que son digitales, pero igual dependen de atención humana.',
+        'El mensaje de error debería decir exactamente qué campo está fallando.',
+        'Si lleva semanas, ya no es falla puntual: es problema de gestión.',
+        'Con estos sistemas conviene tener respaldo de todo: fecha, folio, captura y correo.',
+        'Muchos portales funcionan distinto según navegador, aunque no debería pasar.',
+        'A veces la solución termina siendo absurda: borrar caché o cambiar de navegador.',
+        'El trámite online debería ahorrar tiempo, no transformarse en peregrinación digital.',
+        'Yo revisaría si quedó una solicitud pendiente bloqueando el nuevo intento.',
+        'Si no hay respuesta, insistir por canal formal al menos deja historial.'
+      ],commonOpen,
+      ['el folio','la ClaveÚnica','la captura de pantalla','el horario de atención','la validación del formulario','la sesión vencida','el navegador','el soporte humano','la solicitud pendiente','el certificado','el error del sistema','el canal formal'],
+      ['sin respaldo después nadie se hace cargo','muchas fallas no quedan registradas','el usuario termina haciendo de soporte técnico','ahí se nota la brecha entre digitalizar y funcionar','permite reclamar con algo concreto','evita repetir el trámite desde cero','en Chile eso suele marcar la diferencia','no basta con que el trámite exista en línea','la experiencia del usuario sigue siendo mala','ayuda a no perder semanas esperando'],65),
+      futbol: make([
+        'Más que un partido puntual, el tema es formación y continuidad.',
+        'Sin minutos para juveniles, el recambio siempre llega tarde.',
+        'La liga local marca el techo de cualquier proceso más grande.',
+        'No sirve esperar salvadores si los clubes no trabajan desde abajo.',
+        'La discusión debería partir por canteras, planificación y competencia real.',
+        'Cada ciclo parte de cero porque falta continuidad técnica.',
+        'El problema no se arregla con nombres sueltos, se arregla con estructura.',
+        'Me interesa más hablar de procesos que de humo semanal.',
+        'Los clubes también tienen responsabilidad en el nivel general.',
+        'La formación necesita minutos reales, no discursos de conferencia.',
+        'Si no hay proyecto, cualquier buen jugador termina pareciendo excepción.',
+        'El fútbol chileno tiene que ordenar dirigentes, técnicos y objetivos.',
+        'El debate se empobrece cuando todo se reduce a buscar culpables rápidos.',
+        'La pregunta es qué se está construyendo para los próximos años.',
+        'Prefiero una discusión seria de estructura antes que inventar resultados.'
+      ],commonOpen,
+      ['la formación juvenil','la continuidad técnica','la liga local','las canteras','la planificación de clubes','los minutos competitivos','el trabajo dirigencial','el recambio real','la preparación física','la identidad de juego','la infraestructura deportiva','la competencia interna'],
+      ['sin eso repetimos el mismo ciclo','ahí se ve el problema de fondo','no se arregla con parches de una semana','es más importante que cualquier frase de emergencia','define el nivel antes que la ansiedad del hincha','marca la diferencia en procesos largos','tiene más peso que el humo del momento','ordena mejor la conversación futbolera','evita vender ilusiones falsas','es la base antes de mirar afuera'],70),
+      finanzas: make([
+        'Antes de invertir, el presupuesto mensual tiene que estar claro.',
+        'La UF y el arriendo explican buena parte del estrés financiero chileno.',
+        'Sin fondo de emergencia, cualquier imprevisto se transforma en deuda.',
+        'El dólar le pega a la vida diaria aunque uno no compre acciones.',
+        'Mucha gente habla de rentabilidad sin tener ordenado el flujo de caja.',
+        'Ahorrar no es lo mismo que apostar plata que puedes necesitar pronto.',
+        'La inflación chica y constante termina pesando más de lo que parece.',
+        'Separar deuda, emergencia e inversión cambia completamente la película.',
+        'Si el sueldo está justo, la estrategia primero debe ser defensiva.',
+        'La educación financiera debería partir por decisiones cotidianas.',
+        'Endeudarse para aparentar estabilidad es una trampa muy común.',
+        'El crédito puede ayudar, pero sin planificación se vuelve una mochila.',
+        'Mirar solo el precio y no el costo total es un error clásico.',
+        'No todo instrumento sirve para todos los perfiles de riesgo.',
+        'La mejor inversión a veces es bajar una deuda cara.'
+      ],commonOpen,
+      ['el presupuesto','la UF','el arriendo','el dólar','la deuda de consumo','el fondo de emergencia','el flujo de caja','la inflación','el crédito','el ahorro mensual','el riesgo','la liquidez'],
+      ['si no está claro, cualquier decisión se vuelve frágil','pega directo en la vida real','ordena mejor que seguir consejos al azar','debería mirarse antes de hablar de inversión','explica por qué muchos no logran ahorrar','ayuda a evitar decisiones impulsivas','tiene más peso que una promesa de rentabilidad','cambia según cada familia','no se resuelve con fórmulas mágicas','es la base para tomar mejores decisiones'],70),
+      marketplace: make([
+        'Precio, comuna y fotos reales deberían ser obligatorios para publicar.',
+        'La reputación va a ser más importante que el diseño cuando empiece a moverse plata.',
+        'Responder preguntas en público ayuda a que otros compradores vean lo mismo.',
+        'Si algo ya se vendió, debería quedar marcado altiro.',
+        'Sin reportes rápidos, cualquier marketplace se llena de spam.',
+        'La ficha del producto debería incluir estado, entrega y medio de pago.',
+        'La confianza se construye con historial, no solo con un botón bonito.',
+        'Un punto de encuentro claro reduce harto los problemas.',
+        'Me gusta la idea de feria digital, pero tiene que sentirse segura.',
+        'Los vendedores nuevos necesitan una forma simple de validar reputación.',
+        'Fotos propias valen más que imágenes sacadas de internet.',
+        'Preguntas repetidas se evitan con una publicación bien armada.',
+        'El chat de compra debería dejar registro básico de acuerdos.',
+        'Una categoría mal puesta hace que el producto se pierda.',
+        'Moderación temprana evita que la feria parta desordenada.'
+      ],commonOpen,
+      ['las fotos reales','la reputación del vendedor','el precio visible','la comuna','la forma de entrega','el estado del producto','las preguntas públicas','el historial de ventas','los reportes de spam','el punto de encuentro','la categoría','la descripción'],
+      ['es lo que da confianza al comprador','evita conversaciones eternas por interno','reduce malos entendidos','hace que la publicación sea más seria','debería estar antes del primer mensaje','ordena la feria desde el inicio','ayuda a filtrar ofertas raras','protege tanto al comprador como al vendedor','permite comparar mejor','puede evitar muchos reclamos después'],65),
+      memescl: make([
+        'Me dio risa porque duele un poco reconocerlo.',
+        'Esto tiene demasiada precisión chilena para ser casualidad.',
+        'Lo mandas al grupo familiar y se arma debate de una hora.',
+        'Meme país: uno se ríe y después mira la cuenta del banco.',
+        'Hay una tesis social completa escondida en este chiste.',
+        'Humor de supervivencia, edición Chile.',
+        'No sé si reírme o pedir un certificado para confirmar.',
+        'Esto parece meme, pero describe un trámite real promedio.',
+        'La gracia es que todos hemos estado ahí alguna vez.',
+        'Demasiado específico para no venir de una experiencia traumática.',
+        'Chile explicado en una imagen y dos niveles de ansiedad.',
+        'El algoritmo entendió el trauma administrativo nacional.',
+        'Esto debería venir con pan batido y una deuda en UF.',
+        'El chiste funciona porque el país ya venía preinstalado.',
+        'Me reí, después recordé que era verdad y se me pasó un poco.'
+      ],commonOpen,
+      ['el humor chileno','el trauma administrativo','el grupo familiar','la cuenta del banco','la fila virtual','el trámite eterno','el meme país','la ansiedad nacional','el detalle específico','el caos cotidiano','la talla corta','la exageración justa'],
+      ['por eso pega tan rápido','funciona porque todos lo entienden','duele lo justo para dar risa','lo hace más compartible','resume demasiado bien el día a día','convierte rabia en chiste','es terapia barata de internet','tiene más verdad que muchos discursos','se entiende sin explicar demasiado','deja al país mirando al espejo'],55),
+      debate: make([
+        'Buen debate si se mantiene con argumentos y no solo consignas.',
+        'La experiencia personal suma, pero no reemplaza datos cuando hablamos de política pública.',
+        'Chile tiene diagnósticos repetidos; el problema suele estar en ejecutar.',
+        'El centralismo aparece incluso cuando el tema parece otro.',
+        'Me interesa más leer propuestas concretas que peleas de siempre.',
+        'Sin datos mínimos, la conversación se vuelve pura sensación.',
+        'El tema da para discutirlo con calma y no solo desde la rabia.',
+        'Hay varias capas acá: plata, territorio, gestión y confianza.',
+        'Cuando alguien trae ejemplos concretos, el hilo sube de nivel.',
+        'No todo desacuerdo es mala fe; a veces falta contexto.',
+        'El problema es que muchas discusiones parten desde caricaturas.',
+        'Si separamos diagnóstico de solución, se entiende mucho mejor.',
+        'La discusión nacional necesita menos slogan y más implementación.',
+        'Hay que escuchar también cómo se vive esto fuera de Santiago.',
+        'Una buena pregunta vale más que diez respuestas automáticas.'
+      ],commonOpen,
+      ['los datos','la evidencia','la experiencia regional','la gestión pública','el centralismo','la implementación','la propuesta concreta','la confianza institucional','el territorio','la discusión de fondo','el costo real','la responsabilidad política'],
+      ['sin eso todo queda en consigna','ayuda a no simplificar demasiado','ordena mejor el intercambio','evita pelear contra caricaturas','permite comparar realidades distintas','vuelve más útil el hilo','baja el ruido de la pelea chica','muestra dónde está el problema práctico','deja espacio para soluciones reales','hace que el debate valga la pena'],70),
+      tecnologia: make([
+        'La app puede verse bien, pero si el flujo falla el usuario se va igual.',
+        'El login y la recuperación de cuenta son más importantes de lo que parecen.',
+        'Sin moderación y seguridad, una comunidad crece desordenada muy rápido.',
+        'La experiencia móvil debería probarse desde el primer día.',
+        'El backend tiene que ordenar permisos antes de sumar funciones grandes.',
+        'Una buena UX es cuando el usuario no necesita preguntar qué hacer.',
+        'Los datos personales obligan a pensar seguridad desde el MVP.',
+        'La velocidad de carga también es parte del diseño.',
+        'Si algo se rompe en celular, para muchos usuarios simplemente no existe.',
+        'Me gusta cuando una plataforma tiene identidad y no parece plantilla genérica.',
+        'Separar demo de producción evita dolores de cabeza después.',
+        'Las funciones sociales necesitan límites anti spam desde temprano.',
+        'El sistema de reportes debería estar antes de escalar usuarios.',
+        'Un buen producto no solo agrega features, también elimina fricción.',
+        'La arquitectura importa cuando el prototipo empieza a funcionar.'
+      ],commonOpen,
+      ['la experiencia móvil','el login','la seguridad','el backend','la moderación','la velocidad de carga','la privacidad','el diseño de flujo','los permisos','la base de datos','el anti spam','la arquitectura'],
+      ['define si la gente vuelve','se nota justo cuando empieza a crecer','evita problemas que después son caros','tiene que estar antes del hype','ordena el producto desde adentro','no se arregla solo con diseño visual','hace que el MVP sea más serio','reduce fricción para usuarios nuevos','protege la comunidad','permite escalar con menos caos'],60),
+      chile: make([
+        'Este tema pega distinto según la región, no todo se vive desde Santiago.',
+        'Me interesa leer experiencias concretas, no solo opiniones rápidas.',
+        'Ojalá el hilo junte datos, casos reales y algo de humor.',
+        'La conversación mejora cuando la gente cuenta cómo lo vive en su comuna.',
+        'Hay cosas que parecen chicas hasta que le pasan a uno.',
+        'El contexto chileno cambia completamente la lectura del tema.',
+        'Buen punto para abrir conversación sin quedarse en el titular.',
+        'A veces un caso cotidiano explica más que un informe largo.',
+        'Me gustaría leer también miradas desde regiones.',
+        'Si se mantiene el foco, puede quedar un hilo útil para otros usuarios.',
+        'Chile tiene esa mezcla rara de burocracia, humor y resignación activa.',
+        'La experiencia diaria termina mostrando dónde falla el sistema.',
+        'No todo se arregla con una app, pero una buena comunidad ayuda a ordenar información.',
+        'Cuando se juntan experiencias reales, aparece el patrón.',
+        'Este tipo de hilo sirve si la gente evita responder con frases hechas.'
+      ],commonOpen,
+      ['la experiencia regional','el caso cotidiano','el contexto chileno','la comuna','la vida diaria','el usuario común','el servicio público','la conversación local','la diferencia territorial','el dato práctico','la experiencia personal','el problema de fondo'],
+      ['ahí aparece lo que no se ve desde lejos','ayuda a entender mejor el tema','vuelve más útil el hilo','evita quedarse en frases hechas','muestra que no todos viven lo mismo','ordena la discusión sin ponerse latero','le da más valor a la comunidad','puede ayudar a otros usuarios','deja ver patrones reales','transforma una queja en información útil'],70)
+    };
+  })();
+  window.RP18_BANKS=RP18_BANKS;
+  window.RP18_BANK_COUNT=Object.keys(RP18_BANKS).reduce(function(a,k){return a+RP18_BANKS[k].length;},0);
+  function bankFor(p){
+    var sub=nsub(p&&p.sub)||'chile', s=(String(p&&p.title||'')+' '+String(p&&p.prev||'')).toLowerCase();
+    if(isNews(p))return RP18_BANKS.noticias;
+    if(/registro civil|domicilio|clave|tramite|trámite|sii|afc|fonasa|licencia|municipal|banco|cartola|certificado|servicio público|servicio publico|notaria|notaría|registro|impuesto|carpeta tributaria/.test(s))return RP18_BANKS.tramites;
+    if(sub==='futbol')return RP18_BANKS.futbol;
+    if(sub==='finanzas')return RP18_BANKS.finanzas;
+    if(sub==='marketplace')return RP18_BANKS.marketplace;
+    if(sub==='memescl')return RP18_BANKS.memescl;
+    if(sub==='debate'||sub==='contingencia')return RP18_BANKS.debate;
+    if(sub==='tecnologia')return RP18_BANKS.tecnologia;
+    return RP18_BANKS.chile;
+  }
+  function botPool(sub){
+    sub=nsub(sub)||'chile';
+    var wants={chile:['chile','debate'],contingencia:['chile','debate','finanzas'],finanzas:['finanzas','chile'],futbol:['futbol','chile'],marketplace:['chile','finanzas'],memescl:['memescl','chile'],debate:['debate','chile'],tecnologia:['tecnologia','chile']}[sub]||[sub,'chile'];
+    var bots=(window.BOTS||[]).filter(function(b){var a=b.arq&&window.BOT_ARQUETIPOS?window.BOT_ARQUETIPOS[b.arq]:null;return a&&a.intereses&&wants.some(function(w){return a.intereses.indexOf(w)!==-1;});});
+    if(bots.length<12)bots=(window.BOTS||[]).slice();
+    return bots.length?bots:[{name:'usuario_cl',ciudad:'Chile',av:'👤'}];
+  }
+  function pickBot(p,i,used){
+    var bots=botPool(p&&p.sub),start=h((p&&p.id)+'|'+(p&&p.title)+'|rp18bot|'+i,bots.length);
+    for(var k=0;k<bots.length;k++){var b=bots[(start+k)%bots.length];if(!used||!used[b.name])return b;}
+    return bots[start%bots.length];
+  }
+  function pickPhrase(p,i,used){
+    var bank=bankFor(p),start=h((p&&p.id)+'|'+(p&&p.title)+'|rp18phrase|'+i,bank.length);
+    // Mezcla longitud: cada hilo alterna corto, medio y largo para que no se lea robótico.
+    var want=i%3;
+    for(var pass=0;pass<2;pass++){
+      for(var k=0;k<bank.length;k++){
+        var ph=bank[(start+k*7+pass)%bank.length],len=ph.length,kind=len<78?0:(len<128?1:2),key=ntxt(ph);
+        if(!used[key]&&(pass||kind===want))return ph;
+      }
+    }
+    return bank[start%bank.length];
+  }
+  function rp18CleanComments(p,target,gradual){
+    if(!p)return [];
+    p.cd=Array.isArray(p.cd)?p.cd:[];
+    var requested=parseInt(target||p.coms||p.cd.length||0,10)||0;
+    if(!requested)requested=isNews(p)?0:Math.min(6,Math.max(3,p.cd.length||4));
+    var maxTarget=Math.min(requested,isNews(p)?16:22);
+    var usedTxt={},usedBot={},out=[];
+    p.cd.forEach(function(c,i){
+      c=c||{};var txt=String(c.txt||c.texto||'').trim(),key=ntxt(txt),bot=c.bot||{name:c.username||'',ciudad:c.ciudad||'Chile',av:'👤'};
+      if(isUserComment(c)){
+        if(txt&&!usedTxt[key]){usedTxt[key]=1;out.push({bot:bot.name?bot:{name:c.username||'tu_usuario',ciudad:'Chile',av:'👤'},txt:txt,t:c.t||c.tiempo||'ahora',v:parseInt(c.v||c.votos||0,10)||0,realComId:c.realComId,userId:c.userId,isUser:true});}
+        return;
+      }
+      // Para bots: regeneramos siempre desde banco amplio para eliminar frases antiguas repetidas.
+      var phrase=pickPhrase(p,i,usedTxt),k2=ntxt(phrase),b2=pickBot(p,i,usedBot);
+      if(phrase&&!usedTxt[k2]){usedTxt[k2]=1;if(b2&&b2.name)usedBot[b2.name]=1;out.push({bot:b2,txt:phrase,t:c.t||c.tiempo||['ahora','2min','5min','9min','14min','22min','38min','1h','2h'][out.length%9],v:parseInt(c.v||c.votos||0,10)||1+h((p&&p.id)+'rp18v'+out.length,12)});}
+    });
+    var finalTarget=gradual?Math.min(maxTarget,out.length+1):maxTarget;
+    for(var j=out.length;j<finalTarget;j++){
+      var ph=pickPhrase(p,j,usedTxt),k=ntxt(ph),b=pickBot(p,j,usedBot);
+      if(!ph||usedTxt[k])continue;
+      usedTxt[k]=1;if(b&&b.name)usedBot[b.name]=1;
+      out.push({bot:b,txt:ph,t:['ahora','2min','5min','9min','14min','22min','38min','1h','2h','3h'][j%10],v:1+h((p&&p.id)+'rp18vote'+j,12)});
+    }
+    p.cd=out;p.coms=out.length;return out;
+  }
+  window.RP18_cleanComments=rp18CleanComments;
+  window.RP_ensureLocalComments=function(p){return rp18CleanComments(p,p&&p.coms,false);};
+  window.generateBotComments=function(count,existingCd){
+    var p=window.__rpCommentContextPost||{id:'tmp',sub:'chile',title:'tema chileno',prev:'',coms:count||6,cd:existingCd||[]};
+    return rp18CleanComments(p,count||p.coms||6,false).slice(0,Math.min(count||p.coms||10,22));
+  };
+  window.loadComments=function(postId,sort,offset){
+    var list=$('clist-'+postId);if(!list)return;offset=offset||0;sort=sort||'top';var LIMIT=10,more=$('cmore-'+postId);
+    var p=(window.POSTS||[]).find(function(x){return parseInt(x.id,10)===parseInt(postId,10);});if(!p){list.innerHTML='';return;}
+    var all=rp18CleanComments(p,p.coms||p.cd.length||0,false).slice();
+    if(sort==='new')all=all.slice().reverse();else if(sort==='top')all=all.slice().sort(function(a,b){return (b.v||0)-(a.v||0);});
+    var page=all.slice(offset,offset+LIMIT),html='';
+    page.forEach(function(c){var bot=c.bot||{name:c.username||'usuario_cl',ciudad:'Chile'};html+=(typeof window.renderCommentHTML==='function'?window.renderCommentHTML('rp18-'+h(postId+'-'+(c.txt||c.texto)+'-'+offset),bot.name||'usuario_cl',bot.ciudad||'Chile',c.t||c.tiempo||'ahora',c.txt||c.texto||'',c.v||c.votos||0,!!c.isUser,c.realComId):'<div class="comment"><div class="cctext">'+esc(c.txt||c.texto||'')+'</div></div>');});
+    list.innerHTML=offset===0?html:(list.innerHTML+html);
+    if(more)more.innerHTML=all.length>offset+LIMIT?'<button class="com-more-btn" onclick="loadComments('+postId+',\''+sort+'\','+(offset+LIMIT)+')">ver más comentarios ('+(all.length-offset-LIMIT)+' restantes)</button>':'';
+  };
+  window.renderPostViewComments=function(postId,sort){
+    var p=(window.POSTS||[]).find(function(x){return parseInt(x.id,10)===parseInt(postId,10);});var list=$('pv-comments-list');if(!p||!list)return;sort=sort||'top';
+    var all=rp18CleanComments(p,p.coms||p.cd.length||0,false).slice();
+    if(sort==='new')all=all.slice().reverse();else if(sort==='top')all=all.slice().sort(function(a,b){return (b.v||0)-(a.v||0);});
+    list.innerHTML=all.length?all.map(function(c){var bot=c.bot||{name:c.username||'usuario_cl'};return '<div class="pv-comment"><div class="pv-comment-v"><button onclick="pvVote(this,1)">▲</button><strong>'+esc(parseInt(c.v||c.votos||0,10)||0)+'</strong><button onclick="pvVote(this,-1)">▼</button></div><div><div class="pv-comment-meta"><span class="u">u/'+esc(bot.name||'usuario_cl')+'</span> · '+esc(c.t||c.tiempo||'ahora')+'</div><div class="pv-comment-text">'+(typeof window.linkify==='function'?window.linkify(c.txt||c.texto||''):esc(c.txt||c.texto||''))+'</div></div></div>';}).join(''):'<div class="pv-empty">// todavía no hay comentarios</div>';
+  };
+  var oldRF=window.renderFeed;
+  if(oldRF&&!oldRF.__rp18){
+    window.renderFeed=function(filter){
+      (window.POSTS||[]).forEach(function(p){if(!isNews(p))rp18CleanComments(p,p.coms||p.cd&&p.cd.length||0,false);});
+      var r=oldRF.call(this,filter);
+      return r;
+    };
+    window.renderFeed.__rp18=true;
+  }
+  setTimeout(function(){
+    (window.POSTS||[]).forEach(function(p){if(!isNews(p))rp18CleanComments(p,p.coms||p.cd&&p.cd.length||0,false);});
+    if(window.renderFeed)window.renderFeed(window._currentFilter||null);
+    console.log('[RandomPlan V18] banco amplio activo: '+window.RP18_BANK_COUNT+' frases base');
+  },700);
+})();
+</script>
+
 </body>
 </html>
