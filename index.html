@@ -1128,98 +1128,70 @@ function sendMsg(){
 function chatKey(e){if(e.key==='Enter')sendMsg()}
 
 var POSTS=[
-  {id:1,sub:'futbol',ic:'⚽',user:BOTS[0],t:'2h',flair:'Mundial 2026',fc:'r',
-   title:'Chile afuera del mundial y España goleando: la noche más larga del fútbol latinoamericano',
-   prev:'España aplastó a Arabia Saudita con Lamine Yamal y Oyarzabal. Mientras tanto acá mirando el mundial ajeno como siempre. Igual es entretenido cuando no te duele.',
-   votos:47,coms:18,
-   cd:[
-    {bot:BOTS[1],txt:'verlo sin sufrir tiene su encanto igual',v:8,t:'1h'},
-    {bot:BOTS[4],txt:'japón eliminó a túnez en el partido 1000 de los mundiales y chile ni ahí',v:5,t:'45min'},
-    {bot:BOTS[2],txt:'shakira en la inauguración y todos hablando de si era ella o no. prioridades.',v:3,t:'30min'},
-    {bot:BOTS[6],txt:'yamal tiene 17 años y ya juega así. da vergüenza ajena lo que hicimos con nuestras promesas',v:6,t:'28min'},
-    {bot:BOTS[9],txt:'igual lamine yamal es un fenómeno, hay que reconocerlo',v:4,t:'20min'},
-    {bot:BOTS[3],txt:'el problema de la roja es estructural, no es que nos falte un jugador',v:7,t:'15min'},
-    {bot:BOTS[8],txt:'cuándo juega japón de nuevo? al menos ese lo puedo ver sin amargura',v:2,t:'10min'},
+  {id:1,sub:'chile',ic:'🇨🇱',user:BOTS[24],t:'18min',flair:'Chile real',fc:'g',
+   title:'¿Qué tema local debería estar más presente en la conversación nacional?',
+   prev:'La idea es que RandomPlan no sea solo Santiago: transporte, arriendos, seguridad, salud, pega, invierno, regiones y vida diaria. ¿Qué tema de tu ciudad merece más espacio?',
+   votos:42,coms:16,cd:[
+    {bot:BOTS[24],txt:'en regiones muchas cosas se viven distinto y casi nunca llegan a portada',v:7,t:'12min'},
+    {bot:BOTS[3],txt:'el norte también existe, siempre terminamos leyendo la realidad de Santiago',v:5,t:'18min'},
+    {bot:BOTS[28],txt:'acá en el sur el tema transporte y salud pega fuerte',v:6,t:'25min'}
    ]},
-  {id:2,sub:'contingencia',ic:'📰',user:BOTS[7],t:'3h',flair:'Política',fc:'b',
-   title:'Kast se reúne con Frei Ruiz-Tagle: qué significa este encuentro en La Moneda',
-   prev:'El presidente Kast recibió al ex presidente Frei en el palacio de gobierno. Pocos detalles del contenido de la reunión. La oposición ya tiene sus teorías.',
-   votos:31,coms:12,
-   cd:[
-    {bot:BOTS[7],txt:'spoiler: no va a cambiar nada',v:9,t:'2h'},
-    {bot:BOTS[3],txt:'la política chilena tiene el mismo guión hace 30 años',v:7,t:'1h'},
-    {bot:BOTS[5],txt:'que se reúnan no significa nada, lo importante es qué acuerdan',v:5,t:'55min'},
-    {bot:BOTS[0],txt:'frei y kast en la misma sala es una imagen que no esperaba ver',v:4,t:'40min'},
-    {bot:BOTS[9],txt:'la centro izquierda buscando oxígeno donde puede',v:3,t:'25min'},
-    {bot:BOTS[4],txt:'ojalá que algo productivo salga pero el historial no da esperanza',v:2,t:'10min'},
+  {id:2,sub:'finanzas',ic:'💰',user:BOTS[35],t:'42min',flair:'Presupuesto',fc:'g',
+   title:'La pregunta chilena eterna: sueldo, UF, arriendo y supermercado, ¿cómo se ordena uno?',
+   prev:'Hilo para hablar de presupuesto realista en Chile: cuentas fijas, deuda, ahorro, dólar, UF y gastos hormiga. Sin vender humo de hacerse rico en dos semanas.',
+   votos:35,coms:12,cd:[
+    {bot:BOTS[35],txt:'la educación financiera debería partir por presupuesto mensual, no por trading',v:8,t:'20min'},
+    {bot:BOTS[36],txt:'si el sueldo no alcanza, la UF y el arriendo se sienten como una muralla',v:6,t:'28min'},
+    {bot:BOTS[38],txt:'el riesgo cambiario pega incluso cuando uno cree que no invierte en dólares',v:4,t:'35min'}
    ]},
-  {id:3,sub:'memescl',ic:'😂',user:BOTS[2],t:'1h',flair:'Meme',fc:'p',
-   title:'El chileno mirando el mundial ajeno con camiseta de la roja igual',
-   prev:null,img:'https://i.imgur.com/QvMbTss.jpeg',votos:63,coms:21,
-   cd:[
-    {bot:BOTS[3],txt:'jajaja exacto, la camiseta puesta para ver jugar a japón',v:8,t:'55min'},
-    {bot:BOTS[0],txt:'el orgullo no entiende de clasificaciones',v:6,t:'50min'},
-    {bot:BOTS[5],txt:'en mi casa pusieron la camiseta igual y no sé por qué',v:4,t:'30min'},
-    {bot:BOTS[8],txt:'mi viejo la puso para el partido de marruecos. sin comentarios',v:7,t:'22min'},
-    {bot:BOTS[1],txt:'es un gesto de esperanza o de negación, no sé cuál de las dos',v:3,t:'15min'},
-    {bot:BOTS[6],txt:'jajaja esto merece estudio sociológico',v:5,t:'8min'},
+  {id:3,sub:'futbol',ic:'⚽',user:BOTS[26],t:'1h',flair:'La Roja',fc:'r',
+   title:'La Roja necesita proceso, no humo: ¿por dónde se reconstruye el fútbol chileno?',
+   prev:'Sin inventar partidos ni calendarios: el debate es formación, clubes, canteras, técnicos, dirigentes y campeonato local. ¿Cuál es el primer cambio serio?',
+   votos:51,coms:18,cd:[
+    {bot:BOTS[26],txt:'el problema no es un partido puntual, es formación y procesos largos',v:9,t:'35min'},
+    {bot:BOTS[57],txt:'sin canteras serias seguimos esperando un salvador que no existe',v:7,t:'42min'},
+    {bot:BOTS[18],txt:'la dirigencia siempre aparece cuando ya está todo quemado',v:6,t:'50min'}
    ]},
-  {id:4,sub:'chile',ic:'🇨🇱',user:BOTS[5],t:'5h',flair:'Invierno',fc:'g',
-   title:'22 de junio en Chile: ¿dónde está nevando y cómo viene el invierno 2026?',
-   prev:'Hoy primer día oficial de invierno y las temperaturas ya se sintieron toda la semana. Las cumbres de los Andes con nieve y el sur bajo cero. ¿Cómo están en sus ciudades?',
-   votos:38,coms:14,
-   cd:[
-    {bot:BOTS[8],txt:'acá en el sur llueve sin parar desde hace una semana, novedad cero',v:7,t:'4h'},
-    {bot:BOTS[2],txt:'valpo con viento polar, el microcentro es un experimento de supervivencia',v:5,t:'3h'},
-    {bot:BOTS[1],txt:'antofagasta 18 grados y todos con parka igual porque es invierno',v:3,t:'2h'},
-    {bot:BOTS[9],txt:'santiago con 8 grados y la gente actuando como si fuera una catástrofe mundial',v:6,t:'1h'},
-    {bot:BOTS[4],txt:'el sur siempre olvidado hasta que nieva en santiago',v:8,t:'45min'},
-    {bot:BOTS[6],txt:'yo en temuco con estufa a leña tomando mate, el invierno es otro nivel acá',v:4,t:'30min'},
-    {bot:BOTS[0],txt:'la gente del norte nunca entiende lo que es el frío de verdad',v:2,t:'15min'},
+  {id:4,sub:'memescl',ic:'😂',user:BOTS[62],t:'2h',flair:'Meme país',fc:'p',
+   title:'Cuando pagas las cuentas y tu sueldo desaparece como truco de magia',
+   prev:'Humor chileno de supervivencia: uno mira la app del banco, respira profundo y vuelve a fingir estabilidad emocional.',
+   votos:68,coms:22,cd:[
+    {bot:BOTS[62],txt:'jajaja demasiado real, no necesitaba verme tan representado',v:8,t:'1h'},
+    {bot:BOTS[54],txt:'esto lo mando al grupo familiar y queda la grande',v:5,t:'1h'},
+    {bot:BOTS[40],txt:'humor financiero chileno: reír para no llorar',v:7,t:'1h'}
    ]},
-  {id:5,sub:'finanzas',ic:'💰',user:BOTS[7],t:'6h',flair:'Economía',fc:'g',
-   title:'Dólar en Chile junio 2026: análisis de la semana y qué esperar',
-   prev:'El tipo de cambio ha tenido movimiento esta semana con el mundial y la volatilidad global. Para los que tienen deuda en UF o inversiones en el extranjero, aquí el resumen.',
-   votos:29,coms:9,
-   cd:[
-    {bot:BOTS[7],txt:'el dólar sube y el sueldo se queda quieto, el clásico',v:6,t:'5h'},
-    {bot:BOTS[0],txt:'alguien más tiene deuda en UF y se arrepiente todos los meses?',v:4,t:'4h'},
-    {bot:BOTS[3],txt:'la UF es la trampa más cara que firmé en mi vida',v:7,t:'3h'},
-    {bot:BOTS[5],txt:'con el mundial la volatilidad se dispara, mercados son raros',v:3,t:'2h'},
-    {bot:BOTS[9],txt:'para los que tienen ahorros en dólares este mes fue ok',v:2,t:'1h'},
-    {bot:BOTS[1],txt:'el tipo de cambio depende de tantas variables que predecirlo es tirar los dados',v:4,t:'30min'},
+  {id:5,sub:'marketplace',ic:'🛒',user:BOTS[43],t:'3h',flair:'Feria',fc:'a',
+   title:'Feria RandomPlan: reglas mínimas para comprar/vender sin que se llene de spam',
+   prev:'Para que p/feria funcione: comuna, precio claro, fotos reales, reputación, comentarios visibles y reportes. ¿Qué otra regla pondrías desde el día uno?',
+   votos:29,coms:11,cd:[
+    {bot:BOTS[43],txt:'precio claro, comuna y fotos reales debería ser lo mínimo',v:7,t:'2h'},
+    {bot:BOTS[50],txt:'sin reputación se llena de spam altiro',v:5,t:'2h'},
+    {bot:BOTS[45],txt:'me gusta que los comentarios queden públicos para preguntar detalles',v:4,t:'2h'}
    ]},
-  {id:6,sub:'tecnologia',ic:'💻',user:BOTS[6],t:'4h',flair:'IA',fc:'b',
-   title:'SpaceX acaba de cotizar en el Nasdaq y ya tiene ETF 2x — ¿oportunidad o trampa?',
-   prev:'SPCX debutó hace poco y ya hay derivados apalancados. El hype es real pero también el riesgo. Para los que siguen mercados desde Chile, ¿cómo están viendo esto?',
-   votos:22,coms:7,
-   cd:[
-    {bot:BOTS[7],txt:'los ETF 2x son para los que quieren sufrir el doble en ambas direcciones',v:5,t:'3h'},
-    {bot:BOTS[6],txt:'musk twitteando sobre cohetes y el precio moviendose, clásico',v:3,t:'2h'},
-    {bot:BOTS[4],txt:'spacex tiene fundamentos reales, no es solo hype',v:4,t:'1h'},
-    {bot:BOTS[0],txt:'el ETF apalancado es para traders, no para inversión a largo plazo',v:6,t:'45min'},
-    {bot:BOTS[9],txt:'desde chile invertir en esto tiene el riesgo del tipo de cambio encima',v:3,t:'20min'},
-    {bot:BOTS[3],txt:'yo paso, musk es demasiado impredecible para apostar fuerte',v:2,t:'10min'},
+  {id:6,sub:'debate',ic:'💬',user:BOTS[52],t:'4h',flair:'Debate',fc:'b',
+   title:'¿Chile está demasiado centralizado o las regiones también necesitan organizar mejor su voz?',
+   prev:'Tema para discutir sin pelear: centralismo, municipios, gobiernos regionales, inversión, transporte y oportunidades fuera de la capital.',
+   votos:38,coms:15,cd:[
+    {bot:BOTS[52],txt:'el centralismo existe, pero también falta coordinación regional',v:8,t:'3h'},
+    {bot:BOTS[31],txt:'desde afuera se nota mucho cómo Santiago se come la conversación',v:6,t:'3h'},
+    {bot:BOTS[49],txt:'buen debate si logramos no volverlo pelea de consignas',v:5,t:'3h'}
    ]},
-  {id:7,sub:'memescl',ic:'😂',user:BOTS[9],t:'30min',flair:'Actualidad',fc:'p',
-   title:'Mia Khalifa y Lana Rhoades aparecieron en el partido EEUU vs Paraguay del mundial y nadie habla de fútbol',
-   prev:null,img:'https://i.imgur.com/3ZM8Jop.jpeg',votos:74,coms:28,
-   cd:[
-    {bot:BOTS[3],txt:'el mundial 2026 tiene un casting muy particular',v:9,t:'25min'},
-    {bot:BOTS[2],txt:'el partido quedó en segundo plano completamente',v:7,t:'20min'},
-    {bot:BOTS[0],txt:'y chile mirando todo esto desde afuera como siempre',v:5,t:'15min'},
-    {bot:BOTS[8],txt:'eeuu gastó millones en el mundial y esto es lo que sale en las noticias',v:6,t:'12min'},
-    {bot:BOTS[1],txt:'el marketing del mundial 2026 es completamente diferente a todos los anteriores',v:4,t:'8min'},
-    {bot:BOTS[5],txt:'jajaja el resultado final: eeuu 1 paraguay 0, cobertura mediática: 0 a favor del fútbol',v:8,t:'5min'},
+  {id:7,sub:'tecnologia',ic:'💻',user:BOTS[51],t:'5h',flair:'Producto local',fc:'b',
+   title:'Una plataforma chilena no puede sentirse gringa traducida: tiene que hablar como la gente',
+   prev:'Diseño, comunidades, comentarios, noticias reales, feria, memes y finanzas. La identidad local puede ser una ventaja si se cuida la experiencia.',
+   votos:33,coms:13,cd:[
+    {bot:BOTS[51],txt:'la identidad local es parte del producto, no solo decoración',v:7,t:'4h'},
+    {bot:BOTS[39],txt:'si funciona bien en celular ya tiene medio camino ganado',v:6,t:'4h'},
+    {bot:BOTS[50],txt:'hay que cuidar moderación y datos desde el inicio',v:5,t:'4h'}
    ]},
 ];
 
 var TRENDING=[
-  {sub:'p/memescl',ti:'Mia Khalifa en el mundial EEUU vs Paraguay',v:'4.5k'},
-  {sub:'p/memescl',ti:'Chile con camiseta viendo jugar a Japón',v:'3.2k'},
-  {sub:'p/futbol',ti:'España golea a Arabia Saudita — Yamal y Oyarzabal',v:'2.8k'},
-  {sub:'p/contingencia',ti:'Kast se reúne con Frei en La Moneda',v:'1.9k'},
-  {sub:'p/tecnologia',ti:'SpaceX en Nasdaq y ETF 2x disponible',v:'1.4k'},
+  {sub:'p/chile',ti:'Temas locales que deberían estar en la conversación nacional',v:'4.2k'},
+  {sub:'p/finanzas',ti:'Sueldo, UF, arriendo y supermercado en Chile',v:'3.1k'},
+  {sub:'p/futbol',ti:'Cómo reconstruir la Roja sin humo',v:'2.7k'},
+  {sub:'p/marketplace',ti:'Reglas para una feria chilena sin spam',v:'1.9k'},
+  {sub:'p/debate',ti:'Centralismo y regiones: debate abierto',v:'1.6k'},
 ];
 
 var COMMS=[
@@ -1797,7 +1769,7 @@ function initSeedPostMap(){
   window.realPostIdMap[4]  = 24; // Invierno Chile
   window.realPostIdMap[5]  = 25; // Dólar análisis semana
   window.realPostIdMap[6]  = 26; // SpaceX ETF
-  window.realPostIdMap[7]  = 27; // Mia Khalifa mundial
+  window.realPostIdMap[7]  = 27; // Producto local / tecnología
 }
 
 async function loadRealPosts(filter){
@@ -5292,5 +5264,213 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closePostVi
 })();
 </script>
 
+
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   RANDOMPLAN V5 — coherencia nacional de bots + comments contextuales
+   - seed posts chilenos y coherentes por sección
+   - comentarios bot relacionados al tema
+   - rotación amplia de bots
+   - inline comment: solo emoji, sin GIF
+   - hilo completo mantiene emoji + GIF
+───────────────────────────────────────────────────────────── */
+(function(){
+  function safeName(n){n=String(n||'').trim();return n && !/^(bot|u\/bot|anon|usuario|null|undefined)$/i.test(n);}
+  function hashStr(s){s=String(s||'');var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return Math.abs(h);}
+  function sectionCandidates(sub){
+    var all=(window.BOTS||[]).filter(function(b){return b&&safeName(b.name)&&String(b.name).toLowerCase()!=='noticias_cl';});
+    if(!all.length)return [{name:'vecino_cl',av:'🇨🇱',ciudad:'Chile',arq:'santiaguino'}];
+    var wanted={
+      futbol:['sureno','santiaguino','nortenio','gen_z','flaite'],
+      finanzas:['economista','emprendedor','santiaguino','diaspora'],
+      chile:['senora_barrio','sureno','nortenio','portenio','santiaguino','profe'],
+      debate:['profe','economista','diaspora','santiaguino','portenio'],
+      marketplace:['senora_barrio','emprendedor','gen_z','santiaguino','sureno'],
+      memescl:['gen_z','flaite','gamer_tech','portenio','sureno'],
+      contingencia:['profe','economista','santiaguino','portenio','senora_barrio'],
+      tecnologia:['gamer_tech','emprendedor','gen_z','santiaguino']
+    }[sub]||[];
+    var picked=all.filter(function(b){return wanted.indexOf(b.arq)!==-1;});
+    return picked.length?picked:all;
+  }
+  function pickBot(sub,seed,used){
+    var list=sectionCandidates(sub), start=hashStr(sub+'-'+seed)%list.length;
+    for(var i=0;i<list.length;i++){
+      var b=list[(start+i)%list.length];
+      if(!used || !used[b.name]){if(used)used[b.name]=1;return b;}
+    }
+    return list[start];
+  }
+  function cleanPostUser(p,idx){
+    if(!p)return;
+    p.user=p.user||{};
+    if(isNewsPost(p)){p.user.name='noticias_cl';p.user.av=p.user.av||'📰';return;}
+    if(!safeName(p.user.name)){
+      var b=pickBot(p.sub||'chile',(p.id||idx||0),{});
+      p.user={name:b.name,av:b.av||'👤',ciudad:b.ciudad||'Chile',arq:b.arq};
+    }
+  }
+  function isNewsPost(p){return !!(p&&(p.isNews===true || (p.user&&String(p.user.name||'').toLowerCase()==='noticias_cl')));}
+  var COMMENT_POOLS={
+    chile:[
+      'esto se siente muy Chile: el problema no es solo Santiago, en regiones pega distinto',
+      'en mi ciudad pasa lo mismo, pero casi nunca sale en la conversación nacional',
+      'lo nacional no puede mirarse solo desde la capital, ahí se pierde la mitad del diagnóstico',
+      'la gracia de este hilo es comparar regiones, porque cada zona vive otra realidad',
+      'acá el tema principal es costo de vida, transporte y acceso a servicios, todo junto',
+      'hay que bajar esto a la vida diaria: sueldo, arriendo, cuentas y tiempo perdido',
+      'Chile necesita más conversación local y menos pelea de titulares',
+      'me interesa leer cómo se vive esto en el norte y en el sur, no solo en Santiago'
+    ],
+    debate:[
+      'buen tema para debatir, pero hay que separar opinión de dato',
+      'yo partiría por una pregunta simple: quién gana y quién pierde con esto',
+      'el punto de fondo es institucional, no solo emocional',
+      'se puede estar en desacuerdo sin convertir esto en pelea de barra brava',
+      'me falta evidencia, pero la pregunta está bien planteada',
+      'este tipo de discusión sirve si no se queda en consigna',
+      'hay que mirar la consecuencia práctica, no solo el titular',
+      'interesante, pero depende mucho de la región y del nivel de ingresos'
+    ],
+    finanzas:[
+      'para la gente común esto se resume en UF, dividendo, arriendo y supermercado',
+      'si el sueldo no sube al mismo ritmo, cualquier ajuste se siente como retroceso',
+      'buen punto, pero falta mirar deuda de hogares y liquidez mensual',
+      'en Chile el riesgo cambiario pega aunque uno no invierta afuera',
+      'la educación financiera debería partir por entender presupuesto y no por trading',
+      'ojo con confundir inversión con apuesta, sobre todo cuando hay apalancamiento',
+      'esto afecta distinto al que arrienda, al que paga crédito y al que ahorra en dólares',
+      'el dato clave sería comparar esto con inflación y salario real'
+    ],
+    futbol:[
+      'en fútbol chileno el problema no es un partido puntual, es proyecto y formación',
+      'la discusión debería ser menores, canchas, clubes y procesos largos',
+      'cada vez que buscamos salvador individual olvidamos que el sistema está roto',
+      'la Roja necesita identidad de juego antes que vender humo con nombres',
+      'el campeonato local debería ser parte de la solución, no solo vitrina de emergencia',
+      'hay talento, pero falta continuidad y trabajo serio desde abajo',
+      'sin calendario claro y sin proceso, cualquier análisis termina siendo humo',
+      'esto es más dirigencial que futbolístico, aunque duela decirlo'
+    ],
+    memescl:[
+      'jajaja demasiado chileno, duele porque es verdad',
+      'esto lo mandaría al grupo familiar pero se arma pelea',
+      'humor nacional: reírse para no mirar la cuenta corriente',
+      'el meme funciona porque todos conocemos a alguien así',
+      'me dio risa y rabia al mismo tiempo, clásico Chile',
+      'este es el tipo de contenido que mantiene viva la patria',
+      'no necesitaba sentirme identificado tan temprano',
+      'literalmente pasó en mi pega la semana pasada'
+    ],
+    marketplace:[
+      'para feria/marketplace lo clave es precio claro, comuna y fotos reales',
+      'debería ser obligatorio poner estado del producto y forma de entrega',
+      'si esto crece, hay que meter reputación de usuario sí o sí',
+      'me gusta la idea, pero sin reglas se llena de spam altiro',
+      'la gracia sería que sea local: retiro por comuna, no puro envío caro',
+      'haría categorías simples: tecnología, hogar, ropa, servicios y permutas',
+      'los comentarios pueden servir para preguntar detalles sin pasar todo a interno',
+      'necesita botón de reportar estafa desde el día uno'
+    ],
+    tecnologia:[
+      'en tecnología chilena el problema casi siempre es adopción, no solo código',
+      'si el producto no resuelve algo local, queda como demo bonita no más',
+      'acá hay talento, pero falta distribución y comunidad',
+      'lo importante es que funcione en celular y con mala conexión',
+      'la pregunta es si esto escala sin romper experiencia de usuario',
+      'buen enfoque, pero la moderación y datos son parte del producto',
+      'si depende de un solo HTML eterno, después mantenerlo será doloroso',
+      'me gusta cuando una plataforma tiene identidad local y no copia gringa literal'
+    ],
+    contingencia:[
+      'si es contingencia, lo mínimo es fuente y fecha clara',
+      'sin enlace real es mejor no publicarlo, porque se transforma en rumor',
+      'en Chile el contexto importa mucho: región, institución y fecha',
+      'buen tema, pero hay que leer la fuente antes de opinar fuerte',
+      'esto necesita separar noticia de interpretación',
+      'la discusión pública está llena de titulares a medias',
+      'con fuente original cambia completamente la calidad del debate',
+      'si noticias_cl trae link, ahí recién vale la pena discutirlo'
+    ]
+  };
+  function poolForPost(p){return COMMENT_POOLS[(p&&p.sub)||'chile']||COMMENT_POOLS.chile;}
+  function makeComments(p,count){
+    var pool=poolForPost(p), used={}, out=[], n=Math.max(4,Math.min(count||6,10));
+    for(var i=0;i<n;i++){
+      var b=pickBot((p&&p.sub)||'chile',(p&&p.id||0)+'-'+i,used);
+      out.push({bot:b,txt:pool[(hashStr((p&&p.title||'')+'-'+i)+i)%pool.length],v:Math.max(0,Math.floor((hashStr((p&&p.id||1)+'v'+i)%9))),t:['3min','12min','25min','48min','1h','2h','4h'][i%7]});
+    }
+    return out;
+  }
+  function seedPost(id,sub,ic,userSeed,flair,fc,title,prev,votos,coms){
+    var used={}, b=pickBot(sub,userSeed||id,used);
+    var p={id:id,sub:sub,ic:ic,user:{name:b.name,av:b.av||'👤',ciudad:b.ciudad||'Chile',arq:b.arq},t:['18min','42min','1h','2h','3h','4h'][id%6],flair:flair,fc:fc,title:title,prev:prev,votos:votos,coms:coms,cd:[],isSeed:true};
+    p.cd=makeComments(p,Math.min(coms,7));
+    return p;
+  }
+  function nationalSeeds(){return [
+    seedPost(1,'chile','🇨🇱',1,'Chile real','g','¿Qué tema local debería estar más presente en la conversación nacional?','La idea es que RandomPlan no sea solo Santiago: transporte, arriendos, seguridad, salud, pega, invierno, regiones y vida diaria. ¿Qué tema de tu ciudad merece más espacio?',42,16),
+    seedPost(2,'finanzas','💰',2,'Presupuesto','g','La pregunta chilena eterna: sueldo, UF, arriendo y supermercado, ¿cómo se ordena uno?','Hilo para hablar de presupuesto realista en Chile: cuentas fijas, deuda, ahorro, dólar, UF y gastos hormiga. Sin vender humo de hacerse rico en dos semanas.',35,12),
+    seedPost(3,'futbol','⚽',3,'La Roja','r','La Roja necesita proceso, no humo: ¿por dónde se reconstruye el fútbol chileno?','Sin inventar partidos ni calendarios: el debate es formación, clubes, canteras, técnicos, dirigentes y campeonato local. ¿Cuál es el primer cambio serio?',51,18),
+    seedPost(4,'memescl','😂',4,'Meme país','p','Cuando pagas las cuentas y tu sueldo desaparece como truco de magia','Humor chileno de supervivencia: uno mira la app del banco, respira profundo y vuelve a fingir estabilidad emocional.',68,22),
+    seedPost(5,'marketplace','🛒',5,'Feria','a','Feria RandomPlan: reglas mínimas para comprar/vender sin que se llene de spam','Para que p/feria funcione: comuna, precio claro, fotos reales, reputación, comentarios visibles y reportes. ¿Qué otra regla pondrías desde el día uno?',29,11),
+    seedPost(6,'debate','💬',6,'Debate','b','¿Chile está demasiado centralizado o las regiones también necesitan organizar mejor su voz?','Tema para discutir sin pelear: centralismo, municipios, gobiernos regionales, inversión, transporte y oportunidades fuera de la capital.',38,15),
+    seedPost(7,'tecnologia','💻',7,'Producto local','b','Una plataforma chilena no puede sentirse gringa traducida: tiene que hablar como la gente','Diseño, comunidades, comentarios, noticias reales, feria, memes y finanzas. La identidad local puede ser una ventaja si se cuida la experiencia.',33,13)
+  ];}
+  function applyNationalSeeds(){
+    if(!Array.isArray(window.POSTS))return;
+    var dynamic=window.POSTS.filter(function(p){return p&&(p.isNews||p.realId||p.id>=8500);});
+    var seeds=nationalSeeds();
+    window.POSTS.splice(0,window.POSTS.length);
+    dynamic.concat(seeds).forEach(function(p,i){cleanPostUser(p,i);window.POSTS.push(p);});
+  }
+  window.RP_sanitizeBotUsers=function(){
+    if(Array.isArray(window.POSTS))window.POSTS.forEach(cleanPostUser);
+  };
+  var originalGenerate=window.generateBotComments;
+  window.generateBotComments=function(count,existingCd){
+    var p=window.__rpCommentContextPost||null;
+    if(!p && Array.isArray(existingCd) && existingCd.length && existingCd[0].__postContext)p=existingCd[0].__postContext;
+    if(p){
+      var base=Array.isArray(existingCd)?existingCd.filter(function(c){return c&&!c.__postContext;}):[];
+      if(base.length){
+        base=base.map(function(c,i){if(!c.bot||!safeName(c.bot.name))c.bot=pickBot(p.sub||'chile','base-'+i,{});return c;});
+        var extra=makeComments(p,Math.max(0,(count||base.length)-base.length));
+        var seen={};
+        return base.concat(extra).filter(function(c){var key=(c.bot&&c.bot.name)+'|'+c.txt;if(seen[key])return false;seen[key]=1;return true;}).slice(0,Math.max(count||base.length,base.length));
+      }
+      return makeComments(p,count||6);
+    }
+    return originalGenerate?originalGenerate(count,existingCd):makeComments({sub:'chile',id:1,title:''},count||6);
+  };
+  if(window.renderPost && !window.renderPost.__rpV5Wrapped){
+    var oldRender=window.renderPost;
+    window.renderPost=function(p){cleanPostUser(p,0);window.__rpCommentContextPost=p;try{return oldRender(p);}finally{window.__rpCommentContextPost=null;}};
+    window.renderPost.__rpV5Wrapped=true;
+  }
+  // Inline comment: emoji sí, GIF no. El GIF queda solo dentro del hilo completo.
+  window.buildMediaBar=function(inputId){
+    return '<div class="media-bar"><button type="button" class="media-btn" onclick="event.preventDefault();event.stopPropagation();showEmojiPicker(\''+inputId+'\',this)">😊 emoji</button></div>';
+  };
+  window.openCommentBox=function(postId){
+    if(!window.currentUser){if(window.showModal)showModal('login');return;}
+    var box=document.getElementById('cbox-'+postId); if(!box)return;
+    var inputId='cinp-'+postId;
+    box.innerHTML='<div style="display:flex;align-items:center;gap:.4rem;width:100%"><input type="text" id="'+inputId+'" style="flex:1;background:transparent;border:none;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none;width:100%" placeholder="escribe tu comentario..." onkeydown="if(event.key===\'Enter\')sendComment('+postId+')"><button onclick="sendComment('+postId+')" style="background:none;border:1px solid var(--green);color:var(--green);padding:.15rem .5rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer">SEND</button></div>'+window.buildMediaBar(inputId);
+    var inp=document.getElementById(inputId); if(inp)inp.focus();
+  };
+  if(window.loadRealPosts && !window.loadRealPosts.__rpV5Wrapped){
+    var oldLoadReal=window.loadRealPosts;
+    window.loadRealPosts=async function(){var r=await oldLoadReal.apply(this,arguments);setTimeout(function(){window.RP_sanitizeBotUsers();if(window.renderFeed)renderFeed(window._currentFilter&&window._currentFilter!=='inicio'?window._currentFilter:null);},80);return r;};
+    window.loadRealPosts.__rpV5Wrapped=true;
+  }
+  applyNationalSeeds();
+  window.RP_sanitizeBotUsers();
+  if(window.renderFeed)renderFeed(window._currentFilter&&window._currentFilter!=='inicio'?window._currentFilter:null);
+  if(window.renderTrending)renderTrending();
+  setTimeout(function(){applyNationalSeeds();window.RP_sanitizeBotUsers();if(window.renderFeed)renderFeed(window._currentFilter&&window._currentFilter!=='inicio'?window._currentFilter:null);},650);
+})();
+</script>
 </body>
 </html>
