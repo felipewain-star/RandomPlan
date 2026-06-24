@@ -2868,16 +2868,10 @@ async function botCommentRealPost(postId, postTitle, postContenido, postSub, fak
   if (!candidates.length) candidates = BOTS;
   var botData = candidates[Math.floor(Math.random() * candidates.length)];
 
-  // Usar pool propio del arquetipo — sin Claude API (CORS)
+  // Intentar Claude API para comentario contextual
   var pool = getBotPool(botData);
-  var longitud = getBotLength(botData);
-  var filtered = longitud === 'muy_corta'
-    ? pool.filter(function(p) { return p.length <= 40; })
-    : longitud === 'corta'
-    ? pool.filter(function(p) { return p.length <= 80; })
-    : pool;
-  if (!filtered.length) filtered = pool;
-  var txt = filtered[Math.floor(Math.random() * filtered.length)];
+  var fallbackTxt = pool[Math.floor(Math.random()*pool.length)];
+  var txt = (await generateClaudeComment(botData.name, botData.arq||'santiaguino', postTitle, postSub)) || fallbackTxt;
 
   // Solo DOM - no DB
   if(fakeId){
@@ -3013,6 +3007,30 @@ async function loadNews(){
     console.log('[RandomPlan] '+items.length+' noticias cargadas');
   }catch(e){console.log('[RandomPlan] news error:',e.message);}
 }
+
+// ── CLAUDE API BOT COMMENTS ──
+var _botCommentCache={};
+
+async function generateClaudeComment(botName, botArq, postTitle, postSub){
+  var cacheKey=botName+':'+postTitle.slice(0,20);
+  if(_botCommentCache[cacheKey]) return _botCommentCache[cacheKey];
+  var arqDesc={nortenio:'eres de Antofagasta directo y del norte',portenio:'eres de Valparaiso bohemio',santiaguino:'eres de Santiago urbano',sureno:'eres de Concepcion tranquilo',economista:'eres economista analitico',gamer_tech:'eres gamer y tech usas jerga internet',senora_barrio:'eres senora de barrio practica',profe:'eres profesor reflexivo',flaite:'eres de la calle hablas chilenismo',diaspora:'vives en extranjero compara chile',emprendedor:'eres emprendedor startup',gen_z:'eres gen z chileno no cap based'};
+  var desc=arqDesc[botArq]||'eres chileno';
+  var prompt='Eres u/'+botName+' en RandomPlan. '+desc+'. Comenta en max 15 palabras en chileno coloquial este post de p/'+postSub+': '+postTitle;
+  try{
+    var r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:80,messages:[{role:'user',content:prompt}]})
+    });
+    if(!r.ok) return null;
+    var d=await r.json();
+    var txt=d.content&&d.content[0]&&d.content[0].text;
+    if(txt){txt=txt.trim().replace(/^["']|["']$/g,'');_botCommentCache[cacheKey]=txt;return txt;}
+  }catch(e){}
+  return null;
+}
+
 
 // Init
 addMsg(null,'// chat global activo · randomplan.cl',false,true);
