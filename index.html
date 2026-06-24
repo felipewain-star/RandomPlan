@@ -1883,10 +1883,78 @@ function closeProfile(){
   document.body.style.overflow='';
 }
 
+function renderBotProfile(username, bot, body){
+  // generate consistent fake stats from username hash
+  function h(s,m){var n=0;for(var i=0;i<s.length;i++)n=(n*31+s.charCodeAt(i))&0xfffffff;return n%m;}
+  var karma=h(username,4500)+50;
+  var posts=h(username+'p',80)+5;
+  var coms=h(username+'c',300)+20;
+  var lvl=getKarmaLevel(karma);
+  var arqLabels={
+    nortenio:'Norte Grande',portenio:'Puerto',santiaguino:'Santiago',
+    sureno:'Sur de Chile',economista:'Economista',gamer_tech:'Gamer/Tech',
+    senora_barrio:'Barrio',profe:'Educación',flaite:'Calle',
+    diaspora:'Diáspora',emprendedor:'Startup',gen_z:'Gen Z'
+  };
+  var arqLabel=arqLabels[bot.arq||'santiaguino']||'Usuario';
+  var joinDate=new Date(Date.now()-h(username+'d',365*2)*86400000).toLocaleDateString('es-CL',{timeZone:'America/Santiago'});
+
+  var html='';
+  html+='<div class="profile-card">';
+  html+=makeAvatar(username,'lg');
+  html+='<div>';
+  html+='<div style="font-size:1.1rem;font-weight:700;color:var(--text1);font-family:var(--mono)">u/'+username+'</div>';
+  html+='<div style="margin:.3rem 0">'+karmaTag(karma)+'</div>';
+  html+='<div style="font-size:.65rem;color:var(--text3);font-family:var(--mono)">'+arqLabel+' · miembro desde '+joinDate+'</div>';
+  html+='</div></div>';
+
+  html+='<div class="profile-stats">';
+  html+='<div class="profile-stat"><div class="profile-stat-n" style="color:var(--green)">'+karma+'</div><div class="profile-stat-l">karma</div></div>';
+  html+='<div class="profile-stat"><div class="profile-stat-n" style="color:var(--blue)">'+posts+'</div><div class="profile-stat-l">posts</div></div>';
+  html+='<div class="profile-stat"><div class="profile-stat-n" style="color:var(--purple)">'+coms+'</div><div class="profile-stat-l">comentarios</div></div>';
+  html+='</div>';
+
+  // nivel progress
+  html+='<div style="background:var(--bg0);border:1px solid var(--border);border-radius:4px;padding:.7rem;margin-bottom:.8rem">';
+  html+='<div style="font-size:.65rem;font-family:var(--mono);color:var(--text3);margin-bottom:.4rem">// nivel: <span style="color:'+lvl.color+'">'+lvl.label+'</span></div>';
+  var nextLevels=[10,100,500,1000,5000,10000];
+  var next=nextLevels.find(function(n){return n>karma;});
+  if(next){
+    var prev=nextLevels[nextLevels.indexOf(next)-1]||0;
+    var pct=Math.min(100,Math.floor((karma-prev)/(next-prev)*100));
+    html+='<div style="background:var(--bg2);border-radius:2px;height:4px;margin-top:.4rem">';
+    html+='<div style="background:'+lvl.color+';width:'+pct+'%;height:4px;border-radius:2px"></div></div>';
+    html+='<div style="font-size:.6rem;color:var(--text3);font-family:var(--mono);margin-top:.3rem">'+pct+'% hacia el siguiente nivel</div>';
+  }
+  html+='</div>';
+
+  // sample phrases
+  var arq=bot.arq||'santiaguino';
+  html+='<div class="profile-section">';
+  html+='<div class="profile-section-title">// comentarios recientes</div>';
+  var frases=BOT_PHRASES[arq]||BOT_PHRASES.santiaguino;
+  var samples=[].concat(frases.largo||[],frases.corto||[]).slice(0,3);
+  samples.forEach(function(txt){
+    html+='<div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:.6rem .8rem;margin-bottom:.4rem">';
+    html+='<div style="font-size:.82rem;color:var(--text2)">'+txt+'</div>';
+    html+='<div style="font-size:.7rem;color:var(--text3);font-family:var(--mono);margin-top:.3rem">▲ '+Math.floor(Math.random()*8)+'</div>';
+    html+='</div>';
+  });
+  html+='</div>';
+
+  body.innerHTML=html;
+}
+
 async function loadProfile(username){
   var body=document.getElementById('profile-body');
   try {
-    // fetch perfil
+    // check if bot first
+    var bot=BOTS.find(function(b){return b.name===username;});
+    if(bot){
+      renderBotProfile(username, bot, body);
+      return;
+    }
+    // fetch perfil real
     var rp=await db.from('perfiles').select('*').eq('username',username).single();
     if(rp.error||!rp.data){
       body.innerHTML='<div class="profile-empty">// usuario no encontrado</div>';
