@@ -1,4 +1,4 @@
-}<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -2865,8 +2865,8 @@ async function loadGlobalGifs(query){
 
 function buildMediaBar(inputId){
   return '<div class="media-bar">'+
-    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmojiPicker(this.dataset.inp)">😊</button>'+
-    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGifPicker(this.dataset.inp)">GIF</button>'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmoji(this)">😊</button>'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGif(this)">GIF</button>'+
   '</div>';
 }
 
