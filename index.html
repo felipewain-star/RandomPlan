@@ -147,7 +147,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .csub{color:var(--blue);cursor:pointer;font-weight:700}.csub:hover{text-decoration:underline}
 .cuser{color:var(--amber);cursor:pointer}.cuser:hover{text-decoration:underline}
 .dot{color:var(--border2)}
-.flair-news{background:rgba(255,59,48,.15);color:#ff3b30;border:1px solid rgba(255,59,48,.3)}
 .flair{padding:.04rem .33rem;border-radius:2px;font-size:.6rem;font-weight:700}
 .flair.r{background:rgba(255,123,114,.1);color:#ff7b72;border:1px solid rgba(255,123,114,.2)}
 .flair.b{background:rgba(121,192,255,.1);color:var(--blue);border:1px solid rgba(121,192,255,.2)}
@@ -211,31 +210,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .link-preview-title{font-size:.82rem;font-weight:700;color:var(--text1);line-height:1.3;margin-bottom:.2rem;font-family:var(--sans)}
 .link-preview-desc{font-size:.75rem;color:var(--text2);line-height:1.4;font-family:var(--sans)}
 .link-preview-loading{padding:.6rem .7rem;font-size:.72rem;color:var(--text3);font-family:var(--mono)}
-.karma-tag{font-size:.6rem;font-family:var(--mono);border:1px solid;border-radius:2px;padding:.05rem .35rem;white-space:nowrap;opacity:.85}
-.profile-wrap{display:none;position:fixed;inset:0;z-index:500;background:var(--bg0);overflow-y:auto}.profile-wrap.on{display:block}
-.profile-header{background:var(--bg1);border-bottom:1px solid var(--border);padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:10}
-.profile-back{background:none;border:1px solid var(--border2);color:var(--text3);padding:.3rem .7rem;border-radius:3px;font-family:var(--mono);font-size:.72rem;cursor:pointer}
-.profile-back:hover{border-color:var(--green);color:var(--green)}
-.profile-body{max-width:740px;margin:0 auto;padding:1.5rem 1rem}
-.profile-card{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:1.5rem;margin-bottom:1rem;display:flex;gap:1.2rem;align-items:center}
-.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:1rem 0}
-.profile-stat{background:var(--bg0);border:1px solid var(--border);border-radius:4px;padding:.7rem;text-align:center}
-.profile-stat-n{font-size:1.4rem;font-weight:700;font-family:var(--mono);color:var(--green)}
-.profile-stat-l{font-size:.62rem;color:var(--text3);font-family:var(--mono);margin-top:.2rem}
-.profile-section{margin-top:1.2rem}
-.profile-section-title{font-family:var(--mono);font-size:.72rem;color:var(--text3);margin-bottom:.6rem;padding-bottom:.3rem;border-bottom:1px solid var(--border)}
-.profile-empty{font-family:var(--mono);font-size:.72rem;color:var(--text3);padding:1rem;text-align:center}
-.post-view{display:none;position:fixed;inset:0;z-index:400;background:var(--bg0);overflow-y:auto}.post-view.on{display:block}
-.post-view-header{background:var(--bg1);border-bottom:1px solid var(--border);padding:.8rem 1.2rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:10}
-.post-view-back{background:none;border:1px solid var(--border2);color:var(--text3);padding:.3rem .7rem;border-radius:3px;font-family:var(--mono);font-size:.72rem;cursor:pointer}
-.post-view-back:hover{border-color:var(--green);color:var(--green)}
-.post-view-body{max-width:740px;margin:0 auto;padding:1.2rem 1rem}
-.post-view-title{font-size:1.3rem;font-weight:700;color:var(--text1);margin:1rem 0 .5rem;line-height:1.35;word-break:break-word}
-.post-view-content{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:1rem;margin-bottom:1rem;word-break:break-word}
-.post-view-img{width:100%;max-height:500px;object-fit:contain;border-radius:4px;display:block}
-.post-view-divider{border:none;border-top:1px solid var(--border);margin:1rem 0}
-.post-view-comment-box{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:.8rem;margin-bottom:1.2rem}
-.post-view-comments-title{font-family:var(--mono);font-size:.72rem;color:var(--text3);margin-bottom:.8rem}
 .u-avatar{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;font-family:var(--mono);border:1.5px solid transparent}
 .u-avatar-lg{width:36px;height:36px;font-size:.85rem}
 .u-avatar-sm{width:22px;height:22px;font-size:.6rem}
@@ -584,20 +558,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
   <div id="gif-grid-global" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:165px;overflow-y:auto"></div>
 </div>
 
-<div class="post-view" id="post-view">
-  <div class="post-view-header">
-    <button class="post-view-back" onclick="closePostView()">← volver</button>
-    <span id="post-view-sub" style="font-family:var(--mono);font-size:.72rem;color:var(--text3)"></span>
-  </div>
-  <div class="post-view-body" id="post-view-body"></div>
-</div>
-<div class="profile-wrap" id="profile-wrap">
-  <div class="profile-header">
-    <button class="profile-back" onclick="closeProfile()">← volver</button>
-    <span id="profile-title" style="font-family:var(--mono);font-size:.82rem;color:var(--text2)"></span>
-  </div>
-  <div class="profile-body" id="profile-body"></div>
-</div>
 <div class="modal-wrap" id="modal-wrap" onclick="closeMBg(event)">
   <div class="modal">
     <div class="modal-bar">randomplan.cl <button class="modal-x" onclick="closeModal()">✕</button></div>
@@ -1056,6 +1016,7 @@ function addMsg(user,txt,isMe,isSystem){
     div.innerHTML=
       '<div class="msg-meta">'+
         '<span class="msg-user'+(isMe?' me':'')+'">'+user.name+'</span>'+
+        '<span class="msg-city">['+user.ciudad+']</span>'+
         '<span class="msg-time">'+nowTime()+'</span>'+
       '</div>'+
       '<div class="msg-text">'+txt+'</div>';
@@ -1365,12 +1326,12 @@ function renderPost(p){
   html+='<div class="cmeta">';
   html+='<span class="csub" onclick="filterFeedSub(this.dataset.sub)" data-sub="'+p.sub+'">'+p.ic+' '+p.sub+'</span>';
   html+='<span class="dot">::</span>';
-  html+='<span class="cuser" data-u="'+p.user.name+'" onclick="showProfile(this.dataset.u)" style="cursor:pointer">'+makeAvatar(p.user.name,'sm')+' u/'+p.user.name+'</span>';
+  html+='<span class="cuser">'+makeAvatar(p.user.name,'sm')+' u/'+p.user.name+'</span>';
   html+='<span class="dot">::</span>';
   html+='<span>'+p.t+'</span>';
   html+='<span class="flair '+p.fc+'">'+p.flair+'</span>';
   html+='</div>';
-  html+='<div class="ctitle" onclick="openPostView('+p.id+')" style="cursor:pointer">'+p.title+(p.isNews?' <span style="display:inline-block;font-size:.58rem;font-family:var(--mono);background:#1a3a2a;color:#00ff88;border:1px solid #00ff8840;border-radius:2px;padding:.05rem .3rem;vertical-align:middle">↗ nota</span>':'')+'</div>';
+  html+='<div class="ctitle" onclick="toggleComs('+p.id+')">'+p.title+'</div>';
 
   // En memes no mostramos el texto prev (ya está la imagen)
   if(p.prev && !isMeme){
@@ -1405,18 +1366,23 @@ function renderPost(p){
 
 function renderFeed(filter){
   var list=filter?POSTS.filter(function(p){return p.sub===filter}):POSTS;
-  if(!filter){var n=list.filter(function(p){return p.isNews;});var r=list.filter(function(p){return !p.isNews;});list=n.concat(r);}
   var html=list.map(renderPost).join('');
   if(!html)html='<div style="text-align:center;padding:2.5rem;color:var(--text3);font-size:.75rem;font-family:var(--mono)">// no hay posts aquí todavía<br><br>🌵</div>';
   document.getElementById('posts-feed').innerHTML=html;
-  return html;
 }
 
 // Mapeo permanente de posts semilla (ids JS) → IDs reales en Supabase
 // Actualizar aquí si se agregan nuevos posts semilla
 function initSeedPostMap(){
-  // realPostIdMap filled dynamically by loadRealPosts only
   window.realPostIdMap = window.realPostIdMap || {};
+  // id_js: id_supabase
+  window.realPostIdMap[1]  = 21; // La Roja convocó
+  window.realPostIdMap[2]  = 22; // El dólar $960
+  window.realPostIdMap[3]  = 23; // Camiseta roja igual
+  window.realPostIdMap[4]  = 24; // Invierno Chile
+  window.realPostIdMap[5]  = 25; // Dólar análisis semana
+  window.realPostIdMap[6]  = 26; // SpaceX ETF
+  window.realPostIdMap[7]  = 27; // Mia Khalifa mundial
 }
 
 async function loadRealPosts(filter){
@@ -1428,11 +1394,12 @@ async function loadRealPosts(filter){
   var converted=realPosts.map(function(p,i){
     var com=p.comunidades||{nombre:'chile',icono:'🇨🇱'};
     var user=p.perfiles||{username:'anon',ciudad:'Chile'};
-    // use real Supabase ID directly - no fakeId needed
+    var fakeId=9000+i;
+    // map fake id to real supabase id for comment loading
     window.realPostIdMap=window.realPostIdMap||{};
-    window.realPostIdMap[p.id]=p.id;
+    window.realPostIdMap[fakeId]=p.id;
     return {
-      id: p.id,
+      id: fakeId,
       realId: p.id,
       userId: p.user_id,
       sub: com.nombre,
@@ -1449,12 +1416,11 @@ async function loadRealPosts(filter){
       cd: []
     };
   });
-  // add to POSTS array so openPostView can find them
-  // remove any existing post with same id first (avoid duplicates)
+  // agregar a POSTS para que openPostView los encuentre
   converted.forEach(function(p){
-    var existing=POSTS.findIndex(function(x){return x.id===p.id;});
-    if(existing!==-1) POSTS.splice(existing,1);
-    POSTS.unshift(p);
+    if(!POSTS.find(function(x){return x.id===p.id;})){
+      POSTS.unshift(p);
+    }
   });
   // filter if needed
   var filtered=filter?converted.filter(function(p){return p.sub===filter;}):converted;
@@ -1643,7 +1609,7 @@ function renderCommentHTML(cid, username, ciudad, tiempo, texto, votos, isMe, re
   var html='<div class="comment" id="'+cid+'">';
   html+='<div class="cava" style="flex-shrink:0;width:28px">'+makeAvatar(safeUser)+'</div>';
   html+='<div class="ccont">';
-  html+='<div class="ccmeta"><span class="u" data-u="'+safeUser+'" onclick="showProfile(this.dataset.u)" style="cursor:pointer">u/'+safeUser+'</span> · '+tiempo+'</div>';
+  html+='<div class="ccmeta"><span class="u">u/'+safeUser+'</span> · '+tiempo+'</div>';
   html+='<div class="cctext">'+texto+'</div>';
   html+='<div class="ccacts">';
   html+='<button class="ccact ccvote-up" data-v="'+votos+'" onclick="vc(this,1)">▲ '+votos+'</button>';
@@ -1766,11 +1732,9 @@ async function sendCommentInline(postId){
   if(!currentPerfil) await loadPerfil();
   var username=currentPerfil?currentPerfil.username:'anon';
   var ciudad=currentPerfil?currentPerfil.ciudad:'Chile';
-  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
-  if(realId){
-    var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
-    if(r.error){toast('error: '+r.error.message);return;}
-  }
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||postId;
+  var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
+  if(r.error){toast('error: '+r.error.message);return;}
   var list=document.getElementById('clist-'+postId);
   if(list){
     var newCid='new-'+Date.now();
@@ -1796,11 +1760,9 @@ async function sendComment(postId){
   if(!currentPerfil) await loadPerfil();
   var username=currentPerfil?currentPerfil.username:'anon';
   var ciudad=currentPerfil?currentPerfil.ciudad:'Chile';
-  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
-  if(realId){
-    var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
-    if(r.error){toast('error: '+r.error.message);return;}
-  }
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||postId;
+  var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
+  if(r.error){toast('error: '+r.error.message);return;}
   var list=document.getElementById('clist-'+postId);
   if(list){
     var safeUsername=currentPerfil?currentPerfil.username:(username||'anon');
@@ -1819,7 +1781,6 @@ function voteComment(btn,dir){ vc(btn,dir); }
 
 
 function filterFeed(sub,el){
-  window._currentFilter=sub||null;
   document.querySelectorAll('.sf-item').forEach(function(i){i.classList.remove('on')});
   if(el)el.classList.add('on');
   var f=(!sub||sub==='inicio')?null:sub;
@@ -2357,11 +2318,9 @@ async function sendCommentInline(postId){
   if(!currentPerfil) await loadPerfil();
   var username=currentPerfil?currentPerfil.username:'anon';
   var ciudad=currentPerfil?currentPerfil.ciudad:'Chile';
-  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
-  if(realId){
-    var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
-    if(r.error){toast('error: '+r.error.message);return;}
-  }
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||postId;
+  var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
+  if(r.error){toast('error: '+r.error.message);return;}
   var list=document.getElementById('clist-'+postId);
   if(list){
     var newCid='new-'+Date.now();
@@ -3344,11 +3303,9 @@ async function sendCommentInline(postId){
   if(!currentPerfil) await loadPerfil();
   var username=currentPerfil?currentPerfil.username:'anon';
   var ciudad=currentPerfil?currentPerfil.ciudad:'Chile';
-  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
-  if(realId){
-    var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
-    if(r.error){toast('error: '+r.error.message);return;}
-  }
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||postId;
+  var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
+  if(r.error){toast('error: '+r.error.message);return;}
   var list=document.getElementById('clist-'+postId);
   if(list){
     var newCid='new-'+Date.now();
@@ -4048,10 +4005,27 @@ async function botCommentRealPost(postId, postTitle, postContenido, postSub, fak
   if (!filtered.length) filtered = pool;
   var txt = filtered[Math.floor(Math.random() * filtered.length)];
 
-  if(fakeId){
-    var cl=document.getElementById('clist-'+fakeId);
-    if(cl){var el=document.createElement('div');el.innerHTML=renderCommentHTML('bot-'+Date.now(),botData.name,botData.ciudad||'Chile','ahora',linkify(txt),Math.floor(Math.random()*8),false,null);var nd=el.firstChild;if(nd){nd.style.opacity='0';nd.style.transition='opacity .5s';cl.insertBefore(nd,cl.firstChild);setTimeout(function(){nd.style.opacity='1';},50);}}
-  }
+  // Insertar en Supabase
+  try {
+    var r = await db.from('comentarios').insert({
+      texto: txt,
+      user_id: '00000000-0000-0000-0000-000000000001',
+      post_id: postId,
+      votos: Math.floor(Math.random() * 8)
+    });
+    if (r.error) return;
+
+    // Mostrar en DOM si el post está abierto
+    if (fakeId) {
+      var clist = document.getElementById('clist-' + fakeId);
+      if (clist) {
+        clist.innerHTML += renderCommentHTML(
+          'bot-' + Date.now(), botData.name, botData.ciudad,
+          'ahora', linkify(txt), Math.floor(Math.random() * 8), false, null
+        );
+      }
+    }
+  } catch(e) {}
 }
 
 async function botPublishPost(botData, comunidadNombre, comunidadId) {
@@ -4151,111 +4125,6 @@ async function botActivityLoop() {
 }
 
 
-function getKarmaLevel(k){if(k>=10000)return{label:'⚡ leyenda',color:'#ffd700'};if(k>=5000)return{label:'🔥 élite',color:'#ff6b35'};if(k>=1000)return{label:'💎 veterano',color:'#79c0ff'};if(k>=500)return{label:'⭐ activo',color:'#00ff88'};if(k>=100)return{label:'📈 regular',color:'#a5d6ff'};if(k>=10)return{label:'🌱 nuevo',color:'#8b949e'};return{label:'👾 anon',color:'#484f58'};}
-function karmaTag(k){var lvl=getKarmaLevel(k||0);var n=k>=1000?(k/1000).toFixed(1)+'k':k+'';return '<span class="karma-tag" style="color:'+lvl.color+';border-color:'+lvl.color+'40">'+lvl.label+' · '+n+'</span>';}
-function hashNum(s,m){var n=0;for(var i=0;i<s.length;i++)n=(n*31+s.charCodeAt(i))&0xfffffff;return n%m;}
-function showProfile(u){if(!u||u==='noticia_cl')return;var w=document.getElementById('profile-wrap');if(!w)return;document.getElementById('profile-title').textContent='u/'+u;document.getElementById('profile-body').innerHTML='<div style="text-align:center;padding:2rem;font-family:var(--mono);font-size:.75rem;color:var(--text3)">// cargando...</div>';w.classList.add('on');document.body.style.overflow='hidden';loadProfile(u);}
-function closeProfile(){var w=document.getElementById('profile-wrap');if(w)w.classList.remove('on');document.body.style.overflow='';}
-async function loadProfile(username){
-  var body=document.getElementById('profile-body');
-  var bot=BOTS.find(function(b){return b.name===username;});
-  if(bot){
-    var karma=hashNum(username,4500)+50;var posts=hashNum(username+'p',80)+5;var coms=hashNum(username+'c',300)+20;var lvl=getKarmaLevel(karma);
-    var joinDate=new Date(Date.now()-hashNum(username+'d',365*2)*86400000).toLocaleDateString('es-CL',{timeZone:'America/Santiago'});
-    var arqL={nortenio:'Norte Grande',portenio:'Valparaíso',santiaguino:'Santiago',sureno:'Sur de Chile',economista:'Economista',gamer_tech:'Gamer/Tech',senora_barrio:'Barrio',profe:'Educación',flaite:'Calle',diaspora:'Diáspora',emprendedor:'Startup',gen_z:'Gen Z'};
-    var html='<div class="profile-card">'+makeAvatar(username,'lg')+'<div><div style="font-size:1.1rem;font-weight:700;color:var(--text1);font-family:var(--mono)">u/'+username+'</div><div style="margin:.3rem 0">'+karmaTag(karma)+'</div><div style="font-size:.65rem;color:var(--text3);font-family:var(--mono)">'+(arqL[bot.arq]||'Usuario')+' · desde '+joinDate+'</div></div></div>';
-    html+='<div class="profile-stats"><div class="profile-stat"><div class="profile-stat-n" style="color:var(--green)">'+karma+'</div><div class="profile-stat-l">karma</div></div><div class="profile-stat"><div class="profile-stat-n" style="color:var(--blue)">'+posts+'</div><div class="profile-stat-l">posts</div></div><div class="profile-stat"><div class="profile-stat-n" style="color:var(--purple)">'+coms+'</div><div class="profile-stat-l">comentarios</div></div></div>';
-    body.innerHTML=html;return;
-  }
-  try{
-    var rp=await db.from('perfiles').select('*').eq('username',username).single();
-    if(rp.error||!rp.data){body.innerHTML='<div class="profile-empty">// usuario no encontrado</div>';return;}
-    var u=rp.data;
-    var rpo=await db.from('posts').select('*,comunidades(nombre,icono)').eq('user_id',u.id).order('created_at',{ascending:false}).limit(8);
-    var rc=await db.from('comentarios').select('*').eq('user_id',u.id).order('created_at',{ascending:false}).limit(8);
-    var ps=rpo.data||[];var cs=rc.data||[];
-    var h2='<div class="profile-card">'+makeAvatar(u.username,'lg')+'<div><div style="font-size:1.1rem;font-weight:700;color:var(--text1);font-family:var(--mono)">u/'+u.username+'</div><div style="margin:.3rem 0">'+karmaTag(u.karma)+'</div><div style="font-size:.65rem;color:var(--text3);font-family:var(--mono)">desde '+new Date(u.created_at||Date.now()).toLocaleDateString('es-CL',{timeZone:'America/Santiago'})+'</div></div></div>';
-    h2+='<div class="profile-stats"><div class="profile-stat"><div class="profile-stat-n" style="color:var(--green)">'+(u.karma||0)+'</div><div class="profile-stat-l">karma</div></div><div class="profile-stat"><div class="profile-stat-n" style="color:var(--blue)">'+ps.length+'</div><div class="profile-stat-l">posts</div></div><div class="profile-stat"><div class="profile-stat-n" style="color:var(--purple)">'+cs.length+'</div><div class="profile-stat-l">comentarios</div></div></div>';
-    if(ps.length){h2+='<div class="profile-section"><div class="profile-section-title">// posts recientes</div>';ps.forEach(function(p){var c2=p.comunidades||{nombre:'chile',icono:'🇨🇱'};h2+='<div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:.6rem .8rem;margin-bottom:.4rem"><div style="font-size:.65rem;color:var(--text3);font-family:var(--mono)">'+c2.icono+' p/'+c2.nombre+'</div><div style="font-size:.85rem;font-weight:700;color:var(--text1)">'+p.titulo+'</div><div style="font-size:.7rem;color:var(--text3);font-family:var(--mono);margin-top:.25rem">▲ '+(p.votos||0)+'</div></div>';});h2+='</div>';}
-    if(cs.length){h2+='<div class="profile-section"><div class="profile-section-title">// comentarios recientes</div>';cs.forEach(function(c3){h2+='<div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:.6rem .8rem;margin-bottom:.4rem"><div style="font-size:.82rem;color:var(--text2)">'+c3.texto+'</div><div style="font-size:.7rem;color:var(--text3);font-family:var(--mono);margin-top:.25rem">▲ '+(c3.votos||0)+'</div></div>';});h2+='</div>';}
-    body.innerHTML=h2;
-  }catch(e){body.innerHTML='<div class="profile-empty">// error: '+e.message+'</div>';}
-}
-function openPostView(postId){
-  var p=POSTS.find(function(x){return x.id===postId;});if(!p)return;
-  var wrap=document.getElementById('post-view');var body=document.getElementById('post-view-body');if(!wrap||!body)return;
-  document.getElementById('post-view-sub').textContent=(p.ic||'')+' p/'+p.sub;
-  document.body.style.overflow='hidden';wrap.classList.add('on');
-  var html='<div style="font-size:.7rem;color:var(--text3);font-family:var(--mono);margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">'+makeAvatar(p.user.name,'sm')+'<span data-u="'+p.user.name+'" onclick="showProfile(this.dataset.u)" style="cursor:pointer;color:var(--green);font-family:var(--mono);font-size:.72rem">u/'+p.user.name+'</span><span>·</span><span>'+p.t+'</span>'+(p.flair?'<span class="flair '+(p.isNews?'flair-news':'fc-'+(p.fc||'g'))+'">'+p.flair+'</span>':'')+'</div>';
-  if(p.isNews&&p.url){html+='<div class="post-view-title"><a href="'+p.url+'" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">'+p.title+' <span style="font-size:.7rem;color:var(--green)">↗</span></a></div>';}
-  else{html+='<div class="post-view-title">'+p.title+'</div>';}
-  html+='<div class="post-view-content">';
-  if(p.img)html+='<img class="post-view-img" src="'+p.img+'" alt="">';
-  if(p.prev)html+='<div style="font-size:.88rem;color:var(--text2);line-height:1.6;margin-top:'+(p.img?'.8rem':'0')+'">'+p.prev+'</div>';
-  html+='</div>';
-  html+='<hr class="post-view-divider">';
-  html+='<div class="post-view-comment-box"><textarea id="pv-inp-'+postId+'" placeholder="escribe un comentario..." style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:3px;padding:.5rem .7rem;font-family:var(--sans);font-size:.84rem;color:var(--text1);outline:none;resize:vertical;min-height:70px;box-sizing:border-box"></textarea>';
-  html+='<div style="display:flex;justify-content:flex-end;margin-top:.4rem;gap:.5rem"><button class="media-btn" onclick="showEmoji(this)" data-inp="pv-inp-'+postId+'">😊</button><button class="media-btn" onclick="showGif(this)" data-inp="pv-inp-'+postId+'">GIF</button><button style="background:var(--green);color:#000;border:none;border-radius:3px;padding:.35rem .9rem;font-family:var(--mono);font-size:.75rem;cursor:pointer;font-weight:700" onclick="sendPVComment('+postId+')">ENVIAR</button></div></div>';
-  html+='<div class="post-view-comments-title">// '+(p.coms||0)+' comentarios</div>';
-  html+='<div id="pv-list-'+postId+'"><div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// cargando...</div></div>';
-  body.innerHTML=html;wrap.scrollTop=0;
-  loadPVComments(postId);
-}
-function closePostView(){var w=document.getElementById('post-view');if(w)w.classList.remove('on');document.body.style.overflow='';}
-async function loadPVComments(postId){
-  var list=document.getElementById('pv-list-'+postId);if(!list)return;
-  var p=POSTS.find(function(x){return x.id===postId;});if(!p){list.innerHTML='';return;}
-  var html='';
-  // check if post exists in Supabase via realPostIdMap
-  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
-  var useBot=!realId||p.isNews;
-  if(useBot){
-    var numComs=Math.max(p.coms||5,5);
-    var coms=generateBotComments(numComs,p.cd||[],p.sub);
-    if(!coms.length){list.innerHTML='<div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// sin comentarios aún</div>';return;}
-    coms.forEach(function(c){html+=renderCommentHTML('pvc-'+Math.random().toString(36).slice(2),c.bot?c.bot.name:'anon','',c.t||'ahora',linkify(c.txt||''),c.v||0,false,null);});
-    list.innerHTML=html;return;
-  }
-  if(!realId){list.innerHTML='<div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// sin comentarios aún</div>';return;}
-  var r=await db.from('comentarios').select('*,perfiles(username)').eq('post_id',realId).order('votos',{ascending:false}).limit(50);
-  if(r.error||!r.data||!r.data.length){list.innerHTML='<div style="text-align:center;padding:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text3)">// sin comentarios aún</div>';return;}
-  r.data.forEach(function(c){var u=c.perfiles||{username:'anon'};html+=renderCommentHTML('pvc-'+c.id,u.username,'','ahora',linkify(c.texto),c.votos||0,currentUser&&c.user_id===currentUser.id,c.id);});
-  list.innerHTML=html;
-}
-async function sendPVComment(postId){
-  var inp=document.getElementById('pv-inp-'+postId);if(!inp||!inp.value.trim())return;
-  var texto=inp.value.trim();
-  var sess=await db.auth.getSession();if(!sess.data||!sess.data.session){showModal('login');return;}
-  var uid=sess.data.session.user.id;
-  inp.value='';
-  var realId=(postId>=8000&&postId<8500)?(window.realPostIdMap&&window.realPostIdMap[postId])||null:null;
-  if(realId){
-    var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
-    if(r.error){toast('error: '+r.error.message);return;}
-    if(currentPerfil){currentPerfil.karma=(currentPerfil.karma||0)+1;db.from('perfiles').update({karma:currentPerfil.karma}).eq('id',uid);}
-  }
-  var list=document.getElementById('pv-list-'+postId);
-  if(list){var nh=renderCommentHTML('pvc-new-'+Date.now(),currentPerfil?currentPerfil.username:'yo','','ahora',linkify(texto),0,true,null);list.innerHTML=nh+list.innerHTML;}
-  toast('comentario publicado');
-  var p=POSTS.find(function(x){return x.id===postId;});if(p)p.coms=(p.coms||0)+1;
-}
-var _newsLoaded=false;
-async function loadNews(){
-  if(_newsLoaded)return;
-  try{
-    var r=await fetch('/api/news');if(!r.ok)return;
-    var d=await r.json();var items=d.items||[];if(!items.length)return;
-    _newsLoaded=true;
-    items.forEach(function(n,i){
-      if(!n.title||n.title.length<5)return;
-      var cleanDesc=(n.desc||'').replace(/<[^>]+>/gi,'').replace(/&lt;.*?&gt;/gi,'').replace(/&amp;/gi,'&').replace(/\s+/g,' ').trim().slice(0,180);
-      POSTS.unshift({id:8500+i,sub:n.sub||'chile',ic:n.ic||'📰',user:{name:'noticia_cl',av:'📰'},t:'ahora',flair:'📡 LIVE',fc:'r',title:n.title,prev:cleanDesc||null,url:n.link||null,votos:Math.floor(Math.random()*12)+1,coms:Math.floor(Math.random()*6)+1,cd:[],isNews:true});
-    });
-    var f=document.getElementById('posts-feed');if(f)f.innerHTML=renderFeed(window._currentFilter||null);
-    renderTrending();console.log('[RandomPlan] '+items.length+' noticias');
-  }catch(e){console.log('[RandomPlan] news error:',e.message);}
-}
-
 // Init
 addMsg(null,'// chat global activo · randomplan.cl',false,true);
 CHAT_INIT.forEach(function(m){addMsg(m.bot,m.txt,false,false)});
@@ -4266,7 +4135,6 @@ initSeedPostMap();renderFeed(null);renderTrending();renderComms();
 setInterval(tickVotes,8000);
 loadChatHistory();
 setInterval(pollChat,3000);
-setTimeout(loadNews,1500);
 loadRealPosts(null);
 // check existing session
 db.auth.getSession().then(function(r){
