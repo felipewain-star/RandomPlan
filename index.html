@@ -1479,7 +1479,7 @@ function rpInsert(txt){var i=document.getElementById('rpNewComment');if(!i)retur
 function rpInitEmoji(){var box=document.getElementById('rpEmojiPicker');if(!box||box.dataset.init)return;box.dataset.init='1';RP_EMOJIS.forEach(function(e){var b=document.createElement('button');b.textContent=e;b.onclick=function(){rpInsert(e);box.style.display='none'};box.appendChild(b);});}
 function rpToggleEmoji(){rpInitEmoji();var e=document.getElementById('rpEmojiPicker'),g=document.getElementById('rpGifPicker');if(g)g.style.display='none';e.style.display=e.style.display==='flex'?'none':'flex';}
 function rpToggleGif(){var g=document.getElementById('rpGifPicker'),e=document.getElementById('rpEmojiPicker');if(e)e.style.display='none';g.style.display=g.style.display==='block'?'none':'block';var grid=document.getElementById('rpGifGrid');if(grid&&!grid.dataset.loaded){grid.dataset.loaded='1';rpBuscarGif('meme chile')}}
-async function rpBuscarGif(q){var grid=document.getElementById('rpGifGrid');if(!grid)return;grid.innerHTML='<span class="empty">// buscando...</span>';try{var key='AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';var r=await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q||'meme chile')+'&key='+key+'&limit=12&media_filter=gif,tinygif');if(!r.ok)throw new Error('tenor '+r.status);var d=await r.json();var results=d.results||[];grid.innerHTML='';results.forEach(function(item){var mf=item.media_formats||{};var thumb=(mf.tinygif&&mf.tinygif.url)||(mf.gif&&mf.gif.url)||'';var full=(mf.gif&&mf.gif.url)||thumb;if(!thumb)return;var img=document.createElement('img');img.src=thumb;img.className='gif-thumb';img.onclick=function(ev){ev.preventDefault();rpInsert(' [gif:'+full+']');document.getElementById('rpGifPicker').style.display='none'};grid.appendChild(img);});if(!results.length)grid.innerHTML='<span class="empty">// sin resultados</span>';}catch(e){grid.innerHTML='<span class="empty">// error GIF: '+String(e.message||e)+'</span>';}}
+async function rpBuscarGif(q){var grid=document.getElementById('rpGifGrid');if(!grid)return;var fall=['https://media.giphy.com/media/3oEjHI8WJv4x6UPDB6/giphy.gif','https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif','https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif','https://media.giphy.com/media/111ebonMs90YLu/giphy.gif','https://media.giphy.com/media/5VKbvrjxpVJCM/giphy.gif','https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif','https://media.giphy.com/media/LCdPNT81vlv3y/giphy.gif','https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif'];function drawFallback(){grid.innerHTML='';fall.forEach(function(u){var img=document.createElement('img');img.src=u;img.className='gif-thumb';img.onclick=function(ev){ev.preventDefault();rpInsert(' [gif:'+u+']');document.getElementById('rpGifPicker').style.display='none'};grid.appendChild(img);});}grid.innerHTML='<span class="empty">// buscando...</span>';try{var key='AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';var r=await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q||'meme chile')+'&key='+key+'&limit=12&media_filter=gif,tinygif');if(!r.ok)throw new Error('tenor '+r.status);var d=await r.json();var results=d.results||[];if(!results.length){drawFallback();return;}grid.innerHTML='';results.forEach(function(item){var mf=item.media_formats||{};var thumb=(mf.tinygif&&mf.tinygif.url)||(mf.gif&&mf.gif.url)||'';var full=(mf.gif&&mf.gif.url)||thumb;if(!thumb)return;var img=document.createElement('img');img.src=thumb;img.className='gif-thumb';img.onclick=function(ev){ev.preventDefault();rpInsert(' [gif:'+full+']');document.getElementById('rpGifPicker').style.display='none'};grid.appendChild(img);});if(!grid.children.length)drawFallback();}catch(e){drawFallback();}}
 function rpAddComment(){var i=document.getElementById('rpNewComment'),v=i.value.trim();if(!v)return;var box=document.getElementById('rpComments');var empty=box.querySelector('.empty');if(empty)empty.remove();var d=document.createElement('div');d.className='rp-thread-comment';d.innerHTML='<div class="rp-thread-votes"><button>▲</button><strong>0</strong><button>▼</button></div><div class="rp-thread-comment-body"><div class="rp-thread-comment-meta">u/tu_usuario · ahora</div><div class="rp-thread-comment-text">'+rpLinkify(v)+'</div></div>';box.insertBefore(d,box.firstChild);i.value='';}
 <\/script>
 </body></html>`;
@@ -1761,7 +1761,7 @@ function renderPost(p){
   if(refUrl){
     html+='<button class="cact source-link" onclick="event.stopPropagation();openPostThreadWindow('+p.id+')">// abrir hilo + '+(isNewsClickable?'fuente':'link')+'</button>';
   }
-  html+='<button class="cact" onclick="event.stopPropagation();openPostThreadWindow('+p.id+')">// '+p.coms+' comentarios</button>';
+  html+='<button class="cact comments-toggle-btn" onclick="event.stopPropagation();toggleComs('+p.id+')">// '+p.coms+' comentarios</button>';
   html+='<button class="cact" onclick="event.stopPropagation();toast(&quot;enlace copiado&quot;)">// compartir</button>';
   if(p.realId&&currentUser&&p.userId===currentUser.id) html+='<button class="cact com-del" onclick="event.stopPropagation();deletePost('+p.id+','+p.realId+',this)">// borrar</button>';
   html+='</div>';
@@ -1896,8 +1896,8 @@ function toggleComs(id){
   var el=document.getElementById('cs-'+id);
   if(!el)return;
   el.classList.toggle('open',openComs[id]);
-  var btn=document.querySelector('#post-'+id+' .cact');
-  if(btn) btn.textContent=openComs[id]?'// cerrar':'// comentarios';
+  var btn=document.querySelector('#post-'+id+' .comments-toggle-btn');
+  if(btn){var p=POSTS.find(function(x){return x.id===id;});btn.textContent=openComs[id]?'// cerrar comentarios':'// '+((p&&p.coms)||0)+' comentarios';}
   if(openComs[id]) renderComSection(id,'top');
 }
 
@@ -1915,8 +1915,8 @@ function renderComSection(postId, sort){
     inner.innerHTML=
       '<div class="com-write" id="cwrite-'+postId+'">'+
         '<input type="text" id="'+inputId+'" placeholder="escribe un comentario..." onkeydown="if(event.key===\'Enter\')sendCommentInline('+postId+')" style="flex:1;background:var(--bg0);border:1px solid var(--border);border-radius:3px;padding:.38rem .6rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none">'+
-        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmoji(this)">😊</button>'+
-        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGif(this)">GIF</button>'+
+        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmojiPicker(this.dataset.inp)">😊</button>'+
+        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGifPicker(this.dataset.inp)">GIF</button>'+
         '<button class="com-send-btn" onclick="sendCommentInline('+postId+')">SEND</button>'+
       '</div>'+
       '<div class="com-sort-bar">'+
@@ -1938,8 +1938,8 @@ function renderComSection(postId, sort){
       writeDiv.id='cwrite-'+postId;
       writeDiv.innerHTML=
         '<input type="text" id="'+inputId+'" placeholder="escribe un comentario..." onkeydown="if(event.key===\'Enter\')sendCommentInline('+postId+')" style="flex:1;background:var(--bg0);border:1px solid var(--border);border-radius:3px;padding:.38rem .6rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none">'+
-        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmoji(this)">😊</button>'+
-        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGif(this)">GIF</button>'+
+        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmojiPicker(this.dataset.inp)">😊</button>'+
+        '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGifPicker(this.dataset.inp)">GIF</button>'+
         '<button class="com-send-btn" onclick="sendCommentInline('+postId+')">SEND</button>';
       existing.insertBefore(writeDiv, existing.querySelector('.com-list'));
     }
@@ -2026,7 +2026,7 @@ function renderCommentHTML(cid, username, ciudad, tiempo, texto, votos, isMe, re
   html+='<div class="cava" style="flex-shrink:0;width:28px">'+makeAvatar(safeUser)+'</div>';
   html+='<div class="ccont">';
   html+='<div class="ccmeta"><span class="u">u/'+safeUser+'</span> · '+tiempo+'</div>';
-  html+='<div class="cctext">'+texto+'</div>';
+  html+='<div class="cctext">'+linkify(texto)+'</div>';
   html+='<div class="ccacts">';
   html+='<button class="ccact ccvote-up" data-v="'+votos+'" onclick="vc(this,1)">▲ '+votos+'</button>';
   html+='<button class="ccact ccvote-down" onclick="vc(this,-1)">▼</button>';
@@ -3419,8 +3419,8 @@ async function buscarGif(q){
 
 function buildMediaBar(inputId){
   return '<div class="media-bar">'+
-    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmoji(this)">😊</button>'+
-    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGif(this)">GIF</button>'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmojiPicker(this.dataset.inp)">😊</button>'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGifPicker(this.dataset.inp)">GIF</button>'+
   '</div>';
 }
 
@@ -4418,6 +4418,90 @@ document.addEventListener('click', function(e){
   if(gp && !gp.contains(e.target) && !e.target.classList.contains('media-btn')) gp.style.display='none';
 });
 
+
+// ── RANDOMPLAN FIX: picker emoji/GIF estable ──
+// Mantiene los GIFs aunque Tenor falle, útil en GitHub Pages o navegadores con bloqueo.
+var RP_GIF_FALLBACKS=[
+  {tags:'meme chile risa jajaja laugh',url:'https://media.giphy.com/media/3oEjHI8WJv4x6UPDB6/giphy.gif'},
+  {tags:'meme chile facepalm fail',url:'https://media.giphy.com/media/3o7TKr3nzbh5WgCFxe/giphy.gif'},
+  {tags:'meme chile waiting esperar',url:'https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif'},
+  {tags:'meme shocked sorprendido',url:'https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif'},
+  {tags:'meme yes si approve',url:'https://media.giphy.com/media/111ebonMs90YLu/giphy.gif'},
+  {tags:'meme no nope',url:'https://media.giphy.com/media/ToMjGpKniGqRNLGBrhu/giphy.gif'},
+  {tags:'meme fire fuego',url:'https://media.giphy.com/media/5VKbvrjxpVJCM/giphy.gif'},
+  {tags:'meme dance fiesta',url:'https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif'},
+  {tags:'meme money finanzas',url:'https://media.giphy.com/media/LCdPNT81vlv3y/giphy.gif'},
+  {tags:'meme computer tech',url:'https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif'},
+  {tags:'meme ok entiendo',url:'https://media.giphy.com/media/GCvktC0KFy9l6/giphy.gif'},
+  {tags:'meme cat gato',url:'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif'}
+];
+function rpRenderGifFallbacks(grid, query){
+  if(!grid)return;
+  var q=String(query||'').toLowerCase().trim();
+  var words=q.split(/\s+/).filter(Boolean);
+  var items=RP_GIF_FALLBACKS.filter(function(x){return !q||x.tags.indexOf(q)!==-1||words.some(function(w){return x.tags.indexOf(w)!==-1;});});
+  if(!items.length)items=RP_GIF_FALLBACKS.slice(0,9);
+  grid.innerHTML='';
+  items.slice(0,12).forEach(function(item){
+    var img=document.createElement('img');
+    img.src=item.url;
+    img.className='gif-thumb';
+    img.alt='gif';
+    img.onclick=function(ev){
+      ev.preventDefault();ev.stopPropagation();
+      if(!_activeInput)return;
+      var inp=document.getElementById(_activeInput);
+      if(inp){inp.value+=(inp.value?' ':'')+'[gif:'+item.url+']';inp.focus();}
+      var gp=document.getElementById('global-gif-picker');
+      if(gp)gp.style.display='none';
+    };
+    grid.appendChild(img);
+  });
+}
+function showEmoji(btn){
+  var inputId=(btn&&btn.dataset&&btn.dataset.inp)||(btn&&btn.getAttribute&&btn.getAttribute('data-inp'));
+  if(inputId)showEmojiPicker(inputId);
+}
+function showGif(btn){
+  var inputId=(btn&&btn.dataset&&btn.dataset.inp)||(btn&&btn.getAttribute&&btn.getAttribute('data-inp'));
+  if(inputId)showGifPicker(inputId);
+}
+async function loadGlobalGifs(query){
+  var grid=document.getElementById('gif-grid-global');
+  if(!grid)return;
+  grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// buscando...</span>';
+  try{
+    var key='AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';
+    var url='https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(query||'meme chile')+'&key='+key+'&limit=12&media_filter=gif,tinygif';
+    var r=await fetch(url);
+    if(!r.ok)throw new Error('tenor '+r.status);
+    var d=await r.json();
+    var results=d.results||[];
+    if(!results.length){rpRenderGifFallbacks(grid,query);return;}
+    grid.innerHTML='';
+    results.forEach(function(item){
+      var mf=item.media_formats||{};
+      var thumb=(mf.tinygif&&mf.tinygif.url)||(mf.gif&&mf.gif.url)||'';
+      var full=(mf.gif&&mf.gif.url)||thumb;
+      if(!thumb)return;
+      var img=document.createElement('img');
+      img.src=thumb;img.className='gif-thumb';img.alt=item.content_description||'gif';
+      img.onclick=function(ev){
+        ev.preventDefault();ev.stopPropagation();
+        if(!_activeInput)return;
+        var inp=document.getElementById(_activeInput);
+        if(inp){inp.value+=(inp.value?' ':'')+'[gif:'+full+']';inp.focus();}
+        var gp=document.getElementById('global-gif-picker');
+        if(gp)gp.style.display='none';
+      };
+      grid.appendChild(img);
+    });
+    if(!grid.children.length)rpRenderGifFallbacks(grid,query);
+  }catch(e){
+    rpRenderGifFallbacks(grid,query);
+  }
+}
+
 var _botCommentedPosts = {};
 var _botPostsToday = 0;
 var _botPostsLastReset = new Date().toDateString();
@@ -4564,21 +4648,20 @@ async function botActivityLoop() {
 
 
 var _newsLoaded=false;
-async function loadNews(){
-  if(_newsLoaded)return;
-  try{
-    var r=await fetch('/api/news');if(!r.ok)return;
-    var d=await r.json();var items=d.items||[];if(!items.length)return;
-    _newsLoaded=true;
-    items.forEach(function(n,i){
-      if(!n.title||n.title.length<5)return;
-      var cleanDesc=(n.desc||'').replace(/<[^>]+>/gi,'').replace(/&lt;.*?&gt;/gi,'').replace(/&amp;/gi,'&').replace(/\s+/g,' ').trim().slice(0,180);
-      POSTS.unshift({id:8500+i,sub:n.sub||'chile',ic:n.ic||'📰',user:{name:'noticias_cl',av:'📰'},t:'ahora',flair:'📡 LIVE',fc:'r',title:n.title,prev:cleanDesc||null,url:n.link||n.url||n.source_url||n.reference_url||n.referencia||n.external_url||n.fuente_url||extractFirstUrl(n.desc)||null,votos:Math.floor(Math.random()*12)+1,coms:Math.floor(Math.random()*6)+1,cd:[],isNews:true});
-    });
-    var f=document.getElementById('posts-feed');if(f)f.innerHTML=renderFeed(window._currentFilter||null);
-    renderTrending();console.log('[RandomPlan] '+items.length+' noticias');
-  }catch(e){console.log('[RandomPlan] news error:',e.message);}
-}
+var NEWS_FEEDS=[
+  {name:'Federal Reserve',sub:'finanzas',ic:'🏦',flair:'OFICIAL FED',url:'https://www.federalreserve.gov/feeds/press_monetary.xml'},
+  {name:'Federal Reserve',sub:'finanzas',ic:'🏦',flair:'OFICIAL FED',url:'https://www.federalreserve.gov/feeds/press_all.xml'}
+];
+function stripHtmlNews(s){return String(s||'').replace(/<[^>]+>/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&#39;/g,"'").replace(/&quot;/g,'"').replace(/\s+/g,' ').trim();}
+function relativeNewsTime(dateStr){var d=dateStr?new Date(dateStr):null;if(!d||isNaN(d.getTime()))return 'ahora';var ms=Date.now()-d.getTime();var m=Math.floor(ms/60000);if(m<1)return 'ahora';if(m<60)return m+'min';var h=Math.floor(m/60);if(h<24)return h+'h';var days=Math.floor(h/24);return days+'d';}
+function newsProxyUrls(url){return ['https://api.allorigins.win/raw?url='+encodeURIComponent(url),'https://corsproxy.io/?'+encodeURIComponent(url)];}
+async function fetchTextWithFallback(urls){var lastErr=null;for(var i=0;i<urls.length;i++){try{var r=await fetch(urls[i],{cache:'no-store'});if(r.ok)return await r.text();lastErr=new Error('HTTP '+r.status);}catch(e){lastErr=e;}}throw lastErr||new Error('fetch failed');}
+function parseRssItems(xmlText, feed){var doc=(new DOMParser()).parseFromString(xmlText,'text/xml');var items=[].slice.call(doc.querySelectorAll('item')).slice(0,8);return items.map(function(it){var title=stripHtmlNews((it.querySelector('title')||{}).textContent||'');var link=stripHtmlNews((it.querySelector('link')||{}).textContent||'');var desc=stripHtmlNews((it.querySelector('description')||{}).textContent||'');var date=stripHtmlNews((it.querySelector('pubDate')||{}).textContent||'');return {title:title,desc:desc,link:link,date:date,sub:feed.sub,ic:feed.ic,flair:feed.flair,source:feed.name};}).filter(function(n){return n.title&&normalizeNewsUrl(n.link);});}
+async function fetchFedRssNews(){var out=[];for(var i=0;i<NEWS_FEEDS.length;i++){var feed=NEWS_FEEDS[i];try{var xml=await fetchTextWithFallback(newsProxyUrls(feed.url));out=out.concat(parseRssItems(xml,feed));}catch(e){console.log('[RandomPlan] RSS fail '+feed.url, e.message||e);}}return out;}
+async function fetchGdeltFedNews(){try{var q='("Federal Reserve" OR FOMC OR "Fed rate" OR "Fed decision") sourcelang:english';var url='https://api.gdeltproject.org/api/v2/doc/doc?query='+encodeURIComponent(q)+'&mode=ArtList&format=json&sort=DateDesc&maxrecords=12';var r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('GDELT '+r.status);var d=await r.json();return (d.articles||[]).map(function(a){return {title:stripHtmlNews(a.title),desc:stripHtmlNews(a.seendate?('Fuente: '+(a.domain||'medio externo')):''),link:a.url,date:a.seendate,sub:'finanzas',ic:'📰',flair:'NEWS REAL',source:a.domain||'GDELT'};}).filter(function(n){return n.title&&normalizeNewsUrl(n.link);});}catch(e){console.log('[RandomPlan] GDELT fail', e.message||e);return [];}}
+function addRealNewsToPosts(items){var seen={};POSTS.forEach(function(p){var u=getPostReference(p);if(u)seen[u]=true;});var clean=[];items.forEach(function(n){var u=normalizeNewsUrl(n.link);if(!u||seen[u])return;seen[u]=true;clean.push(n);});clean.slice(0,12).reverse().forEach(function(n,i){var cleanDesc=stripHtmlNews(n.desc||'').slice(0,220);POSTS.unshift({id:8500+i+Math.floor(Math.random()*500),sub:n.sub||'finanzas',ic:n.ic||'📰',user:{name:'noticias_cl',av:'📰'},t:relativeNewsTime(n.date),flair:n.flair||'NEWS REAL',fc:n.flair==='OFICIAL FED'?'g':'r',title:n.title,prev:cleanDesc||('Fuente real: '+(n.source||getDomain(n.link))),url:n.link,votos:0,coms:0,cd:[],isNews:true,sourceName:n.source||getDomain(n.link)});});return clean.length;}
+async function loadNews(){if(_newsLoaded)return;try{var fed=await fetchFedRssNews();var gdelt=await fetchGdeltFedNews();var count=addRealNewsToPosts(fed.concat(gdelt));if(count>0){_newsLoaded=true;renderFeed(window._currentFilter||null);renderTrending();console.log('[RandomPlan] '+count+' noticias reales cargadas');}else{console.log('[RandomPlan] no se pudieron cargar noticias reales; no se publican noticias falsas');}}catch(e){console.log('[RandomPlan] news error:',e.message||e);}}
+
 
 // Init
 addMsg(null,'// chat global activo · randomplan.cl',false,true);
