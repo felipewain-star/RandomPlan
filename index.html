@@ -1198,52 +1198,45 @@ function generateBotComments(count, existingCd){
   // shuffle BOTS to avoid repetition
   var availBots=BOTS.slice().sort(function(){return Math.random()-0.5;});
   var usedBots={};
-  var phrases=[
-    "si","no","jajaja","exacto","wtf","claro po","obvio","mentira","facts","no way",
-    "ajá","oof","lol","bruh","cap","ni ahí","ya pues","ntp","uff","q","bro...",
-    "literal","ngl","ok pero","espera qué","a ver...","no po","sipo","depende",
-    "ni idea","no sé po","eso","concuerdo","discrepo igual","difícil decir",
-    "ni siquiera la vio!","en serio??","no me digas","eso mismo pensé","claro po wn",
-    "jajajajaja","no lo puedo creer","esto es real?","yo también","me la mandaron al grupo jaja",
-    "no lo había pensado","100%","facts po","momento momento","yo creo que sí","yo creo que no",
-    "no cap esto es verdad","deja de tener razón po","llegué tarde pero sí",
-    "lo mismo nos pasó en la pega","típico de la capital","qué sorpresa que pase esto",
-    "para nada de acuerdo pero respeto","interesante perspectiva igual",
-    "hay que ver los dos lados","fuego este post","guardado esto","compartido al tiro",
-    "esto necesita más upvotes","gracias por decirlo","alguien tenía que decirlo",
-    "primera vez que comento y tenía que ser en este post","por fin alguien lo dice",
-    "no todo es negativo igual","seamos justos con el análisis",
-    "al final uno hace lo que puede","la vida es así no más",
-    "oye pero qué bueno este post","necesitaba leer esto hoy",
-    "alguien más o soy yo solo?","jajaja no pero sí","en realidad tiene sentido",
-    "lo pensé pero no lo iba a decir","esto merece más atención",
-    "las 3am y leyendo esto","procrastinando con esto en vez de estudiar",
-    "fuego","top","guardado","compartido","sin palabras","uf heavy","brutal",
-    "no me lo esperaba","qué level","demasiado real","me pegó fuerte esto",
-    "mira yo llevo años diciéndole esto a mis amigos y nadie me pescaba, al final resulta que tenía razón en todo. ojalá la gente leyera más antes de opinar.",
-    "no puedo creer que estemos discutiendo esto en 2024 como si fuera algo nuevo. esto pasa en chile hace décadas y nadie hace nada porque a los que mandan les conviene.",
-    "yo viví esto en carne propia y les juro que es exactamente como lo describen. perdí trabajo, amigos, plata. no es fácil pero se sale. ánimo a los que estén pasando lo mismo.",
-    "llevo tres años trabajando en esto y puedo decirles con certeza que el problema es más profundo de lo que parece. no es solo lo que se ve en la superficie.",
-    "mi abuelo decía que chile era un país de extremos: o todo bien o todo mal, nunca hay término medio. cuánta razón tenía el viejo. aquí no existe la escala de grises.",
-    "me encanta este espacio porque por fin se puede hablar con gente que piensa distinto sin que se vuelva una pelea. en twitter esto sería una guerra de insultos.",
-    "desde el sur y con todo el respeto: los santiaguinos no tienen idea de lo que pasa en el resto del país. hablan de chile como si fuera solo la capital.",
-    "estudié esto en la u y lo que describen acá coincide con lo que vimos en clases. el problema no es falta de información, es falta de voluntad política.",
-    "llevo una hora leyendo este hilo y es la primera vez en mucho tiempo que siento que la gente realmente está pensando y no solo reaccionando. da esperanza.",
-    "el problema con chile es que tenemos cultura del trabajo duro sin cultura del descanso. nos enseñaron a trabajar más que todos pero nadie nos enseñó a vivir bien.",
-    "seré honesto: al principio no estaba de acuerdo con este post. lo leí de nuevo y cambié de opinión. eso casi nunca me pasa en internet.",
-    "la generación de mis papás no entiende por qué los jóvenes estamos agotados. creen que es flojera. no es flojera, es que el mundo que nos entregaron está roto.",
-    "no voy a mentir, lloré un poco leyendo los comentarios. ver que hay gente que pasó por lo mismo y salió adelante da una fuerza que no sabía que necesitaba.",
-    "llevo mucho tiempo pensando en esto y nunca encontré el espacio para decirlo. el problema es que en chile no sabemos escuchar. hablamos todos al mismo tiempo."
-  ];
+  // frases por arquetipo del bot
+  var arq=bot?bot.arq:'santiaguino';
+  var ARQP={
+    nortenio:   {c:['en el norte se trabaja','iquique presente','calama siempre','el norte no se queja'],l:['desde el norte les digo que santiago no tiene idea de lo que pasa acá arriba. llevamos años solos','el costo de vida en antofagasta es una locura y nadie lo menciona. todo caro, todo lejos'],r:['en iquique lo mismo','calama también','el norte siempre olvidado']},
+    portenio:   {c:['valpo lo dijo primero','el puerto sabe','desde el cerro','valparaíso presente'],l:['valparaíso es la ciudad más honesta de chile porque no puede fingir que todo está bien','en valpo uno aprende que las cosas se arreglan con ingenio porque la plata nunca alcanza'],r:['desde el cerro lo mismo','el puerto ya lo vivió','trolebusero presente']},
+    santiaguino:{c:['rush de las 6pm','metro lleno again','santiago no para','la florida sabe'],l:['el gran santiago tiene millones de personas y a veces da la sensación de que nadie se conoce. esa soledad colectiva es rara','vivir en santiago es un ejercicio de resistencia diaria. el tráfico, el metro, el costo. uno lo normaliza'],r:['igual desde stgo','metro trauma diario','capitalino presente']},
+    sureno:     {c:['lluvia eterna','el sur aguanta','desde concepción','temuco presente'],l:['el sur de chile tiene una identidad propia que no se parece a nada del norte. la lluvia, los árboles, el ritmo. es otro país dentro del país','en concepción uno siente que hay una energía diferente. más directa, menos fachada'],r:['conce también','sur presente','desde valdivia lo mismo']},
+    economista: {c:['la uf subió','el ipsa en rojo','dólar al alza','banco central ojo'],l:['el problema fiscal de chile es estructural y no se resuelve con parches. necesitamos una reforma real','la deuda de los hogares chilenos es una bomba de tiempo. consumo a crédito, tasas altas, salarios que no suben'],r:['los datos lo dicen','la uf no miente','correlación no es causalidad pero igual']},
+    gamer_tech: {c:['gg','no cap','ratio','npc detected','lag presente'],l:['el mercado tech chileno está 5 años atrás del mundo y nadie hace nada. los sueldos son malos','la IA va a cambiar todo en 3 años y chile no está ni pensando en eso'],r:['skill issue','ez','100 real','cope']},
+    senora_barrio:{c:['caro todo','la feria libre','qué les pasa','dios mío'],l:['el precio del supermercado es una vergüenza. uno va con 50 mil y no alcanza para nada','mis hijos me preguntan por qué todo está tan caro y no sé qué decirles'],r:['así es señora','en mi barrio igual','mis vecinos dicen lo mismo']},
+    profe:      {c:['en clases lo veo','historia presente','educación pública','el liceo dice'],l:['en el aula uno ve las consecuencias reales de las políticas. no son estadísticas, son cabros que no pudieron comer','enseñar historia en chile es complicado porque la historia reciente todavía duele y divide'],r:['en el liceo igual','los cabros lo dicen','educación presente']},
+    flaite:     {c:['la calle sabe','que lo q','heavy el tema','bkn','wena po','oe'],l:['uno crece en la villa y aprende cosas que en el colegio no enseñan. a leer gente, a moverse, a sobrevivir','el barrio te forma de una manera que no se puede explicar. hay cosas malas pero también hay comunidad real'],r:['la villa presente','oe exacto','bkn el comentario']},
+    diaspora:   {c:['desde afuera','extraño chile pero','se ven las cosas diferente','la nostalgia'],l:['desde afuera chile se ve distinto. uno empieza a entender qué cosas son normales en el mundo y cuáles solo en chile','la pregunta de volver o no volver es la más difícil. no hay respuesta correcta'],r:['desde europa lo mismo','el que salió entiende','afuera se ve clarito']},
+    emprendedor:{c:['el mrr no miente','pivot necesario','tracción presente','validar primero'],l:['emprender en chile es complicado porque el ecosistema es chico y el capital de riesgo es conservador','el problema no es la idea, es la ejecución y el timing. chile tiene talento pero falta apoyo temprano'],r:['el mercado lo valida','pivot inteligente','la tracción no miente']},
+    gen_z:      {c:['no cap','slay','based','ratio','npc moment','mid','sigma'],l:['la generación z chilena está agotada de que le digan que es floja. trabajamos más con menos seguridad','el problema de salud mental en jóvenes chilenos es real y masivo y nadie lo toma en serio de verdad'],r:['no cap real','based respuesta','ratio aplicado']}
+  };
+  var prob={economista:0.85,profe:0.75,nortenio:0.6,sureno:0.6,senora_barrio:0.65,emprendedor:0.6,portenio:0.55,santiaguino:0.5,diaspora:0.5,gamer_tech:0.35,flaite:0.3,gen_z:0.25};
+  var frasesArq=ARQP[arq]||ARQP.santiaguino;
+  // pick context
+  var r2=Math.random();
+  var ctx=r2<0.4?'c':r2<0.7?'l':'r';
+  var fPool=frasesArq[ctx];
+  var phrases=[fPool[Math.floor(Math.random()*fPool.length)]];
   var tiempos=["1min","5min","12min","23min","45min","1h","2h","3h","5h","8h","12h","1d"];
   for(var i=0;i<needed;i++){
-    // pick bot not already used in this section
     var bot=availBots[i % availBots.length];
-    var txt=phrases[Math.floor(Math.random()*phrases.length)];
-    // votes realistic - max 9, some negative
-    var maxV = txt.length < 20 ? 4 : txt.length < 60 ? 7 : 9;
-    var v = Math.floor(Math.random()*maxV);
-    if(Math.random()<0.25) v = -Math.floor(Math.random()*3);
+    var arq=bot?bot.arq:'santiaguino';
+    var frasesArq=ARQP[arq]||ARQP.santiaguino;
+    var r2=Math.random();
+    var ctx=r2<0.4?'c':r2<0.7?'l':'r';
+    var fPool=frasesArq[ctx];
+    var txt=fPool[Math.floor(Math.random()*fPool.length)];
+    var vProb=prob[arq]||0.5;
+    var maxV=txt.length<20?3:txt.length<60?6:8;
+    var v=0;
+    if(Math.random()<vProb){
+      v=Math.floor(Math.random()*maxV);
+      if(Math.random()<0.2) v=-Math.floor(Math.random()*3);
+    }
     all.push({
       bot:bot,
       txt:txt,
