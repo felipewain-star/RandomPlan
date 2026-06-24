@@ -4020,27 +4020,24 @@ async function botCommentRealPost(postId, postTitle, postContenido, postSub, fak
   if (!filtered.length) filtered = pool;
   var txt = filtered[Math.floor(Math.random() * filtered.length)];
 
-  // Insertar en Supabase
-  try {
-    var r = await db.from('comentarios').insert({
-      texto: txt,
-      user_id: '00000000-0000-0000-0000-000000000001',
-      post_id: postId,
-      votos: Math.floor(Math.random() * 8)
-    });
-    if (r.error) return;
-
-    // Mostrar en DOM si el post está abierto
-    if (fakeId) {
-      var clist = document.getElementById('clist-' + fakeId);
-      if (clist) {
-        clist.innerHTML += renderCommentHTML(
-          'bot-' + Date.now(), botData.name, botData.ciudad,
-          'ahora', linkify(txt), Math.floor(Math.random() * 8), false, null
-        );
+  // Solo mostrar en DOM - no guardar en DB para evitar conflictos de FK
+  if (fakeId) {
+    var clist = document.getElementById('clist-' + fakeId);
+    if (clist) {
+      var el = document.createElement('div');
+      el.innerHTML = renderCommentHTML(
+        'bot-' + Date.now(), botData.name, botData.ciudad||'Chile',
+        'ahora', linkify(txt), Math.floor(Math.random() * 8), false, null
+      );
+      var node = el.firstChild;
+      if(node){
+        node.style.opacity='0';
+        node.style.transition='opacity .5s';
+        clist.insertBefore(node, clist.firstChild);
+        setTimeout(function(){node.style.opacity='1';},50);
       }
     }
-  } catch(e) {}
+  }
 }
 
 async function botPublishPost(botData, comunidadNombre, comunidadId) {
