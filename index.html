@@ -1765,9 +1765,11 @@ async function sendComment(postId){
   if(!currentPerfil) await loadPerfil();
   var username=currentPerfil?currentPerfil.username:'anon';
   var ciudad=currentPerfil?currentPerfil.ciudad:'Chile';
-  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||postId;
-  var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
-  if(r.error){toast('error: '+r.error.message);return;}
+  var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||null;
+  if(realId){
+    var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});
+    if(r.error){toast('error: '+r.error.message);return;}
+  }
   var list=document.getElementById('clist-'+postId);
   if(list){
     var safeUsername=currentPerfil?currentPerfil.username:(username||'anon');
