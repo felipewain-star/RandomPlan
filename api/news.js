@@ -1,4 +1,4 @@
-// v3
+// v4
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-cache, no-store');
@@ -15,8 +15,7 @@ export default async function handler(req, res) {
     if (!str) return '';
     return str
       .replace(/<[^>]+>/gi, '')
-      .replace(/&lt;/gi, '')
-      .replace(/&gt;/gi, '')
+      .replace(/&lt;.*?&gt;/gi, '')
       .replace(/&amp;/gi, '&')
       .replace(/&quot;/gi, '"')
       .replace(/&#39;/gi, "'")
@@ -31,6 +30,22 @@ export default async function handler(req, res) {
     if (/[áéíóúñüÁÉÍÓÚÑÜ]/i.test(text)) return true;
     const words = ['chile','el ','la ','los ','las ','del ','que ','por ','con ','una ','para '];
     return words.filter(w => text.toLowerCase().includes(w)).length >= 2;
+  }
+
+  // Resolve Google News redirect URL to real article URL
+  async function resolveUrl(url) {
+    try {
+      if (!url.includes('news.google.com')) return url;
+      const r = await fetch(url, {
+        method: 'HEAD',
+        redirect: 'follow',
+        signal: AbortSignal.timeout(3000),
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RandomPlan/1.0)' }
+      });
+      return r.url || url;
+    } catch(e) {
+      return url;
+    }
   }
 
   function parseRSS(xml, sub, ic, max) {
@@ -65,6 +80,11 @@ export default async function handler(req, res) {
       if (!r.ok) return;
       allItems.push(...parseRSS(await r.text(), src.sub, src.ic, src.max));
     } catch(e) {}
+  }));
+
+  // Resolve all Google News URLs in parallel
+  await Promise.allSettled(allItems.map(async (item) => {
+    item.link = await resolveUrl(item.link);
   }));
 
   allItems.sort(() => Math.random() - 0.5);
