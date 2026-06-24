@@ -615,7 +615,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 <!-- GLOBAL EMOJI/GIF PICKERS -->
 <div id="global-emoji-picker" style="display:none;position:fixed;z-index:99999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;max-width:270px;flex-wrap:wrap;gap:.1rem;max-height:190px;overflow-y:auto;box-shadow:0 4px 24px rgba(0,0,0,.8)"></div>
 <div id="global-gif-picker" style="display:none;position:fixed;z-index:99999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;width:280px;box-shadow:0 4px 24px rgba(0,0,0,.8)">
-  <input id="gif-search-global" placeholder="buscar GIF + Enter" style="width:100%;background:#0d1117;border:1px solid #2a3f55;border-radius:3px;padding:.38rem .6rem;font-family:monospace;font-size:.75rem;color:#e6edf3;outline:none;margin-bottom:.4rem;box-sizing:border-box" onkeydown="if(event.key==='Enter'){document.getElementById('gif-grid-global').dataset.loaded='1';buscarGif(this.value)}">
+  <input id="gif-search-global" placeholder="buscar GIF + Enter" style="width:100%;background:#0d1117;border:1px solid #2a3f55;border-radius:3px;padding:.38rem .6rem;font-family:monospace;font-size:.75rem;color:#e6edf3;outline:none;margin-bottom:.4rem;box-sizing:border-box" onkeydown="if(event.key==='Enter'){document.getElementById('gif-grid-global').dataset.loaded='1';loadGlobalGifs(this.value)}">
   <div id="gif-grid-global" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:165px;overflow-y:auto"></div>
 </div>
 
@@ -1479,7 +1479,7 @@ function rpInsert(txt){var i=document.getElementById('rpNewComment');if(!i)retur
 function rpInitEmoji(){var box=document.getElementById('rpEmojiPicker');if(!box||box.dataset.init)return;box.dataset.init='1';RP_EMOJIS.forEach(function(e){var b=document.createElement('button');b.textContent=e;b.onclick=function(){rpInsert(e);box.style.display='none'};box.appendChild(b);});}
 function rpToggleEmoji(){rpInitEmoji();var e=document.getElementById('rpEmojiPicker'),g=document.getElementById('rpGifPicker');if(g)g.style.display='none';e.style.display=e.style.display==='flex'?'none':'flex';}
 function rpToggleGif(){var g=document.getElementById('rpGifPicker'),e=document.getElementById('rpEmojiPicker');if(e)e.style.display='none';g.style.display=g.style.display==='block'?'none':'block';var grid=document.getElementById('rpGifGrid');if(grid&&!grid.dataset.loaded){grid.dataset.loaded='1';rpBuscarGif('meme chile')}}
-async function rpBuscarGif(q){var grid=document.getElementById('rpGifGrid');if(!grid)return;grid.innerHTML='<span class="empty">// buscando...</span>';try{var r=await fetch('https://api.tenor.com/v1/search?q='+encodeURIComponent(q||'meme chile')+'&key=LIVDSRZULELA&limit=9&media_filter=minimal');if(!r.ok)throw new Error('tenor '+r.status);var d=await r.json();var results=d.results||[];grid.innerHTML='';results.forEach(function(item){var m=item.media&&item.media[0]||{};var thumb=(m.tinygif||m.gif||{}).url||'';var full=(m.gif||m.tinygif||{}).url||thumb;if(!thumb)return;var img=document.createElement('img');img.src=thumb;img.className='gif-thumb';img.onclick=function(){rpInsert(' [gif:'+full+']');document.getElementById('rpGifPicker').style.display='none'};grid.appendChild(img);});if(!results.length)grid.innerHTML='<span class="empty">// sin resultados</span>';}catch(e){grid.innerHTML='<span class="empty">// error GIF</span>';}}
+async function rpBuscarGif(q){var grid=document.getElementById('rpGifGrid');if(!grid)return;grid.innerHTML='<span class="empty">// buscando...</span>';try{var key='AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';var r=await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q||'meme chile')+'&key='+key+'&limit=12&media_filter=gif,tinygif');if(!r.ok)throw new Error('tenor '+r.status);var d=await r.json();var results=d.results||[];grid.innerHTML='';results.forEach(function(item){var mf=item.media_formats||{};var thumb=(mf.tinygif&&mf.tinygif.url)||(mf.gif&&mf.gif.url)||'';var full=(mf.gif&&mf.gif.url)||thumb;if(!thumb)return;var img=document.createElement('img');img.src=thumb;img.className='gif-thumb';img.onclick=function(ev){ev.preventDefault();rpInsert(' [gif:'+full+']');document.getElementById('rpGifPicker').style.display='none'};grid.appendChild(img);});if(!results.length)grid.innerHTML='<span class="empty">// sin resultados</span>';}catch(e){grid.innerHTML='<span class="empty">// error GIF: '+String(e.message||e)+'</span>';}}
 function rpAddComment(){var i=document.getElementById('rpNewComment'),v=i.value.trim();if(!v)return;var box=document.getElementById('rpComments');var empty=box.querySelector('.empty');if(empty)empty.remove();var d=document.createElement('div');d.className='rp-thread-comment';d.innerHTML='<div class="rp-thread-votes"><button>▲</button><strong>0</strong><button>▼</button></div><div class="rp-thread-comment-body"><div class="rp-thread-comment-meta">u/tu_usuario · ahora</div><div class="rp-thread-comment-text">'+rpLinkify(v)+'</div></div>';box.insertBefore(d,box.firstChild);i.value='';}
 <\/script>
 </body></html>`;
@@ -4286,47 +4286,68 @@ function selectGif(pickerId, fullUrl, thumbUrl){
 }
 
 // ── EMOJI / GIF GLOBAL PICKER ──
-// Single floating picker that works everywhere
+// Picker flotante único: funciona en comentarios del feed, modal y fallback interno.
 var _activeInput = null;
+var _globalEmojiReady = false;
+
+function initGlobalEmojiPicker(){
+  var picker = document.getElementById('global-emoji-picker');
+  if(!picker || _globalEmojiReady) return;
+  _globalEmojiReady = true;
+  picker.innerHTML = '';
+  var list = (typeof EMOJIS !== 'undefined' && EMOJIS && EMOJIS.length) ? EMOJIS : ['😂','🔥','💀','🤣','😭','🤯','👀','😤','🫡','🤔','💯','🎯','🤙','👊','😎','🥲','😬','🤦','🙄','👏','🫠','😅','🤡','💪','🫶','❤️','🖤','⚡','🌊','🏔','🐍','🦅','🦁','🐺','💻','📱','🎮','🏆','💰','📈','📉','🔑','⚠️','❌','✅','🚀','🌙','☀️','🌧','❄️','🍺','🍕','🌮','☕','🤝','🙏','👋','✌️','🤞','🧠','💬','🔊','🎵','🎶'];
+  list.forEach(function(e){
+    var b=document.createElement('button');
+    b.type='button';
+    b.textContent=e;
+    b.style.cssText='background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px;line-height:1.1';
+    b.onmouseover=function(){this.style.background='#1c2733'};
+    b.onmouseout=function(){this.style.background='none'};
+    b.onclick=function(ev){ev.preventDefault();ev.stopPropagation();insertEmojiGlobal(e)};
+    picker.appendChild(b);
+  });
+}
+
+function _placeFloatingPicker(picker, inputId){
+  var inp=document.getElementById(inputId);
+  var rect=inp?inp.getBoundingClientRect():null;
+  if(rect){
+    picker.style.top=(rect.bottom+window.scrollY+6)+'px';
+    picker.style.left=Math.max(4,Math.min(rect.left+window.scrollX, window.innerWidth-300))+'px';
+  }else{
+    picker.style.top='80px';
+    picker.style.left='12px';
+  }
+}
 
 function showEmojiPicker(inputId){
   _activeInput = inputId;
-  var picker = document.getElementById('global-emoji-picker');
-  var gif = document.getElementById('global-gif-picker');
+  initGlobalEmojiPicker();
+  var picker=document.getElementById('global-emoji-picker');
+  var gif=document.getElementById('global-gif-picker');
   if(!picker) return;
+  if(gif) gif.style.display='none';
   if(picker.style.display==='flex'){
     picker.style.display='none';
     return;
   }
-  gif.style.display='none';
-  // position near input
-  var inp = document.getElementById(inputId);
-  if(inp){
-    var rect = inp.getBoundingClientRect();
-    picker.style.top = (rect.bottom + window.scrollY + 4) + 'px';
-    picker.style.left = Math.max(4, rect.left + window.scrollX) + 'px';
-  }
+  _placeFloatingPicker(picker,inputId);
   picker.style.display='flex';
 }
 
 function showGifPicker(inputId){
   _activeInput = inputId;
-  var picker = document.getElementById('global-gif-picker');
-  var ep = document.getElementById('global-emoji-picker');
+  var picker=document.getElementById('global-gif-picker');
+  var ep=document.getElementById('global-emoji-picker');
   if(!picker) return;
+  if(ep) ep.style.display='none';
   if(picker.style.display==='block'){
     picker.style.display='none';
     return;
   }
-  ep.style.display='none';
-  var inp = document.getElementById(inputId);
-  if(inp){
-    var rect = inp.getBoundingClientRect();
-    picker.style.top = (rect.bottom + window.scrollY + 4) + 'px';
-    picker.style.left = Math.max(4, rect.left + window.scrollX) + 'px';
-  }
+  _placeFloatingPicker(picker,inputId);
   picker.style.display='block';
-  var grid = document.getElementById('global-gif-grid');
+  var grid=document.getElementById('gif-grid-global');
   if(grid && !grid.dataset.loaded){
     grid.dataset.loaded='1';
     loadGlobalGifs('meme chile');
@@ -4335,66 +4356,66 @@ function showGifPicker(inputId){
 
 function insertEmojiGlobal(e){
   if(!_activeInput) return;
-  var inp = document.getElementById(_activeInput);
+  var inp=document.getElementById(_activeInput);
   if(!inp) return;
-  var s = inp.selectionStart||inp.value.length;
-  inp.value = inp.value.slice(0,s) + e + inp.value.slice(s);
+  var s=typeof inp.selectionStart==='number' ? inp.selectionStart : inp.value.length;
+  inp.value=inp.value.slice(0,s)+e+inp.value.slice(s);
   inp.focus();
-  inp.selectionStart = inp.selectionEnd = s + e.length;
-  document.getElementById('global-emoji-picker').style.display='none';
+  try{inp.selectionStart=inp.selectionEnd=s+e.length}catch(x){}
+  var ep=document.getElementById('global-emoji-picker');
+  if(ep) ep.style.display='none';
 }
 
 async function loadGlobalGifs(query){
-  var grid = document.getElementById('global-gif-grid');
+  var grid=document.getElementById('gif-grid-global');
   if(!grid) return;
-  grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem">buscando...</span>';
-  try {
-    var r = await fetch('https://api.tenor.com/v1/search?q='+encodeURIComponent(query)+'&key=LIVDSRZULELA&limit=9&media_filter=minimal');
-    var d = await r.json();
-    var results = d.results||[];
-    grid.innerHTML = '';
+  grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// buscando...</span>';
+  try{
+    var key='AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';
+    var url='https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(query||'meme chile')+'&key='+key+'&limit=12&media_filter=gif,tinygif';
+    var r=await fetch(url);
+    if(!r.ok) throw new Error('tenor '+r.status);
+    var d=await r.json();
+    var results=d.results||[];
+    grid.innerHTML='';
     results.forEach(function(item){
-      var media = item.media&&item.media[0];
-      var thumb = media&&media.tinygif ? media.tinygif.url : '';
-      var full = media&&media.gif ? media.gif.url : thumb;
+      var mf=item.media_formats||{};
+      var thumb=(mf.tinygif&&mf.tinygif.url)||(mf.gif&&mf.gif.url)||'';
+      var full=(mf.gif&&mf.gif.url)||thumb;
       if(!thumb) return;
-      var img = document.createElement('img');
-      img.src = thumb;
-      img.className = 'gif-thumb';
-      img.onclick = function(){
+      var img=document.createElement('img');
+      img.src=thumb;
+      img.className='gif-thumb';
+      img.alt=item.content_description||'gif';
+      img.onclick=function(ev){
+        ev.preventDefault();ev.stopPropagation();
         if(!_activeInput) return;
-        var inp = document.getElementById(_activeInput);
-        if(inp){
-          inp.value += ' [gif:'+full+']';
-          inp.focus();
-        }
-        document.getElementById('global-gif-picker').style.display='none';
+        var inp=document.getElementById(_activeInput);
+        if(inp){inp.value+=(inp.value?' ':'')+'[gif:'+full+']';inp.focus();}
+        var gp=document.getElementById('global-gif-picker');
+        if(gp) gp.style.display='none';
       };
       grid.appendChild(img);
     });
-    if(!results.length) grid.innerHTML='<span style="color:var(--text3);font-size:.7rem">sin resultados</span>';
-  } catch(e){
-    grid.innerHTML='<span style="color:var(--text3);font-size:.7rem">error cargando GIFs</span>';
+    if(!results.length) grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// sin resultados</span>';
+  }catch(e){
+    grid.innerHTML='<span style="color:var(--red);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// error GIF: '+String(e.message||e)+'</span>';
   }
 }
 
 function buildMediaBar(inputId){
   return '<div class="media-bar">'+
-    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showEmojiPicker(this.dataset.inp)">😊</button>'+
-    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="showGifPicker(this.dataset.inp)">GIF</button>'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="event.stopPropagation();showEmojiPicker(this.dataset.inp)">😊</button>'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="event.stopPropagation();showGifPicker(this.dataset.inp)">GIF</button>'+
   '</div>';
 }
 
-// close pickers on outside click
+// cerrar pickers al hacer click afuera
 document.addEventListener('click', function(e){
-  var ep = document.getElementById('global-emoji-picker');
-  var gp = document.getElementById('global-gif-picker');
-  if(ep && !ep.contains(e.target) && !e.target.classList.contains('media-btn')){
-    ep.style.display='none';
-  }
-  if(gp && !gp.contains(e.target) && !e.target.classList.contains('media-btn')){
-    gp.style.display='none';
-  }
+  var ep=document.getElementById('global-emoji-picker');
+  var gp=document.getElementById('global-gif-picker');
+  if(ep && !ep.contains(e.target) && !e.target.classList.contains('media-btn')) ep.style.display='none';
+  if(gp && !gp.contains(e.target) && !e.target.classList.contains('media-btn')) gp.style.display='none';
 });
 
 var _botCommentedPosts = {};
