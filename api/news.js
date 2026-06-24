@@ -2,13 +2,13 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 's-maxage=300');
 
+  // Google News RSS - funciona desde Vercel sin bloqueo
   const sources = [
-    { url: 'https://www.biobiochile.cl/lista/nacional.rss',     sub: 'chile',        ic: '🇨🇱', max: 4 },
-    { url: 'https://www.biobiochile.cl/lista/deportes.rss',     sub: 'futbol',       ic: '⚽',  max: 4 },
-    { url: 'https://www.biobiochile.cl/lista/economia.rss',     sub: 'finanzas',     ic: '💰',  max: 3 },
-    { url: 'https://www.biobiochile.cl/lista/tecnologia.rss',   sub: 'tecnologia',   ic: '💻',  max: 2 },
-    { url: 'https://www.cooperativa.cl/rss/noticias.xml',       sub: 'chile',        ic: '🇨🇱', max: 3 },
-    { url: 'https://as.com/rss/tags/mundial_2026.xml',          sub: 'futbol',       ic: '⚽',  max: 2 },
+    { url: 'https://news.google.com/rss/search?q=chile+noticias&hl=es-CL&gl=CL&ceid=CL:es', sub: 'chile', ic: '🇨🇱', max: 4 },
+    { url: 'https://news.google.com/rss/search?q=futbol+chile+mundial&hl=es-CL&gl=CL&ceid=CL:es', sub: 'futbol', ic: '⚽', max: 4 },
+    { url: 'https://news.google.com/rss/search?q=economia+chile+dolar&hl=es-CL&gl=CL&ceid=CL:es', sub: 'finanzas', ic: '💰', max: 3 },
+    { url: 'https://news.google.com/rss/search?q=mundial+2026&hl=es-CL&gl=CL&ceid=CL:es', sub: 'futbol', ic: '⚽', max: 3 },
+    { url: 'https://news.google.com/rss/search?q=tecnologia+inteligencia+artificial&hl=es-CL&gl=CL&ceid=CL:es', sub: 'tecnologia', ic: '💻', max: 2 },
   ];
 
   function isSpanish(text) {
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
       const link = l ? l[1].trim() : '';
       const desc = d ? d[1].replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().slice(0,200) : '';
       if (!title || title.length < 10 || !isSpanish(title)) continue;
-      if (desc.toLowerCase().startsWith('sigue en directo') || desc.toLowerCase().startsWith('en directo')) continue;
+      if (/^(sigue|en directo|live)/i.test(desc)) continue;
       items.push({ title, link, desc, sub, ic });
       if (items.length >= max) break;
     }
@@ -39,17 +39,22 @@ export default async function handler(req, res) {
   }
 
   const allItems = [];
+  const errors = [];
+
   await Promise.allSettled(sources.map(async (src) => {
     try {
       const r = await fetch(src.url, {
-        headers: { 'User-Agent': 'Mozilla/5.0 RandomPlan/1.0' },
-        signal: AbortSignal.timeout(4000)
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RandomPlan/1.0)' },
+        signal: AbortSignal.timeout(5000)
       });
-      if (!r.ok) return;
-      allItems.push(...parseRSS(await r.text(), src.sub, src.ic, src.max));
-    } catch(e) {}
+      if (!r.ok) { errors.push(src.url + ' -> ' + r.status); return; }
+      const xml = await r.text();
+      allItems.push(...parseRSS(xml, src.sub, src.ic, src.max));
+    } catch(e) {
+      errors.push(src.url.slice(0,50) + ' -> ' + e.message);
+    }
   }));
 
   allItems.sort(() => Math.random() - 0.5);
-  res.json({ items: allItems.slice(0, 15) });
+  res.json({ items: allItems.slice(0, 15), total: allItems.length, errors });
 }
