@@ -4152,12 +4152,48 @@ async function loadNews(){
     _newsLoaded=true;
     items.forEach(function(n,i){
       if(!n.title||n.title.length<5)return;
-      POSTS.unshift({id:8500+i,sub:n.sub||'chile',ic:n.ic||'📰',
+      // generate instant bot comments for news
+      var newsId=8500+i;
+      var newsSub=n.sub||'chile';
+      var eligible=BOTS.filter(function(b){
+        if(!b.subs) return true;
+        return b.subs.indexOf(newsSub)!==-1;
+      });
+      if(!eligible.length) eligible=BOTS.slice();
+      eligible=eligible.sort(function(){return Math.random()-0.5;});
+      var numComs=3+Math.floor(Math.random()*4);
+      var cd=generateBotComments(numComs,[],newsSub);
+      // schedule delayed comments
+      var tiempos=["1min","5min","12min","23min","45min","1h","2h"];
+      for(var dc=0;dc<2+Math.floor(Math.random()*3);dc++){
+        (function(pid,psub,delay){
+          setTimeout(function(){
+            var list=document.getElementById('clist-'+pid);
+            if(!list)return;
+            var bot=eligible[Math.floor(Math.random()*eligible.length)];
+            var phrases=generateBotComments(1,[],psub);
+            if(!phrases.length)return;
+            var txt=phrases[0].txt;
+            var cid='dn-'+Date.now()+'-'+Math.random().toString(36).slice(2);
+            var html=renderCommentHTML(cid,bot.name,'Chile','ahora',txt,Math.floor(Math.random()*6),false,null);
+            var tmp=document.createElement('div');
+            tmp.innerHTML=html;
+            var el=tmp.firstChild;
+            if(el){
+              el.style.opacity='0';
+              el.style.transition='opacity .5s';
+              list.insertBefore(el,list.firstChild);
+              setTimeout(function(){el.style.opacity='1';},50);
+            }
+          }, delay);
+        })(newsId, newsSub, 30000+Math.random()*180000*(dc+1));
+      }
+      POSTS.unshift({id:newsId,sub:newsSub,ic:n.ic||'📰',
         user:{name:'noticia_cl',av:'📰'},t:'ahora',flair:'📡 LIVE',fc:'r',
         title:n.title,prev:n.desc||null,url:n.link||null,
         votos:Math.floor(Math.random()*12)+1,
-        coms:Math.floor(Math.random()*6)+1,
-        cd:[],isNews:true});
+        coms:numComs,
+        cd:cd,isNews:true});
     });
     var f=document.getElementById('posts-feed');
     if(f)f.innerHTML=renderFeed(null);
