@@ -874,6 +874,10 @@ function getBotLength(bot) {
   return arq ? arq.longitud : 'media';
 }
 
+function botCanPost(bot, sub){
+  return !sub || !bot.subs || bot.subs.indexOf(sub)!==-1;
+}
+
 function getBotsForTopic(topic) {
   return BOTS.filter(function(b) {
     var arq = b.arq ? BOT_ARQUETIPOS[b.arq] : null;
@@ -3032,9 +3036,53 @@ async function loadNews(){
     var fakeId=8500;
     items.forEach(function(n,i){
       if(!n.title||n.title.length<5) return;
+      var pid=fakeId+i;
+      var sub=n.sub||'chile';
+
+      // generate instant bot comments (3-5)
+      var instantCount=3+Math.floor(Math.random()*3);
+      var cd=generateBotComments(instantCount,[],sub);
+
+      // schedule delayed bot comments (2-4 more arriving over time)
+      var delayedCount=2+Math.floor(Math.random()*3);
+      (function(postId, postSub, dCount){
+        for(var d=0;d<dCount;d++){
+          var delay=30000+Math.random()*180000; // 30s to 3min
+          setTimeout(function(){
+            var list=document.getElementById('clist-'+postId);
+            if(!list)return;
+            var eligible=BOTS.filter(function(b){return botCanPost(b,postSub);});
+            if(!eligible.length) eligible=BOTS.slice();
+            var bot=eligible[Math.floor(Math.random()*eligible.length)];
+            var arq=bot.arq||'santiaguino';
+            var frasesArq=ARQP[arq]||ARQP.santiaguino;
+            var r2=Math.random();
+            var ctx=r2<0.4?'c':r2<0.7?'l':'r';
+            var pool=frasesArq[ctx];
+            var txt=pool[Math.floor(Math.random()*pool.length)];
+            var v=Math.random()<(bot.vota||0.5)?Math.floor(Math.random()*6):0;
+            var cid='delayed-'+Date.now()+'-'+Math.random().toString(36).slice(2);
+            var html=renderCommentHTML(cid,bot.name,'Chile','ahora',txt,v,false,null);
+            // prepend to list
+            var tmp=document.createElement('div');
+            tmp.innerHTML=html;
+            var newEl=tmp.firstChild;
+            if(newEl){
+              newEl.style.opacity='0';
+              newEl.style.transition='opacity .5s';
+              list.insertBefore(newEl,list.firstChild);
+              setTimeout(function(){newEl.style.opacity='1';},50);
+            }
+            // update coms count
+            var p=POSTS.find(function(x){return x.id===postId;});
+            if(p) p.coms=(p.coms||0)+1;
+          }, delay*(d+1));
+        }
+      })(pid, sub, delayedCount);
+
       POSTS.unshift({
-        id: fakeId+i,
-        sub: n.sub||'chile',
+        id: pid,
+        sub: sub,
         ic: n.ic||'📰',
         user: {name:'noticia_cl', av:'📰'},
         t: 'ahora',
@@ -3044,8 +3092,8 @@ async function loadNews(){
         prev: n.desc||null,
         url: n.link||null,
         votos: Math.floor(Math.random()*12)+1,
-        coms: Math.floor(Math.random()*6)+1,
-        cd: [],
+        coms: instantCount+delayedCount,
+        cd: cd,
         isNews: true
       });
     });
