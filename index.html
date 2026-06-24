@@ -147,6 +147,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .csub{color:var(--blue);cursor:pointer;font-weight:700}.csub:hover{text-decoration:underline}
 .cuser{color:var(--amber);cursor:pointer}.cuser:hover{text-decoration:underline}
 .dot{color:var(--border2)}
+.flair-news{background:rgba(255,59,48,.15);color:#ff3b30;border:1px solid rgba(255,59,48,.3)}
 .flair{padding:.04rem .33rem;border-radius:2px;font-size:.6rem;font-weight:700}
 .flair.r{background:rgba(255,123,114,.1);color:#ff7b72;border:1px solid rgba(255,123,114,.2)}
 .flair.b{background:rgba(121,192,255,.1);color:var(--blue);border:1px solid rgba(121,192,255,.2)}
@@ -417,12 +418,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .sr-item:last-child{border-bottom:none}
 .sr-tag{font-size:.65rem;color:var(--text3);font-family:var(--mono)}
 @media(max-width:800px){.sidebar-l,.sidebar-r{display:none}.content{padding:.65rem}}
-
-/* POST DETAIL OVERLAY */
-.post-overlay{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.75);display:flex;align-items:flex-start;justify-content:center;padding:1rem;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(2px)}
-.post-overlay.on{opacity:1;pointer-events:all}
-.post-detail{background:var(--bg1);border:1px solid var(--border2);border-radius:4px;width:100%;max-width:740px;margin:auto;position:relative;animation:slide-up .2s ease}
-@keyframes slide-up{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
 </style>
 
 <div class="topbar">
@@ -564,8 +559,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
   <div id="gif-grid-global" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:165px;overflow-y:auto"></div>
 </div>
 
-
-<div class="post-overlay" id="post-overlay" onclick="if(event.target===this)closePostDetail()"><div class="post-detail" id="post-detail-body"></div></div>
 <div class="modal-wrap" id="modal-wrap" onclick="closeMBg(event)">
   <div class="modal">
     <div class="modal-bar">randomplan.cl <button class="modal-x" onclick="closeModal()">✕</button></div>
@@ -1339,7 +1332,7 @@ function renderPost(p){
   html+='<span>'+p.t+'</span>';
   html+='<span class="flair '+p.fc+'">'+p.flair+'</span>';
   html+='</div>';
-  html+='<div class="ctitle" onclick="openPostDetail('+p.id+')">'+p.title+'</div>';
+  html+='<div class="ctitle" onclick="toggleComs('+p.id+')">'+p.title+'</div>';
 
   // En memes no mostramos el texto prev (ya está la imagen)
   if(p.prev && !isMeme){
@@ -1374,9 +1367,11 @@ function renderPost(p){
 
 function renderFeed(filter){
   var list=filter?POSTS.filter(function(p){return p.sub===filter}):POSTS;
+  if(!filter){var n=list.filter(function(p){return p.isNews;});var r=list.filter(function(p){return !p.isNews;});list=n.concat(r);}
   var html=list.map(renderPost).join('');
   if(!html)html='<div style="text-align:center;padding:2.5rem;color:var(--text3);font-size:.75rem;font-family:var(--mono)">// no hay posts aquí todavía<br><br>🌵</div>';
   document.getElementById('posts-feed').innerHTML=html;
+  return html;
 }
 
 // Mapeo permanente de posts semilla (ids JS) → IDs reales en Supabase
@@ -1423,6 +1418,13 @@ async function loadRealPosts(filter){
       coms: (p.comentarios&&p.comentarios[0]&&p.comentarios[0].count)||0,
       cd: []
     };
+  });
+  // agregar a POSTS para que openPostView los encuentre
+  // remover duplicados primero
+  converted.forEach(function(p){
+    var idx=POSTS.findIndex(function(x){return x.id===p.id;});
+    if(idx!==-1) POSTS.splice(idx,1);
+    POSTS.unshift(p);
   });
   // filter if needed
   var filtered=filter?converted.filter(function(p){return p.sub===filter;}):converted;
@@ -1783,6 +1785,7 @@ function voteComment(btn,dir){ vc(btn,dir); }
 
 
 function filterFeed(sub,el){
+  window._currentFilter=sub||null;
   document.querySelectorAll('.sf-item').forEach(function(i){i.classList.remove('on')});
   if(el)el.classList.add('on');
   var f=(!sub||sub==='inicio')?null:sub;
@@ -2971,15 +2974,15 @@ async function buscarGif(q){
   grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.3rem;font-family:var(--mono)">// buscando...</span>';
   try{
     // Tenor API v2 — v1 está deprecada y puede fallar
-    var r=await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q)+'&key=AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY&limit=9&media_filter=gif');
+    var r=await fetch('https://api.tenor.com/v1/search?q='+encodeURIComponent(q)+'&key=LIVDSRZULELA&limit=9&media_filter=minimal');
     if(!r.ok)throw new Error('tenor '+r.status);
     var d=await r.json();
     var results=d.results||[];
     grid.innerHTML='';
     results.forEach(function(item){
-      var formats=item.media_formats||{};
-      var thumb=(formats.tinygif||formats.gif||{}).url||'';
-      var full=(formats.gif||formats.tinygif||{}).url||thumb;
+      var m=item.media&&item.media[0]||{};
+      var thumb=(m.tinygif||m.gif||{}).url||'';
+      var full=(m.gif||m.tinygif||{}).url||thumb;
       if(!thumb)return;
       var img=document.createElement('img');
       img.src=thumb;
@@ -3934,14 +3937,14 @@ async function loadGlobalGifs(query){
   if(!grid) return;
   grid.innerHTML = '<span style="color:var(--text3);font-size:.7rem">buscando...</span>';
   try {
-    var r = await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(query)+'&key=AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY&limit=9&media_filter=gif');
+    var r = await fetch('https://api.tenor.com/v1/search?q='+encodeURIComponent(query)+'&key=LIVDSRZULELA&limit=9&media_filter=minimal');
     var d = await r.json();
     var results = d.results||[];
     grid.innerHTML = '';
     results.forEach(function(item){
-      var formats = item.media_formats||{};
-      var thumb = (formats.tinygif||formats.gif||{}).url||'';
-      var full = (formats.gif||formats.tinygif||{}).url||thumb;
+      var media = item.media&&item.media[0];
+      var thumb = media&&media.tinygif ? media.tinygif.url : '';
+      var full = media&&media.gif ? media.gif.url : thumb;
       if(!thumb) return;
       var img = document.createElement('img');
       img.src = thumb;
@@ -4127,194 +4130,34 @@ async function botActivityLoop() {
 }
 
 
+var _newsLoaded=false;
+async function loadNews(){
+  if(_newsLoaded)return;
+  try{
+    var r=await fetch('/api/news');if(!r.ok)return;
+    var d=await r.json();var items=d.items||[];if(!items.length)return;
+    _newsLoaded=true;
+    items.forEach(function(n,i){
+      if(!n.title||n.title.length<5)return;
+      var cleanDesc=(n.desc||'').replace(/<[^>]+>/gi,'').replace(/&lt;.*?&gt;/gi,'').replace(/&amp;/gi,'&').replace(/\s+/g,' ').trim().slice(0,180);
+      POSTS.unshift({id:8500+i,sub:n.sub||'chile',ic:n.ic||'📰',user:{name:'noticia_cl',av:'📰'},t:'ahora',flair:'📡 LIVE',fc:'r',title:n.title,prev:cleanDesc||null,url:n.link||null,votos:Math.floor(Math.random()*12)+1,coms:Math.floor(Math.random()*6)+1,cd:[],isNews:true});
+    });
+    var f=document.getElementById('posts-feed');if(f)f.innerHTML=renderFeed(window._currentFilter||null);
+    renderTrending();console.log('[RandomPlan] '+items.length+' noticias');
+  }catch(e){console.log('[RandomPlan] news error:',e.message);}
+}
+
 // Init
 addMsg(null,'// chat global activo · randomplan.cl',false,true);
 CHAT_INIT.forEach(function(m){addMsg(m.bot,m.txt,false,false)});
 newMsgCount=0;document.getElementById('chat-badge').textContent='0';
-// ── POST DETAIL OVERLAY (vista reddit) ──
-var _currentDetailPost = null;
-
-function openPostDetail(postId) {
-  var p = POSTS.find(function(x) { return x.id === postId; });
-  if (!p) return;
-  _currentDetailPost = p;
-
-  var rawContent = p.prev || p.contenido || '';
-  var gifMatch = rawContent.match(/\[gif:(https?:\/\/[^\]]+)\]/);
-  var imgMatch2 = rawContent.match(/\[img:(https?:\/\/[^\]]+)\]/);
-  var src = null;
-  if (gifMatch) src = gifMatch[1];
-  else if (imgMatch2) src = imgMatch2[1];
-  else if (p.img) src = p.img;
-
-  var imgHtml = src ? '<img style="width:100%;max-height:400px;object-fit:contain;border-radius:3px;margin-bottom:.8rem;background:var(--bg0)" src="' + src + '" alt="imagen" onerror="this.style.display=\'none\'">' : '';
-
-  var isNoticia = rawContent.indexOf('[noticia]') === 0;
-  var noticiaData = isNoticia ? parseNoticiaContenido(rawContent) : null;
-  var noticiaLinkHtml = noticiaData && noticiaData.link
-    ? '<a href="' + noticiaData.link + '" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-bottom:.8rem;color:var(--blue);font-size:.75rem;font-family:var(--mono)">// ver artículo original →</a>'
-    : '';
-
-  var displayContent = rawContent
-    .replace(/\[gif:[^\]]+\]/g, '')
-    .replace(/\[img:[^\]]+\]/g, '')
-    .replace(/^\[noticia\]/, '')
-    .split('|||')[0]
-    .trim();
-
-  var overlay = document.getElementById('post-overlay');
-  var detail = document.getElementById('post-detail-body');
-  if (!overlay || !detail) return;
-
-  detail.innerHTML =
-    '<div style="position:sticky;top:0;z-index:10;background:var(--bg0);border-bottom:1px solid var(--border);padding:.5rem .85rem;display:flex;align-items:center;gap:.5rem;font-size:.72rem;color:var(--text3);font-family:var(--mono)">' +
-      '<span style="cursor:pointer;color:var(--blue);font-weight:700" onclick="closePostDetail();filterFeedSub(\'' + p.sub + '\')">' + p.ic + ' p/' + p.sub + '</span>' +
-      (isNoticia ? '<span style="background:rgba(121,192,255,.12);color:var(--blue);border:1px solid rgba(121,192,255,.2);padding:.05rem .4rem;border-radius:2px;font-size:.62rem;font-weight:700">📰 NOTICIA</span>' : '') +
-      '<button style="margin-left:auto;background:none;border:1px solid var(--border2);color:var(--text2);padding:.2rem .55rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer" onclick="closePostDetail()">✕ cerrar</button>' +
-    '</div>' +
-    '<div style="padding:1rem">' +
-      '<div style="font-size:.7rem;color:var(--text3);margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;font-family:var(--mono)">' +
-        '<span style="color:var(--amber)">u/' + p.user.name + '</span>' +
-        '<span>·</span><span>' + p.t + '</span>' +
-        '<span class="flair ' + p.fc + '">' + p.flair + '</span>' +
-      '</div>' +
-      '<div style="font-family:var(--sans);font-size:1.1rem;font-weight:700;color:var(--text1);line-height:1.35;margin-bottom:.7rem">' + p.title + '</div>' +
-      imgHtml +
-      (displayContent ? '<div style="font-family:var(--sans);font-size:.88rem;color:var(--text2);line-height:1.6;margin-bottom:.8rem">' + linkify(displayContent) + '</div>' : '') +
-      noticiaLinkHtml +
-      '<div style="display:flex;gap:.3rem;margin-bottom:1rem;padding-bottom:.8rem;border-bottom:1px solid var(--border)">' +
-        '<button style="display:flex;align-items:center;gap:.3rem;padding:.3rem .6rem;border-radius:2px;border:none;background:none;font-family:var(--mono);font-size:.72rem;color:var(--text3);cursor:pointer" onclick="vote(' + postId + ',1)">▲ <span>' + fmtV(p.votos) + '</span></button>' +
-        '<button style="display:flex;align-items:center;gap:.3rem;padding:.3rem .6rem;border-radius:2px;border:none;background:none;font-family:var(--mono);font-size:.72rem;color:var(--text3);cursor:pointer" onclick="vote(' + postId + ',-1)">▼</button>' +
-        '<button style="display:flex;align-items:center;gap:.3rem;padding:.3rem .6rem;border-radius:2px;border:none;background:none;font-family:var(--mono);font-size:.72rem;color:var(--text3);cursor:pointer" onclick="toast(\'enlace copiado\')">// compartir</button>' +
-      '</div>' +
-      '<div style="font-size:.7rem;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.6rem;font-family:var(--mono)">// comentarios</div>' +
-      '<div style="background:var(--bg0);border:1px solid var(--border);border-radius:3px;padding:.5rem .7rem;margin-bottom:.8rem;display:flex;align-items:center;gap:.4rem" onclick="document.getElementById(\'pd-inp\').focus()">' +
-        '<span style="color:var(--green);font-size:.8rem;font-family:var(--mono)">> </span>' +
-        '<input style="flex:1;background:transparent;border:none;font-family:var(--mono);font-size:.8rem;color:var(--text1);outline:none;caret-color:var(--green)" id="pd-inp" placeholder="¿qué opinas?" onkeydown="if(event.key===\'Enter\')sendDetailComment(' + postId + ')">' +
-        '<button style="background:none;border:1px solid var(--green);color:var(--green);padding:.2rem .55rem;border-radius:2px;font-size:.7rem;font-family:var(--mono);cursor:pointer" onclick="sendDetailComment(' + postId + ')">SEND</button>' +
-      '</div>' +
-      '<div id="pd-comments-list"><div style="text-align:center;padding:1.5rem;color:var(--text3);font-size:.75rem;font-family:var(--mono)">// cargando comentarios...</div></div>' +
-    '</div>';
-
-  overlay.classList.add('on');
-  document.body.style.overflow = 'hidden';
-  loadDetailComments(postId);
-}
-
-function closePostDetail() {
-  var overlay = document.getElementById('post-overlay');
-  if (overlay) overlay.classList.remove('on');
-  document.body.style.overflow = '';
-  _currentDetailPost = null;
-}
-
-async function loadDetailComments(postId) {
-  var list = document.getElementById('pd-comments-list');
-  if (!list) return;
-
-  var p = POSTS.find(function(x) { return x.id === postId; });
-  var seedComs = p ? generateBotComments(p.coms || 0, p.cd || [], p.sub) : [];
-  var html = seedComs.map(function(c) {
-    return renderCommentHTML('seed-' + Math.random().toString(36).slice(2), c.bot.name, c.bot.ciudad, c.t, linkify(c.txt), c.v, false, null);
-  }).join('');
-
-  var realId = (window.realPostIdMap && window.realPostIdMap[postId]) || postId;
-  try {
-    var r = await db.from('comentarios')
-      .select('*, perfiles(username, ciudad)')
-      .eq('post_id', realId)
-      .order('created_at', { ascending: false })
-      .limit(50);
-    if (r.data && r.data.length) {
-      r.data.forEach(function(c) {
-        var u = c.perfiles || { username: 'anon', ciudad: 'Chile' };
-        var isMe = currentUser && c.user_id === currentUser.id;
-        html = renderCommentHTML('rc-' + c.id, u.username, u.ciudad, 'reciente', linkify(c.texto), c.votos || 0, isMe, c.id) + html;
-      });
-    }
-  } catch(e) {}
-
-  list.innerHTML = html || '<div style="text-align:center;padding:1.5rem;color:var(--text3);font-size:.75rem;font-family:var(--mono)">// sé el primero en comentar</div>';
-}
-
-async function sendDetailComment(postId) {
-  if (!currentUser) { showModal('login'); return; }
-  var inp = document.getElementById('pd-inp');
-  if (!inp) return;
-  var texto = inp.value.trim();
-  if (!texto) return;
-  inp.value = '';
-
-  var realId = (window.realPostIdMap && window.realPostIdMap[postId]) || postId;
-  var r = await db.from('comentarios').insert({ texto: texto, user_id: currentUser.id, post_id: realId, votos: 0 });
-  if (r.error) { toast('error: ' + r.error.message); return; }
-
-  var list = document.getElementById('pd-comments-list');
-  if (list) {
-    var username = currentPerfil ? currentPerfil.username : 'tú';
-    var ciudad = currentPerfil ? currentPerfil.ciudad : 'Chile';
-    list.innerHTML = renderCommentHTML('new-' + Date.now(), username, ciudad, 'ahora', linkify(texto), 0, true, null) + list.innerHTML;
-  }
-  toast('comentario publicado');
-}
-
-// ── SISTEMA DE NOTICIAS ──
-var _newsLoaded = false;
-var _newsPostIds = {};
-
-function parseNoticiaContenido(contenido) {
-  if (!contenido || contenido.indexOf('[noticia]') !== 0) return null;
-  var body = contenido.slice(9);
-  var parts = body.split('|||');
-  return { desc: parts[0] || '', link: parts[1] || '' };
-}
-
-async function loadNews() {
-  if (_newsLoaded) return;
-  try {
-    var r = await fetch('/api/news');
-    if (!r.ok) return;
-    var data = await r.json();
-    var items = data.items || [];
-    if (!items.length) return;
-
-    var comIds = { chile: 1, futbol: 2, contingencia: 3, memescl: 4, finanzas: 5, tecnologia: 6, debate: 8 };
-
-    for (var i = 0; i < items.length; i++) {
-      var item = items[i];
-      if (!item.title || _newsPostIds[item.title]) continue;
-
-      var existing = await db.from('posts').select('id').eq('titulo', item.title).limit(1);
-      if (existing.data && existing.data.length) {
-        _newsPostIds[item.title] = existing.data[0].id;
-        continue;
-      }
-
-      var contenido = '[noticia]' + (item.desc || '') + (item.link ? '|||' + item.link : '');
-      var ins = await db.from('posts').insert({
-        titulo: item.title,
-        contenido: contenido,
-        user_id: '00000000-0000-0000-0000-000000000001',
-        comunidad_id: comIds[item.sub] || 1,
-        votos: Math.floor(Math.random() * 20) + 1
-      }).select('id');
-
-      if (ins.data && ins.data[0]) _newsPostIds[item.title] = ins.data[0].id;
-    }
-
-    _newsLoaded = true;
-    setTimeout(function() { loadRealPosts(null); }, 500);
-  } catch(e) {}
-}
-
-
 scheduleBot();
 setTimeout(botActivityLoop, 15000);
-setTimeout(loadNews, 800);
 initSeedPostMap();renderFeed(null);renderTrending();renderComms();
 setInterval(tickVotes,8000);
 loadChatHistory();
 setInterval(pollChat,3000);
+setTimeout(loadNews,1500);
 loadRealPosts(null);
 // check existing session
 db.auth.getSession().then(function(r){
@@ -4325,7 +4168,7 @@ db.auth.getSession().then(function(r){
     document.getElementById('user-btns').style.display='flex';
   }
 });
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();closePostDetail();}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
 </script>
 </body>
 </html>
