@@ -1450,6 +1450,12 @@ async function loadRealPosts(filter){
       cd: []
     };
   });
+  // add to POSTS array so openPostView can find them
+  converted.forEach(function(p){
+    if(!POSTS.find(function(x){return x.id===p.id;})){
+      POSTS.unshift(p);
+    }
+  });
   // filter if needed
   var filtered=filter?converted.filter(function(p){return p.sub===filter;}):converted;
   if(!filtered.length) return;
