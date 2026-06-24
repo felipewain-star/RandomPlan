@@ -5718,5 +5718,159 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closePostVi
 })();
 </script>
 
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   RANDOMPLAN V7 — fix final: noticias_cl, sin duplicados, sin u/bot,
+   comentarios coherentes inline = hilo completo.
+───────────────────────────────────────────────────────────── */
+(function(){
+  function norm(sub){
+    if(typeof window.normalizeCommunitySub==='function')return window.normalizeCommunitySub(sub);
+    if(!sub)return null;
+    sub=String(sub).toLowerCase().trim().replace(/^p\//,'').replace(/^r\//,'').replace(/^#/, '');
+    var a={inicio:null,home:null,feed:null,feria:'marketplace',marketplace:'marketplace',market:'marketplace',memes:'memescl',noticias:'contingencia',news:'contingencia',actualidad:'contingencia',polemicas:'debate','polémicas':'debate'};
+    return Object.prototype.hasOwnProperty.call(a,sub)?a[sub]:sub;
+  }
+  function esc(s){return typeof escHtml==='function'?escHtml(s):String(s||'').replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function hash(s){s=String(s||'');var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return Math.abs(h);}
+  function domain(u){try{return new URL(u).hostname.replace(/^www\./,'').toLowerCase();}catch(e){return '';}}
+  function cleanText(s){return String(s||'').replace(/<[^>]+>/g,' ').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/\s+/g,' ').trim();}
+  var CHILE_DOMAINS=['biobiochile.cl','cooperativa.cl','latercera.com','emol.com','cnnchile.com','t13.cl','24horas.cl','df.cl','diariofinanciero.cl','elmostrador.cl','ciperchile.cl','adnradio.cl','radioagricultura.cl','eldinamo.cl','theclinic.cl','chvnoticias.cl','mega.cl','meganoticias.cl','radio.uchile.cl','publimetro.cl','redgol.cl'];
+  function isChileUrl(u){var d=domain(u);return CHILE_DOMAINS.some(function(x){return d===x||d.endsWith('.'+x);});}
+  function isBadBotName(name){name=String(name||'').toLowerCase().trim().replace(/^u\//,'');return name==='bot'||name==='anon'||name==='usuario_bot'||name==='noticias_bot'||name==='random_bot';}
+  function isLowEffort(txt){txt=String(txt||'').toLowerCase().trim();return {'wtf':1,'oof':1,'omg':1,'bruh':1,'cap':1,'no way':1,'si':1,'no':1,'lol':1,'jajaja':1,'jajajaja':1,'demasiado real':1,'literal':1,'facts':1,'exacto':1,'obvio':1,'uff':1,'top':1,'fuego':1,'sin palabras':1}[txt]===1;}
+  function botsFor(sub){
+    sub=norm(sub)||'chile';
+    var aliases={marketplace:['marketplace','chile','finanzas'],contingencia:['contingencia','chile','debate'],memescl:['memescl','chile'],datos:['chile','finanzas'],desahogo:['chile','debate']};
+    var wants=aliases[sub]||[sub];
+    var bots=(window.BOTS||[]).filter(function(b){var arq=b.arq&&window.BOT_ARQUETIPOS?BOT_ARQUETIPOS[b.arq]:null;return arq&&arq.intereses&&wants.some(function(w){return arq.intereses.indexOf(w)!==-1;});});
+    if(bots.length<10)bots=(window.BOTS||[]).slice();
+    return bots;
+  }
+  function pickBot(p,i){var bots=botsFor(p&&p.sub);return bots.length?bots[hash((p&&p.id)+'-'+(p&&p.title)+'-'+i)%bots.length]:{name:'usuario_cl',av:'👤',ciudad:'Chile'};}
+  function commentBank(p){
+    var sub=norm(p&&p.sub)||'chile';var txt=(String(p&&p.title||'')+' '+String(p&&p.prev||'')).toLowerCase();
+    if(/registro civil|domicilio|clave|tr[aá]mite|sii|afc|fonasa|licencia|municipal/.test(txt))return ['en trámites online conviene guardar captura y número de solicitud, porque después cuesta demostrar el intento','si el sistema te bota, prueba temprano y desde computador; varias plataformas públicas colapsan en horario punta','esto es demasiado chileno: existe online, pero igual termina sintiéndose como ir a la oficina','revisaría si quedó una solicitud pendiente antes de intentar de nuevo, a veces eso bloquea el proceso','cuando es Registro Civil o SII, el problema suele ser sesión vencida, navegador o datos que no validan','yo no esperaría tres semanas sin pedir ticket de soporte o comprobante del trámite'];
+    if(sub==='finanzas')return ['el punto es mirar flujo mensual antes de hablar de inversión, porque la UF se come todo silenciosamente','en Chile el arriendo y el supermercado mueven más el presupuesto que cualquier gasto chico','el dólar importa incluso si uno no invierte, porque termina pegando en precios importados','hay que separar ahorro de emergencia de inversión con riesgo','sin números claros, cualquier consejo financiero queda en humo'];
+    if(sub==='futbol')return ['más que un resultado puntual, el problema es estructura: canteras, dirigentes y continuidad técnica','si seguimos esperando un salvador cada proceso, vamos a repetir el mismo ciclo','el campeonato local tiene que subir nivel si queremos recambio real','hay talento, pero falta trabajo sostenido y menos humo','la discusión debería partir por formación y minutos para jugadores jóvenes'];
+    if(sub==='marketplace')return ['precio claro, comuna y fotos reales debería ser regla básica para publicar','sin reputación y comentarios visibles, una feria online se llena de spam al tiro','me gusta que las preguntas queden públicas, así otros compradores ven la misma información','sería bueno exigir estado del producto y forma de entrega desde el primer post','si esto crece, moderación y reportes van a ser más importantes que el diseño'];
+    if(sub==='contingencia'||(p&&p.isNews))return ['bien que esté la fuente visible, así se discute sobre algo verificable y no sobre rumores','para comentar noticias acá debería ser regla leer al menos la bajada y la fuente original','me gusta que la noticia quede como hilo, porque permite discutir sin salir de la plataforma altiro','si es tema nacional, debería aparecer contexto y no solo el titular','esto puede funcionar si se separa noticia real de opinión de usuarios'];
+    if(sub==='debate')return ['buen tema si logramos discutirlo sin convertirlo en pelea de consignas','hay que separar experiencia personal de datos, porque las dos cosas importan pero no son lo mismo','el centralismo aparece en casi todos los debates aunque no sea el tema inicial','Chile tiene muchos diagnósticos repetidos, el problema es que casi nunca se ejecutan soluciones','me interesa más leer propuestas concretas que la típica pelea izquierda/derecha'];
+    if(sub==='memescl')return ['jajaja esto sí es humor chileno de supervivencia','demasiado real, me dolió un poco reconocerlo','esto lo mandas al grupo familiar y se arma debate de una hora','la risa nacional siempre sale después de mirar la cuenta del banco','meme país, pero con demasiada verdad escondida'];
+    return ['este tema pega distinto según la región, no todo se vive desde Santiago','me gusta que sea una pregunta concreta, así se puede comentar desde experiencia real','acá hay tema para hilo largo si la gente cuenta casos propios','lo importante es que no se pierda el contexto chileno de la discusión','buen punto, esto puede salir como conversación útil si se mantiene el foco'];
+  }
+  function coherentText(p,i){var b=commentBank(p);return b[hash((p&&p.id)+'-'+(p&&p.title)+'-'+i)%b.length];}
+  function fixPostComments(p){
+    if(!p)return p;
+    if(!p.user)p.user={name:'usuario_cl',av:'👤',ciudad:'Chile'};
+    if(isBadBotName(p.user.name)){var author=pickBot(p,99);p.user={name:author.name,av:author.av||'👤',ciudad:author.ciudad||'Chile'};}
+    p.cd=Array.isArray(p.cd)?p.cd:[];
+    var target=Math.min(parseInt(p.coms||p.cd.length||0,10)||0,16);
+    p.cd=p.cd.map(function(c,i){
+      c=c||{};var bot=c.bot||{};var txt=c.txt||c.texto||'';
+      if(isBadBotName(bot.name||c.username)|| (isLowEffort(txt)&&norm(p.sub)!=='memescl')){bot=pickBot(p,i);txt=coherentText(p,i);}
+      if(!bot.name)bot=pickBot(p,i);
+      return {bot:bot,txt:txt||coherentText(p,i),v:parseInt(c.v||c.votos||0,10)||Math.max(1,hash(p.id+'v'+i)%9),t:c.t||c.tiempo||['1min','6min','12min','28min','45min','1h','2h'][i%7],realComId:c.realComId,userId:c.userId};
+    });
+    for(var j=p.cd.length;j<target;j++)p.cd.push({bot:pickBot(p,j),txt:coherentText(p,j),v:Math.max(1,hash(p.id+'vote'+j)%9),t:['1min','6min','12min','28min','45min','1h','2h','3h'][j%8]});
+    p.coms=p.cd.length || (p.realId?p.coms:target);
+    return p;
+  }
+  window.RP_ensureLocalComments=fixPostComments;
+
+  function dedupePosts(){
+    var arr=window.POSTS||[];var seen={},out=[];
+    arr.forEach(function(p){
+      if(!p||!p.title)return;
+      fixPostComments(p);
+      var ref=(typeof getPostReference==='function'?getPostReference(p):(p.url||p.link||''))||'';
+      var key=p.realId?'real:'+p.realId:(ref?'url:'+ref.toLowerCase():'seed:'+norm(p.sub)+'|'+String(p.title||'').toLowerCase().replace(/\s+/g,' ').trim());
+      if(seen[key])return;
+      seen[key]=true;out.push(p);
+    });
+    window.POSTS=out;
+    return out;
+  }
+  window.RP_dedupePosts=dedupePosts;
+
+  if(window.renderPost&&!window.renderPost.__rpV7Wrapped){
+    var oldRenderPost=window.renderPost;
+    window.renderPost=function(p){fixPostComments(p);window.__rpCommentContextPost=p;var html=oldRenderPost.call(this,p);window.__rpCommentContextPost=null;return html;};
+    window.renderPost.__rpV7Wrapped=true;
+  }
+  window.generateBotComments=function(count,existingCd){var p=window.__rpCommentContextPost||{id:'tmp',sub:'chile',title:'tema chileno',coms:count||0,cd:existingCd||[]};fixPostComments(p);return p.cd.slice(0,Math.min(count||p.cd.length,16));};
+
+  if(window.renderFeed&&!window.renderFeed.__rpV7Wrapped){
+    var oldRenderFeed=window.renderFeed;
+    window.renderFeed=function(filter){dedupePosts();return oldRenderFeed.call(this,norm(filter));};
+    window.renderFeed.__rpV7Wrapped=true;
+  }
+
+  async function fetchGdeltChileV7(){
+    var domainQuery='(domain:biobiochile.cl OR domain:cooperativa.cl OR domain:latercera.com OR domain:emol.com OR domain:cnnchile.com OR domain:t13.cl OR domain:24horas.cl OR domain:df.cl OR domain:elmostrador.cl OR domain:ciperchile.cl OR domain:adnradio.cl)';
+    var queries=[domainQuery, domainQuery+' Chile', domainQuery+' (Gobierno OR Congreso OR economía OR seguridad OR Santiago)'];
+    var all=[];
+    for(var i=0;i<queries.length;i++){
+      try{
+        var url='https://api.gdeltproject.org/api/v2/doc/doc?query='+encodeURIComponent(queries[i])+'&mode=ArtList&format=json&sort=DateDesc&maxrecords=40&_='+(Date.now()+i);
+        var r=await fetch(url,{cache:'no-store'});if(!r.ok)continue;var d=await r.json();
+        (d.articles||[]).forEach(function(a){var link=a.url||'';if(!link||!isChileUrl(link))return;all.push({title:cleanText(a.title),desc:'Fuente real: '+(a.domain||domain(link)),link:link,date:a.seendate,source:a.domain||domain(link)});});
+      }catch(e){}
+    }
+    return all;
+  }
+  async function fetchGoogleChileV7(){
+    var feed='https://news.google.com/rss/search?q='+encodeURIComponent('Chile noticias nacionales when:1d')+'&hl=es-419&gl=CL&ceid=CL:es-419';
+    var urls=['https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(feed),'https://api.allorigins.win/raw?url='+encodeURIComponent(feed)];
+    var out=[];
+    for(var i=0;i<urls.length;i++){
+      try{
+        var r=await fetch(urls[i],{cache:'no-store'});if(!r.ok)continue;var txt=await r.text();
+        if(txt.trim().charAt(0)==='{'){
+          var js=JSON.parse(txt);(js.items||[]).forEach(function(it){var link=it.link||'';var title=cleanText(it.title||'');var m=title.match(/ - ([^-]+)$/);var src=m?m[1]:domain(link);out.push({title:title.replace(/ - [^-]+$/,''),desc:cleanText(it.description||'').slice(0,180),link:link,date:it.pubDate,source:src});});
+        }else if(typeof parseRssItems==='function'){
+          parseRssItems(txt,{sub:'contingencia',ic:'📰',flair:'CHILE REAL'}).forEach(function(n){out.push({title:n.title,desc:n.desc,link:n.link,date:n.date,source:domain(n.link)});});
+        }
+        if(out.length)break;
+      }catch(e){}
+    }
+    return out;
+  }
+  function addNews(items){
+    var seen={};
+    window.POSTS=(window.POSTS||[]).filter(function(p){return !(p&&p.isNews&&p.user&&String(p.user.name||'').toLowerCase()==='noticias_cl');});
+    (window.POSTS||[]).forEach(function(p){var u=(typeof getPostReference==='function'?getPostReference(p):(p.url||''));if(u)seen[u.toLowerCase()]=true;});
+    var clean=[];
+    items.forEach(function(n){var u=(typeof normalizeNewsUrl==='function'?normalizeNewsUrl(n.link):n.link);if(!u||seen[u.toLowerCase()]||!n.title)return;seen[u.toLowerCase()]=true;clean.push({title:cleanText(n.title),desc:cleanText(n.desc||''),link:u,date:n.date,source:n.source||domain(u)});});
+    clean=clean.filter(function(n){return n.title&&n.link;}).slice(0,10);
+    clean.reverse().forEach(function(n){var id=830000+(hash(n.link)%90000);window.POSTS.unshift({id:id,sub:'contingencia',ic:'📰',user:{name:'noticias_cl',av:'📰',ciudad:'Chile'},t:(typeof relativeNewsTime==='function'?relativeNewsTime(n.date):'ahora'),flair:'CHILE REAL',fc:'g',title:n.title,prev:n.desc||('Fuente real: '+n.source),url:n.link,votos:Math.max(1,hash(n.link)%22),coms:0,cd:[],isNews:true,sourceName:n.source});});
+    dedupePosts();return clean.length;
+  }
+  window.loadNews=async function(){
+    if(window._rpNewsV7Loading)return;window._rpNewsV7Loading=true;
+    try{
+      var items=[];try{items=items.concat(await fetchGdeltChileV7());}catch(e){}
+      try{items=items.concat(await fetchGoogleChileV7());}catch(e){}
+      var count=addNews(items);
+      if(count>0)console.log('[RandomPlan] noticias_cl: '+count+' noticias chilenas reales cargadas');
+      else console.log('[RandomPlan] noticias_cl: fuente real sin resultados; no se inventan noticias');
+      var active=(typeof RP_getActiveCommunity==='function'?RP_getActiveCommunity():norm(window._currentFilter));
+      if(window.renderFeed)renderFeed(active||null);
+      if(window.renderTrending)renderTrending();
+    }finally{window._rpNewsV7Loading=false;}
+  };
+
+  // Real posts sin duplicar.
+  if(window.loadRealPosts&&!window.loadRealPosts.__rpV7Wrapped){
+    var oldLoadRealPosts=window.loadRealPosts;
+    window.loadRealPosts=async function(filter){var r=await oldLoadRealPosts.call(this,filter);dedupePosts();var active=(typeof RP_getActiveCommunity==='function'?RP_getActiveCommunity():norm(filter));if(window.renderFeed)renderFeed(active||null);return r;};
+    window.loadRealPosts.__rpV7Wrapped=true;
+  }
+
+  setTimeout(function(){try{dedupePosts();if(window.loadNews)loadNews();var a=(typeof RP_getActiveCommunity==='function'?RP_getActiveCommunity():norm(window._currentFilter));if(window.renderFeed)renderFeed(a||null);}catch(e){console.log('[RandomPlan V7]',e.message||e);}},500);
+})();
+</script>
+
 </body>
 </html>
