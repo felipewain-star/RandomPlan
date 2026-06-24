@@ -3127,7 +3127,7 @@ function openPostView(postId){
     html+='<div style="font-size:.88rem;color:var(--text2);line-height:1.6;word-break:break-word;'+(p.img?'margin-top:.8rem':'')+'">'+linkify(p.prev)+'</div>';
   }
   if(p.isNews&&p.url){
-    html+='<a class="post-view-link" href="'+p.url+'" target="_blank" rel="noopener">↗ leer nota completa</a>';
+    html+='<button class="post-view-link" onclick="window.open(this.dataset.url,\'_blank\')" data-url="'+p.url+'">↗ leer nota completa</button>';
   }
   html+='</div>';
 
