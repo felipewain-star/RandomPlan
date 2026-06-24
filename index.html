@@ -1428,12 +1428,11 @@ async function loadRealPosts(filter){
   var converted=realPosts.map(function(p,i){
     var com=p.comunidades||{nombre:'chile',icono:'🇨🇱'};
     var user=p.perfiles||{username:'anon',ciudad:'Chile'};
-    var fakeId=9000+i;
-    // map fake id to real supabase id for comment loading
+    // use real Supabase ID directly - no fakeId needed
     window.realPostIdMap=window.realPostIdMap||{};
-    window.realPostIdMap[fakeId]=p.id;
+    window.realPostIdMap[p.id]=p.id;
     return {
-      id: fakeId,
+      id: p.id,
       realId: p.id,
       userId: p.user_id,
       sub: com.nombre,
