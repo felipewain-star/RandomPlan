@@ -1216,54 +1216,111 @@ function renderComs(cd){
   }).join('');
 }
 
-function generateBotComments(count, existingCd){
+function generateBotComments(count, existingCd, sub){
   var all=existingCd.slice();
   var needed=Math.min(count, 50) - all.length;
   // shuffle BOTS to avoid repetition
-  var availBots=BOTS.slice().sort(function(){return Math.random()-0.5;});
+  // filter bots that are relevant to this sub
+  var BOT_SUBS={
+    futbol:['futbolero_pc','pelao_fome','flaite_fino','cachorraCL','vikinga_sur','mirna_conce','gamer_iquique','pato_valpo','gen_z_cl','tiktok_stgo','npc_moment'],
+    finanzas:['economistaRoto','uf_diaria','ipsa_en_rojo','macro_pablo','trader_flaite','nerdcl','ingeniera_kt','titi_norte','Rodrigo83','startup_cl','mrr_sonado'],
+    chile:['condor_88','profe_historia','vikinga_sur','mirna_conce','cachorraCL','anarco_sur','roxana_stgo','el_roto_mx','doña_juanita','chileno_afuera','expat_nostalgico'],
+    memescl:['pelao_fome','flaite_fino','gamer_iquique','gen_z_cl','tiktok_stgo','npc_moment','pato_valpo','cachorraCL','based_chileno'],
+    contingencia:['profe_historia','economistaRoto','condor_88','titi_norte','anarco_sur','el_roto_mx','nerdcl','chileno_afuera','ingeniera_kt'],
+    tecnologia:['nerdcl','gamer_iquique','lag_de_vida','techlover_stgo','ingeniera_kt','dev_cl_2024','startup_cl','lean_startup_stgo'],
+    desahogo:['cachorraCL','mirna_conce','roxana_stgo','doña_juanita','vikinga_sur','anarco_sur'],
+    polemicas:['condor_88','el_roto_mx','anarco_sur','profe_historia','pelao_fome','economistaRoto']
+  };
+  var relevantNames=BOT_SUBS[sub]||null;
+  var filteredBots=relevantNames?BOTS.filter(function(b){return relevantNames.indexOf(b.name)!==-1;}):BOTS;
+  if(!filteredBots.length) filteredBots=BOTS;
+  var availBots=filteredBots.slice().sort(function(){return Math.random()-0.5;});
   var usedBots={};
-  var phrases=[
-    "si","no","jajaja","exacto","wtf","claro po","obvio","mentira","facts","no way",
-    "ajá","oof","lol","bruh","cap","ni ahí","ya pues","ntp","uff","q","bro...",
-    "literal","ngl","ok pero","espera qué","a ver...","no po","sipo","depende",
-    "ni idea","no sé po","eso","concuerdo","discrepo igual","difícil decir",
-    "ni siquiera la vio!","en serio??","no me digas","eso mismo pensé","claro po wn",
-    "jajajajaja","no lo puedo creer","esto es real?","yo también","me la mandaron al grupo jaja",
-    "no lo había pensado","100%","facts po","momento momento","yo creo que sí","yo creo que no",
-    "no cap esto es verdad","deja de tener razón po","llegué tarde pero sí",
-    "lo mismo nos pasó en la pega","típico de la capital","qué sorpresa que pase esto",
-    "para nada de acuerdo pero respeto","interesante perspectiva igual",
-    "hay que ver los dos lados","fuego este post","guardado esto","compartido al tiro",
-    "esto necesita más upvotes","gracias por decirlo","alguien tenía que decirlo",
-    "primera vez que comento y tenía que ser en este post","por fin alguien lo dice",
-    "no todo es negativo igual","seamos justos con el análisis",
-    "al final uno hace lo que puede","la vida es así no más",
-    "oye pero qué bueno este post","necesitaba leer esto hoy",
-    "alguien más o soy yo solo?","jajaja no pero sí","en realidad tiene sentido",
-    "lo pensé pero no lo iba a decir","esto merece más atención",
-    "las 3am y leyendo esto","procrastinando con esto en vez de estudiar",
-    "fuego","top","guardado","compartido","sin palabras","uf heavy","brutal",
-    "no me lo esperaba","qué level","demasiado real","me pegó fuerte esto",
-    "mira yo llevo años diciéndole esto a mis amigos y nadie me pescaba, al final resulta que tenía razón en todo. ojalá la gente leyera más antes de opinar.",
-    "no puedo creer que estemos discutiendo esto en 2024 como si fuera algo nuevo. esto pasa en chile hace décadas y nadie hace nada porque a los que mandan les conviene.",
-    "yo viví esto en carne propia y les juro que es exactamente como lo describen. perdí trabajo, amigos, plata. no es fácil pero se sale. ánimo a los que estén pasando lo mismo.",
-    "llevo tres años trabajando en esto y puedo decirles con certeza que el problema es más profundo de lo que parece. no es solo lo que se ve en la superficie.",
-    "mi abuelo decía que chile era un país de extremos: o todo bien o todo mal, nunca hay término medio. cuánta razón tenía el viejo. aquí no existe la escala de grises.",
-    "me encanta este espacio porque por fin se puede hablar con gente que piensa distinto sin que se vuelva una pelea. en twitter esto sería una guerra de insultos.",
-    "desde el sur y con todo el respeto: los santiaguinos no tienen idea de lo que pasa en el resto del país. hablan de chile como si fuera solo la capital.",
-    "estudié esto en la u y lo que describen acá coincide con lo que vimos en clases. el problema no es falta de información, es falta de voluntad política.",
-    "llevo una hora leyendo este hilo y es la primera vez en mucho tiempo que siento que la gente realmente está pensando y no solo reaccionando. da esperanza.",
-    "el problema con chile es que tenemos cultura del trabajo duro sin cultura del descanso. nos enseñaron a trabajar más que todos pero nadie nos enseñó a vivir bien.",
-    "seré honesto: al principio no estaba de acuerdo con este post. lo leí de nuevo y cambié de opinión. eso casi nunca me pasa en internet.",
-    "la generación de mis papás no entiende por qué los jóvenes estamos agotados. creen que es flojera. no es flojera, es que el mundo que nos entregaron está roto.",
-    "no voy a mentir, lloré un poco leyendo los comentarios. ver que hay gente que pasó por lo mismo y salió adelante da una fuerza que no sabía que necesitaba.",
-    "llevo mucho tiempo pensando en esto y nunca encontré el espacio para decirlo. el problema es que en chile no sabemos escuchar. hablamos todos al mismo tiempo."
-  ];
+  // frases contextuales por sub del post
+  var SUB_PHRASES={
+    futbol:{
+      economista: ['el mercado de fichajes no para','las apuestas mueven más plata que el producto en cancha','el fútbol chileno es un negocio mal administrado'],
+      nortenio:   ['desde el norte también somos futboleros','en iquique seguimos el partido igual','antofagasta tiene su propia pasión'],
+      sureno:     ['en conce el fútbol es religión','desde el sur bancamos a la U y al huachipato','lluvia y fútbol, combinación perfecta'],
+      santiaguino:['colo colo presente','el estadio monumental lleno otra vez','la U tiene su hinchada fiel'],
+      flaite:     ['golazo wn','que jugadón oye','heavy el partido','oe se mandaron'],
+      gen_z:      ['no cap ese gol fue real','ratio al portero','bussin el partido','npc el árbitro'],
+      senora_barrio:['mis hijos estaban todos pegados al televisor','qué emoción dios mío','el vecino gritó tan fuerte'],
+      profe:      ['el deporte une lo que la política divide','los jóvenes necesitan estos referentes','el fútbol tiene lecciones para la sala de clases'],
+      gamer_tech: ['las estadísticas no mienten','el var tiene bugs serios','como en el fifa pero real'],
+      diaspora:   ['desde acá afuera seguimos cada partido','extraño ver el fútbol chileno en vivo','los amigos me mandaron el gol al tiro'],
+      emprendedor:['el streaming del fútbol es el futuro','negocio enorme el de los derechos de transmisión'],
+      portenio:   ['en valpo el fútbol es pasión popular','santiago se lleva todos los reflectores pero el sur juega igual']
+    },
+    finanzas:{
+      economista: ['la uf sube y los dividendos también','el banco central debería mover la tasa','inflación más persistente de lo esperado','el tipo de cambio refleja la incertidumbre'],
+      nortenio:   ['acá en el norte el costo de vida es brutal','el sueldo minero no alcanza con esta inflación'],
+      sureno:     ['en el sur los precios también subieron','conce lo siente en la canasta básica'],
+      santiaguino:['en santiago el arriendo se come todo el sueldo','los costos fijos no paran de subir'],
+      flaite:     ['heavy los lucas','todo caro wn','ni pa` comprarse nada'],
+      gen_z:      ['no cap el btc está subiendo','ratio al sistema financiero','based el análisis'],
+      senora_barrio:['el supermercado está imposible','antes con 50 mil llenabas el carro','mis hijos no entienden por qué no alcanza'],
+      profe:      ['la educación financiera debería ser obligatoria','los cabros no aprenden esto en ningún lado','el sistema no está diseñado para el trabajador promedio'],
+      gamer_tech: ['el cripto tiene mejor rendimiento que los fondos','blockchain va a cambiar esto','la fintech lo está haciendo mejor'],
+      diaspora:   ['desde afuera el peso chileno se ve débil','remesas cada vez más caras con este tipo de cambio'],
+      emprendedor:['el acceso a capital es el problema central','las tasas matan a las startups early stage','hay que buscar inversión afuera'],
+      portenio:   ['en valpo la gente no llega a fin de mes','el puerto siempre sintió primero la crisis']
+    },
+    chile:{
+      economista: ['el problema fiscal es estructural','sin reforma tributaria no hay solución','el gasto público no es eficiente'],
+      nortenio:   ['el estado nunca llega al norte','santiago decide por todos sin preguntar','llevamos años pidiendo lo mismo'],
+      sureno:     ['desde el sur vemos esto distinto','el centralismo nos tiene hartos','conce tiene otras prioridades'],
+      santiaguino:['esto se discute en santiago pero el país es más grande','la capital no representa al resto'],
+      flaite:     ['el sistema no funciona pa` nosotros','lo de siempre wn','nada cambia'],
+      gen_z:      ['no cap esto lleva años igual','ratio al gobierno de turno','based el análisis'],
+      senora_barrio:['qué va a pasar con nosotros','mis hijos van a vivir peor que yo','dios mío qué país'],
+      profe:      ['la historia lo explica todo','llevamos décadas con el mismo diagnóstico','el problema es estructural y todos lo saben'],
+      gamer_tech: ['hay soluciones tecnológicas para esto','la digitalización del estado es urgente','estonia lo hizo, chile puede'],
+      diaspora:   ['desde afuera chile se ve diferente','uno valora cosas que antes daba por sentadas','el que salió entiende mejor lo que falta'],
+      emprendedor:['el ecosistema necesita más certeza jurídica','emprender en chile sigue siendo difícil'],
+      portenio:   ['valpo siempre fue el laboratorio de chile','el puerto anticipa lo que viene']
+    },
+    memescl:{
+      economista: ['hasta en los memes aparece la crisis','la economía del humor también tiene ciclos'],
+      nortenio:   ['en el norte también nos reímos','jajaja exacto desde calama'],
+      sureno:     ['conce lo entiende perfectamente','jajaja lluvia y memes'],
+      santiaguino:['jajaja demasiado real','me representó completamente'],
+      flaite:     ['jajajaja oe que bueno','me mandaron esto al grupo wn','heavy el meme'],
+      gen_z:      ['no cap me morí','ratio','bussin el meme','its giving todo'],
+      senora_barrio:['qué son estos cabros jajaja','no entiendo pero me reí','mis hijos me explicaron'],
+      profe:      ['el humor dice verdades que la política no puede','los memes son el folklore del siglo 21'],
+      gamer_tech: ['meme de calidad','algoritmo aprueba','esto va a viralizar'],
+      diaspora:   ['desde afuera igual nos manda memes chilenos el grupo','esto no tiene fronteras'],
+      emprendedor:['el meme marketing es poderoso','viralizar content orgánico es el sueño'],
+      portenio:   ['valpo tiene su propio humor','jajaja esto es muy porteño']
+    },
+    contingencia:{
+      economista: ['esto tiene implicaciones fiscales directas','el mercado ya lo estaba descontando','impacto en el tipo de cambio inevitable'],
+      nortenio:   ['en el norte esto llega diferente','el estado nunca está cuando se necesita','desde acá arriba lo vemos venir hace rato'],
+      sureno:     ['conce también lo está viviendo','el sur siempre sintió primero las consecuencias','desde temuco preocupados'],
+      santiaguino:['esto es tema en santiago también','la capital no puede ignorar esto','desde providencia con atención'],
+      flaite:     ['siempre los mismos pagando el pato','lo de siempre wn','nada cambia para el que menos tiene'],
+      gen_z:      ['no cap esto es grave','ratio al sistema','based el análisis aunque duele'],
+      senora_barrio:['qué va a pasar con nuestras familias','mis hijos me preguntan y no sé qué decirles','dios mío qué está pasando'],
+      profe:      ['la historia se repite señores','llevamos décadas con el mismo diagnóstico','el problema es estructural'],
+      gamer_tech: ['hay que digitalizar la respuesta del estado','la tecnología puede ayudar acá','estonia resolvió esto hace 20 años'],
+      diaspora:   ['desde afuera esto se ve peor','la imagen de chile no ayuda','el que salió entiende el contraste'],
+      emprendedor:['la incertidumbre mata la inversión','necesitamos más certeza jurídica para crecer'],
+      portenio:   ['valpo siempre fue el termómetro del país','el puerto lo anticipa todo']
+    }
+  };
+  // default fallback phrases
+  var DEFAULT_PHRASES=['exacto','así es','interesante punto','hay que verlo con calma','no es tan simple','depende del contexto','válido el punto','algo de razón tiene','discrepo igual','lo mismo pensé'];
+  var subKey=sub||'chile';
+  var subPool=SUB_PHRASES[subKey]||SUB_PHRASES.chile;
+  var phrases=DEFAULT_PHRASES;;
   var tiempos=["1min","5min","12min","23min","45min","1h","2h","3h","5h","8h","12h","1d"];
   for(var i=0;i<needed;i++){
     // pick bot not already used in this section
     var bot=availBots[i % availBots.length];
-    var txt=phrases[Math.floor(Math.random()*phrases.length)];
+    var arqBot=(bot&&bot.arq)||'santiaguino';
+    var ctxPool=(subPool&&subPool[arqBot])||DEFAULT_PHRASES;
+    var txt=ctxPool[Math.floor(Math.random()*ctxPool.length)];
     // votes realistic - max 9, some negative
     var maxV = txt.length < 20 ? 4 : txt.length < 60 ? 7 : 9;
     var v = Math.floor(Math.random()*maxV);
