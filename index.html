@@ -1383,19 +1383,8 @@ function renderPost(p){
   html+='<span>'+p.t+'</span>';
   html+='<span class="flair '+p.fc+'">'+p.flair+'</span>';
   html+='</div>';
-  if(p.isNews&&p.url){
-    // noticia con link externo
-    html+='<div class="ctitle">';
-    html+='<a href="'+p.url+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">'+p.title+'</a>';
-    html+=' <span style="display:inline-block;font-size:.58rem;font-family:var(--mono);background:#1a3a2a;color:#00ff88;border:1px solid #00ff8840;border-radius:2px;padding:.05rem .3rem;vertical-align:middle">↗ leer nota</span>';
-    html+='</div>';
-  }else if(p.isNews&&!p.url){
-    // noticia sin link
-    html+='<div class="ctitle" onclick="toggleComs('+p.id+')">'+p.title+'</div>';
-  }else{
-    // post normal - abre comentarios
-    html+='<div class="ctitle" onclick="toggleComs('+p.id+')">'+p.title+' <span style="font-size:.58rem;font-family:var(--mono);color:var(--text3)">// comentar</span></div>';
-  }
+  // todos los posts abren vista interna
+  html+='<div class="ctitle" onclick="openPostView('+p.id+')" style="cursor:pointer">'+p.title+(p.isNews&&p.url?' <span style="display:inline-block;font-size:.58rem;font-family:var(--mono);background:#1a3a2a;color:#00ff88;border:1px solid #00ff8840;border-radius:2px;padding:.05rem .3rem;vertical-align:middle">↗ nota</span>':'')+'</div>';
 
   // En memes no mostramos el texto prev (ya está la imagen)
   if(p.prev && !isMeme){
