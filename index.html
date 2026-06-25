@@ -1792,15 +1792,13 @@ function renderPost(p){
   if(refUrl){
     html+='<button class="cact source-link" onclick="event.stopPropagation();openPostThreadWindow('+p.id+')">// abrir hilo + '+(isNewsClickable?'fuente':'link')+'</button>';
   }
-  html+='<button class="cact comments-toggle-btn" onclick="event.stopPropagation();toggleComs('+p.id+')">// '+p.coms+' comentarios</button>';
+  html+='<button class="cact comments-toggle-btn" onclick="event.stopPropagation();toggleComs('+p.id+')">// '+(p.coms||0)+' comentarios</button>';
   html+='<button class="cact" onclick="event.stopPropagation();toast(&quot;enlace copiado&quot;)">// compartir</button>';
   if(p.realId&&currentUser&&p.userId===currentUser.id) html+='<button class="cact com-del" onclick="event.stopPropagation();deletePost('+p.id+','+p.realId+',this)">// borrar</button>';
   html+='</div>';
   html+='<div class="comments-section" id="cs-'+p.id+'">';
   html+='<div class="comment-box" id="cbox-'+p.id+'" onclick="openCommentBox('+p.id+')">escribe un comentario...</div>';
   html+='<div id="clist-'+p.id+'"></div>';
-  var allComs=generateBotComments(p.coms, p.cd||[]);
-  html+=renderComs(allComs);
   html+='</div>';
   html+='</div></div>';
   return html;
@@ -1944,7 +1942,7 @@ async function loadRealPosts(filter){
       url: p.url||p.link||p.source_url||p.reference_url||p.referencia||p.external_url||p.fuente_url||extractFirstUrl(p.contenido),
       isNews: (String(user.username||'').toLowerCase()==='noticias_cl'||String(user.username||'').toLowerCase()==='noticia_cl'),
       votos: p.votos||0,
-      coms: (p.comentarios&&p.comentarios[0]&&p.comentarios[0].count)||0,
+      coms: parseInt((p.comentarios&&p.comentarios[0]&&p.comentarios[0].count)||0, 10),
       cd: []
     };
   });
@@ -3849,6 +3847,11 @@ async function sendCommentInline(postId){
     list.innerHTML=newHtml+list.innerHTML;
     setTimeout(function(){attachDelBtn(newCid);},0);
   }
+  // Actualizar contador en el boton del feed
+  var _p2=(window.POSTS||[]).find(function(x){return String(x.id)===String(postId);});
+  if(_p2){_p2.coms=(_p2.coms||0)+1;}
+  var _ctBtn=document.querySelector('#post-'+postId+' .comments-toggle-btn');
+  if(_ctBtn&&!/cerrar/.test(_ctBtn.textContent||'')){_ctBtn.textContent='// '+((_p2&&_p2.coms)||1)+' comentarios';}
   toast('comentario publicado');
 }
 
@@ -8120,5 +8123,35 @@ console.log('[RandomPlan CLEAN] loaded');
 })();
 </script>
 <!-- RP_COMMENTS_ONLY_SAFE_V17_END -->
+
+<script>
+// RANDOMPLAN COMMENT FIX — getPost fallback + debug
+(function(){
+  var _orig = window.toggleComs;
+  window.toggleComs = function(id) {
+    // Ensure post exists in POSTS before toggling
+    var p = (window.POSTS||[]).find(function(x){ return String(x&&x.id)===String(id); });
+    if(!p) {
+      // Try by realId
+      var realId = window.realPostIdMap && window.realPostIdMap[id];
+      if(realId) p = (window.POSTS||[]).find(function(x){ return String(x&&x.realId)===String(realId); });
+    }
+    if(!p) {
+      console.warn('[RP] toggleComs: post not found for id='+id+'. POSTS count='+((window.POSTS||[]).length));
+      return;
+    }
+    return _orig.call(this, id);
+  };
+
+  var _origLoad = window.loadComments;
+  window.loadComments = async function(postId, sort, offset) {
+    var p = (window.POSTS||[]).find(function(x){ return String(x&&x.id)===String(postId); });
+    if(!p) console.warn('[RP] loadComments: post not found for id='+postId);
+    var list = document.getElementById('clist-'+postId);
+    if(!list) console.warn('[RP] loadComments: clist not found for id='+postId);
+    return _origLoad.call(this, postId, sort, offset);
+  };
+})();
+</script>
 </body>
 </html>
