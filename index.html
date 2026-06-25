@@ -8215,5 +8215,81 @@ console.log('[RandomPlan CLEAN] loaded');
   console.log('[RandomPlan] noticias_cl delayed comments activos');
 })();
 </script>
+
+<script>
+(function(){
+  // Fix 1: seed bot comments should NOT run on isNews posts
+  // They get their comments via scheduleNewsComments (delayed)
+  var _origGenerate = window.generateBotComments;
+  window.generateBotComments = function(count, existingCd) {
+    var p = window.__rpCommentContextPost || window.__rpV12RenderContext || null;
+    // If it's a news post, return existing cd only (don't seed new bot comments)
+    if (p && p.isNews) {
+      return (p.cd || []).slice(0, count || 0);
+    }
+    return _origGenerate ? _origGenerate.call(this, count, existingCd) : [];
+  };
+
+  // Fix 2: loadComments for news posts should use p.cd (updated by delayed comments)
+  var _origLoad = window.loadComments;
+  window.loadComments = async function(postId, sort, offset) {
+    var p = (window.POSTS || []).find(function(x) { return String(x.id) === String(postId); });
+    if (p && p.isNews) {
+      // Use p.cd directly - already populated by scheduleNewsComments
+      var list = document.getElementById('clist-' + postId);
+      var more = document.getElementById('cmore-' + postId);
+      if (!list) return;
+      var rows = (p.cd || []).slice();
+      if (sort === 'top') rows.sort(function(a,b){ return (b.v||0)-(a.v||0); });
+      if (!rows.length) {
+        list.innerHTML = '<div style="color:var(--text3);font-size:.75rem;padding:.4rem 0">// los comentarios irán apareciendo...</div>';
+      } else {
+        list.innerHTML = rows.map(function(c) {
+          return typeof renderCommentHTML === 'function'
+            ? renderCommentHTML('nc-' + c.t + '-' + Math.random().toString(36).slice(2),
+                (c.bot && c.bot.name) || 'usuario_cl',
+                (c.bot && c.bot.ciudad) || 'Chile',
+                c.t || 'ahora', c.txt, c.v || 1, false, null)
+            : '';
+        }).join('');
+      }
+      if (more) more.innerHTML = '';
+      return;
+    }
+    return _origLoad ? _origLoad.apply(this, arguments) : null;
+  };
+
+  // Fix 3: openPostThreadWindow for news should also use p.cd
+  var _origThread = window.openPostThreadWindow;
+  window.openPostThreadWindow = async function(id) {
+    var p = (window.POSTS || []).find(function(x) { return String(x.id) === String(id); });
+    if (p && p.isNews) {
+      // Build thread window with current p.cd
+      var rows = (p.cd || []);
+      var commentsHtml = rows.length
+        ? rows.map(function(c) {
+            return typeof renderPostThreadCommentHTML === 'function'
+              ? renderPostThreadCommentHTML(c)
+              : '<div class="rp-thread-comment"><div class="rp-thread-comment-body"><div class="rp-thread-comment-meta">u/' + ((c.bot&&c.bot.name)||'usuario_cl') + ' · ' + (c.t||'ahora') + '</div><div class="rp-thread-comment-text">' + (c.txt||'') + '</div></div></div>';
+          }).join('')
+        : '<div class="empty">// los comentarios irán llegando en unos minutos...</div>';
+      var w = window.open('', '_blank');
+      if (!w) {
+        if (window.openPostView) openPostView(id);
+        return;
+      }
+      var ref = typeof getPostReference === 'function' ? getPostReference(p) : (p.url || '');
+      w.document.open();
+      w.document.write(buildPostThreadWindowHTML(p, ref, commentsHtml));
+      w.document.close();
+      return;
+    }
+    return _origThread ? _origThread.call(this, id) : null;
+  };
+  window.openPostThreadWindow.__rpV8Wrapped = true;
+
+  console.log('[RandomPlan] news comments fix activo');
+})();
+</script>
 </body>
 </html>
