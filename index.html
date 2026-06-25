@@ -177,7 +177,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .post-view-lock{overflow:hidden}
 .post-view-wrap{display:none;position:fixed;inset:0;z-index:650;background:rgba(0,0,0,.86);backdrop-filter:blur(4px);align-items:flex-start;justify-content:center;padding:3.8rem .8rem 1.2rem;overflow-y:auto}
 .post-view-wrap.on{display:flex}
-.post-view{width:100%;max-width:860px;background:var(--bg1);border:1px solid var(--border2);border-radius:5px;box-shadow:0 20px 60px rgba(0,0,0,.55);overflow:visible;position:relative}
+.post-view{width:100%;max-width:860px;background:var(--bg1);border:1px solid var(--border2);border-radius:5px;box-shadow:0 20px 60px rgba(0,0,0,.55);overflow:hidden;position:relative}
 .post-view-top{position:sticky;top:0;z-index:2;background:var(--bg0);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem;padding:.55rem .75rem}
 .post-view-label{font-size:.65rem;color:var(--green);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono)}
 .post-view-label::before{content:'// ';color:var(--text3);font-weight:400}
@@ -1546,15 +1546,7 @@ function openPostView(id){
         '<input id="pv-comment-input" placeholder="comentar en el hilo..." onkeydown="if(event.key===\'Enter\')sendPostViewComment('+p.id+')">'+
         '<button class="pv-comment-send" onclick="sendPostViewComment('+p.id+')">SEND</button>'+
       '</div>'+
-      '<div style="display:flex;gap:.35rem;margin-top:.38rem">'+
-        '<button type="button" class="media-btn" onclick="pvToggleEmoji(event)">😊</button>'+
-        '<button type="button" class="media-btn" onclick="pvToggleGif(event)">GIF</button>'+
-      '</div>'+
-      '<div id="pv-emoji-box" style="display:none;flex-wrap:wrap;gap:.06rem;padding:.38rem;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;margin-top:.3rem;max-height:144px;overflow-y:auto"></div>'+
-      '<div id="pv-gif-box" style="display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:.4rem;margin-top:.3rem">'+
-        '<input id="pv-gif-search" placeholder="buscar GIF + Enter" style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:3px;padding:.35rem .6rem;font-family:var(--mono);font-size:.74rem;color:var(--text1);outline:none;margin-bottom:.38rem;box-sizing:border-box" onkeydown="if(event.key===\'Enter\'){event.preventDefault();pvSearchGif(this.value)}">'+
-        '<div id="pv-gif-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.28rem;max-height:160px;overflow-y:auto"></div>'+
-      '</div>'+
+      buildMediaBar('pv-comment-input')+
     '</div>'+
     '<div class="pv-comments-list" id="pv-comments-list"></div>';
   wrap.classList.add('on');
@@ -1570,88 +1562,6 @@ function closePostView(){
 
 function closePostViewBg(e){
   if(e.target&&e.target.id==='post-view-wrap')closePostView();
-}
-
-/* ── Post-view inline emoji/GIF pickers ── */
-var _pvEmojis=['😂','🔥','💀','🤣','😭','🤯','👀','😤','🫡','🤔','💯','🎯','🤙','👊','😎','🥲','😬','🤦','🙄','👏','🫠','😅','🤡','💪','🫶','❤️','🖤','⚡','🌊','🏔','🐍','🦅','🦁','🐺','💻','📱','🎮','🏆','💰','📈','📉','🔑','⚠️','❌','✅','🚀','🌙','☀️','🌧','❄️','🍺','🍕','🌮','☕','🤝','🙏','👋','✌️','🤞','🧠','💬','🔊','🎵','🎶'];
-var _pvGifFB=['https://media.giphy.com/media/3oEjHI8WJv4x6UPDB6/giphy.gif','https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif','https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif','https://media.giphy.com/media/111ebonMs90YLu/giphy.gif','https://media.giphy.com/media/5VKbvrjxpVJCM/giphy.gif','https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif','https://media.giphy.com/media/LCdPNT81vlv3y/giphy.gif','https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif','https://media.giphy.com/media/3o7TKr3nzbh5WgCFxe/giphy.gif','https://media.giphy.com/media/ToMjGpKniGqRNLGBrhu/giphy.gif','https://media.giphy.com/media/GCvktC0KFy9l6/giphy.gif','https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif'];
-
-function pvInsert(txt){
-  var inp=document.getElementById('pv-comment-input');
-  if(!inp)return;
-  var s=typeof inp.selectionStart==='number'?inp.selectionStart:inp.value.length;
-  inp.value=inp.value.slice(0,s)+txt+inp.value.slice(s);
-  inp.focus();
-  try{inp.selectionStart=inp.selectionEnd=s+txt.length;}catch(e){}
-}
-
-function pvToggleEmoji(ev){
-  ev&&ev.stopPropagation();
-  var ep=document.getElementById('pv-emoji-box');
-  var gp=document.getElementById('pv-gif-box');
-  if(!ep)return;
-  if(gp)gp.style.display='none';
-  var opening=ep.style.display==='none';
-  ep.style.display=opening?'flex':'none';
-  if(opening&&!ep.dataset.init){
-    ep.dataset.init='1';
-    ep.style.flexWrap='wrap';
-    _pvEmojis.forEach(function(e){
-      var b=document.createElement('button');
-      b.type='button';b.textContent=e;
-      b.style.cssText='background:none;border:none;font-size:1.1rem;cursor:pointer;padding:.14rem .18rem;border-radius:3px;line-height:1.1';
-      b.onmouseover=function(){this.style.background='var(--bg3)'};
-      b.onmouseout=function(){this.style.background='none'};
-      b.onclick=function(ev2){ev2.stopPropagation();pvInsert(e);};
-      ep.appendChild(b);
-    });
-  }
-}
-
-function pvToggleGif(ev){
-  ev&&ev.stopPropagation();
-  var ep=document.getElementById('pv-emoji-box');
-  var gp=document.getElementById('pv-gif-box');
-  if(!gp)return;
-  if(ep)ep.style.display='none';
-  var opening=gp.style.display==='none';
-  gp.style.display=opening?'block':'none';
-  if(opening){
-    var grid=document.getElementById('pv-gif-grid');
-    if(grid&&!grid.dataset.loaded){grid.dataset.loaded='1';pvSearchGif('meme chile');}
-  }
-}
-
-function pvGifClick(url){
-  pvInsert(' [gif:'+url+']');
-  var gp=document.getElementById('pv-gif-box');
-  if(gp)gp.style.display='none';
-}
-
-async function pvSearchGif(query){
-  var grid=document.getElementById('pv-gif-grid');
-  if(!grid)return;
-  query=String(query||'meme chile').trim();
-  grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.25rem;font-family:var(--mono)">// buscando...</span>';
-  function drawImgs(urls){
-    grid.innerHTML='';
-    urls.forEach(function(url){
-      var img=document.createElement('img');
-      img.src=url;img.loading='lazy';img.alt='gif';
-      img.style.cssText='width:100%;height:62px;object-fit:cover;border-radius:3px;cursor:pointer;border:1px solid transparent';
-      img.onmouseover=function(){this.style.borderColor='var(--green)'};
-      img.onmouseout=function(){this.style.borderColor='transparent'};
-      img.onclick=function(){pvGifClick(url);};
-      grid.appendChild(img);
-    });
-  }
-  try{
-    var r=await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(query)+'&key=AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY&limit=12&media_filter=gif,tinygif',{cache:'no-store'});
-    if(!r.ok)throw new Error('tenor');
-    var d=await r.json();
-    var urls=(d.results||[]).map(function(it){var mf=it.media_formats||{};return (mf.gif&&mf.gif.url)||(mf.tinygif&&mf.tinygif.url)||'';}).filter(Boolean);
-    if(urls.length){drawImgs(urls);}else{drawImgs(_pvGifFB);}
-  }catch(e){drawImgs(_pvGifFB);}
 }
 
 function setPostViewSort(btn, postId, sort){
@@ -7018,18 +6928,31 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closePostVi
   }
   function dedupe(arr){var seen={},out=[];arr.forEach(function(x){x=String(x||'').trim();var k=ntxt(x);if(x&&k&&!seen[k]){seen[k]=1;out.push(x);}});return out;}
   function make(seed,openers,subjects,closers,limit){
-    var out=seed.slice(),i=0;
-    outer:for(var a=0;a<openers.length;a++)for(var b=0;b<subjects.length;b++)for(var c=0;c<closers.length;c++){
-      out.push(openers[a].replace('{s}',subjects[(b+a)%subjects.length]).replace('{c}',closers[(c+b)%closers.length]));
-      i++; if(out.length>=limit)break outer;
+    var out=seed.slice();
+    // Recorremos subjects x closers en el bucle externo y rotamos el opener
+    // en CADA frase, para que no salgan 12 frases seguidas con el mismo inicio.
+    var n=0;
+    outer:for(var b=0;b<subjects.length;b++)for(var c=0;c<closers.length;c++){
+      var a=n%openers.length; // opener rota en cada iteración
+      out.push(openers[a].replace('{s}',subjects[(b+c)%subjects.length]).replace('{c}',closers[(c+b)%closers.length]));
+      n++; if(out.length>=limit)break outer;
     }
     return dedupe(out).slice(0,limit);
   }
   var RP18_BANKS=(function(){
     var commonOpen=[
-      '{s}, {c}.','Para mí, {s} es lo que define si esto avanza o no: {c}.','Sin mirar {s} de verdad, {c}.','Lo que pocas veces se menciona es {s}: {c}.',
-      'El tema de fondo acá es {s}; {c}.','Si la discusión parte por {s}, {c}.','Mucha gente ignora {s} y por eso {c}.','{s} importa más de lo que parece: {c}.',
-      'Difícil no mencionar {s} en esto, porque {c}.','Ojo que {s} no es menor; {c}.','Lo que cambia todo es prestarle atención a {s}: {c}.','Cuando se habla en serio, {s} siempre aparece y {c}.'
+      '{s}, {c}.',
+      'Para mí {s} es lo clave acá, {c}.',
+      'Sin mirar {s}, {c}.',
+      'Lo que casi nadie menciona es {s}: {c}.',
+      'El tema de fondo es {s}; {c}.',
+      'Cuando aparece {s}, {c}.',
+      'Mucha gente pasa por alto {s} y {c}.',
+      'Ojo que {s} pesa harto: {c}.',
+      'Si la discusión parte por {s}, {c}.',
+      'A veces se olvida {s}, pero {c}.',
+      'Yo pondría {s} sobre la mesa porque {c}.',
+      'Difícil avanzar sin {s}: {c}.'
     ];
     return {
       noticias: make([
@@ -7231,35 +7154,47 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closePostVi
     for(var k=0;k<bots.length;k++){var b=bots[(start+k)%bots.length];if(!used||!used[b.name])return b;}
     return bots[start%bots.length];
   }
-  // Cache de bancos mezclados por post (Fisher-Yates seeded)
-  var _rp18SC={};
-  function getShuffledBank(p){
-    var seed=String((p&&p.id)||'x')+(p&&p.sub||'');
-    if(_rp18SC[seed])return _rp18SC[seed];
+  // Banco mezclado por post con Fisher-Yates seeded (cacheado).
+  var _rp18Shuf={};
+  function shuffledBank(p){
+    var seed=String((p&&p.id)||'x')+'|'+(p&&p.sub||'');
+    if(_rp18Shuf[seed])return _rp18Shuf[seed];
     var bank=bankFor(p).slice();
     var s=2166136261>>>0;
     for(var ci=0;ci<seed.length;ci++){s^=seed.charCodeAt(ci);s=Math.imul(s,16777619)>>>0;}
     s=s||1;
     for(var n=bank.length-1;n>0;n--){
       s=Math.imul(s,1664525)+1013904223>>>0;
-      var jj=s%(n+1);
-      var tt=bank[n];bank[n]=bank[jj];bank[jj]=tt;
+      var jj=s%(n+1), tt=bank[n]; bank[n]=bank[jj]; bank[jj]=tt;
     }
-    _rp18SC[seed]=bank;
+    _rp18Shuf[seed]=bank;
     return bank;
   }
-  function pickPhrase(p,i,used){
-    var bank=getShuffledBank(p);
-    // Primer pase: frase no usada Y con inicio diferente a las ya elegidas
-    var usedStarts={};
-    Object.keys(used).forEach(function(k){ usedStarts[k.slice(0,28)]=1; });
+  // Primeras 3-4 palabras normalizadas → "stem" de apertura.
+  function openStem(txt){
+    return ntxt(txt).split(' ').slice(0,4).join(' ');
+  }
+  // Últimas 4 palabras normalizadas → "stem" de cierre.
+  function closeStem(txt){
+    var w=ntxt(txt).split(' ');
+    return w.slice(Math.max(0,w.length-4)).join(' ');
+  }
+  function pickPhrase(p,i,used,usedStems,usedCloses){
+    var bank=shuffledBank(p);
+    usedStems=usedStems||{}; usedCloses=usedCloses||{};
+    // Pase 1: distinta apertura Y distinto cierre.
     for(var k=0;k<bank.length;k++){
-      var ph=bank[k],key=ntxt(ph),start=ntxt(ph).slice(0,28);
-      if(ph&&key&&!used[key]&&!usedStarts[start])return ph;
+      var ph=bank[k], key=ntxt(ph);
+      if(ph&&key&&!used[key]&&!usedStems[openStem(ph)]&&!usedCloses[closeStem(ph)])return ph;
     }
-    // Segundo pase: al menos que no sea exactamente la misma frase
+    // Pase 2: al menos distinta apertura.
+    for(var ka=0;ka<bank.length;ka++){
+      var pa=bank[ka], keya=ntxt(pa);
+      if(pa&&keya&&!used[keya]&&!usedStems[openStem(pa)])return pa;
+    }
+    // Pase 3: que el texto completo no se repita.
     for(var k2=0;k2<bank.length;k2++){
-      var ph2=bank[k2],key2=ntxt(ph2);
+      var ph2=bank[k2], key2=ntxt(ph2);
       if(ph2&&key2&&!used[key2])return ph2;
     }
     return bank[i%bank.length]||bank[0];
@@ -7270,7 +7205,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closePostVi
     var requested=parseInt(target||p.coms||p.cd.length||0,10)||0;
     if(!requested)requested=isNews(p)?0:Math.min(6,Math.max(3,p.cd.length||4));
     var maxTarget=Math.min(requested,isNews(p)?16:22);
-    var usedTxt={},usedBot={},out=[];
+    var usedTxt={},usedBot={},usedStems={},usedCloses={},out=[];
     p.cd.forEach(function(c,i){
       c=c||{};var txt=String(c.txt||c.texto||'').trim(),key=ntxt(txt),bot=c.bot||{name:c.username||'',ciudad:c.ciudad||'Chile',av:'👤'};
       if(isUserComment(c)){
@@ -7278,14 +7213,14 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closePostVi
         return;
       }
       // Para bots: regeneramos siempre desde banco amplio para eliminar frases antiguas repetidas.
-      var phrase=pickPhrase(p,i,usedTxt),k2=ntxt(phrase),b2=pickBot(p,i,usedBot);
-      if(phrase&&!usedTxt[k2]){usedTxt[k2]=1;if(b2&&b2.name)usedBot[b2.name]=1;out.push({bot:b2,txt:phrase,t:c.t||c.tiempo||['ahora','2min','5min','9min','14min','22min','38min','1h','2h'][out.length%9],v:parseInt(c.v||c.votos||0,10)||1+h((p&&p.id)+'rp18v'+out.length,12)});}
+      var phrase=pickPhrase(p,i,usedTxt,usedStems,usedCloses),k2=ntxt(phrase),b2=pickBot(p,i,usedBot);
+      if(phrase&&!usedTxt[k2]){usedTxt[k2]=1;usedStems[openStem(phrase)]=1;usedCloses[closeStem(phrase)]=1;if(b2&&b2.name)usedBot[b2.name]=1;out.push({bot:b2,txt:phrase,t:c.t||c.tiempo||['ahora','2min','5min','9min','14min','22min','38min','1h','2h'][out.length%9],v:parseInt(c.v||c.votos||0,10)||1+h((p&&p.id)+'rp18v'+out.length,12)});}
     });
     var finalTarget=gradual?Math.min(maxTarget,out.length+1):maxTarget;
     for(var j=out.length;j<finalTarget;j++){
-      var ph=pickPhrase(p,j,usedTxt),k=ntxt(ph),b=pickBot(p,j,usedBot);
+      var ph=pickPhrase(p,j,usedTxt,usedStems,usedCloses),k=ntxt(ph),b=pickBot(p,j,usedBot);
       if(!ph||usedTxt[k])continue;
-      usedTxt[k]=1;if(b&&b.name)usedBot[b.name]=1;
+      usedTxt[k]=1;usedStems[openStem(ph)]=1;usedCloses[closeStem(ph)]=1;if(b&&b.name)usedBot[b.name]=1;
       out.push({bot:b,txt:ph,t:['ahora','2min','5min','9min','14min','22min','38min','1h','2h','3h'][j%10],v:1+h((p&&p.id)+'rp18vote'+j,12)});
     }
     p.cd=out;p.coms=out.length;return out;
@@ -7326,6 +7261,212 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closePostVi
     if(window.renderFeed)window.renderFeed(window._currentFilter||null);
     console.log('[RandomPlan V18] banco amplio activo: '+window.RP18_BANK_COUNT+' frases base');
   },700);
+})();
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   RANDOMPLAN V20 — Media inline DEFINITIVO
+   Reemplaza TODO el sistema de emoji/GIF por pickers que se anclan
+   inline en el DOM (sin position:fixed que se corta ni se va fuera
+   de pantalla). Override final: gana sobre todas las versiones previas.
+═══════════════════════════════════════════════════════════════ */
+(function(){
+'use strict';
+
+var EMOJIS=['😂','🔥','💀','🤣','😭','🤯','👀','😤','🫡','🤔','💯','🎯','🤙','👊','😎','🥲','😬','🤦','🙄','👏','🫠','😅','🤡','💪','🫶','❤️','🖤','⚡','🌊','🏔','🐍','🦅','🦁','🐺','💻','📱','🎮','🏆','💰','📈','📉','🔑','⚠️','❌','✅','🚀','🌙','☀️','🌧','❄️','🍺','🍕','🌮','☕','🤝','🙏','👋','✌️','🤞','🧠','💬','🔊','🎵','🎶','🇨🇱','⚽','🛒'];
+var TENOR_KEY='AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';
+var GIF_FB=['https://media.giphy.com/media/3oEjHI8WJv4x6UPDB6/giphy.gif','https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif','https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif','https://media.giphy.com/media/111ebonMs90YLu/giphy.gif','https://media.giphy.com/media/5VKbvrjxpVJCM/giphy.gif','https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif','https://media.giphy.com/media/LCdPNT81vlv3y/giphy.gif','https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif','https://media.giphy.com/media/3o7TKr3nzbh5WgCFxe/giphy.gif','https://media.giphy.com/media/ToMjGpKniGqRNLGBrhu/giphy.gif','https://media.giphy.com/media/GCvktC0KFy9l6/giphy.gif','https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif'];
+
+// Estilos de los pickers inline
+var css=document.createElement('style');
+css.textContent=[
+  '.v20-bar{display:flex;gap:.35rem;align-items:center;margin-top:.4rem;flex-wrap:wrap}',
+  '.v20-btn{background:none;border:1px solid var(--border2);color:var(--text3);padding:.22rem .55rem;border-radius:3px;font-size:.74rem;font-family:var(--mono);cursor:pointer;transition:all .12s;user-select:none}',
+  '.v20-btn:hover,.v20-btn.on{border-color:var(--green);color:var(--green);background:var(--greendim)}',
+  '.v20-ep{display:none;flex-wrap:wrap;gap:.05rem;padding:.4rem;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;margin-top:.32rem;max-height:150px;overflow-y:auto}',
+  '.v20-ep.on{display:flex}',
+  '.v20-ep button{background:none;border:none;font-size:1.15rem;cursor:pointer;padding:.14rem .18rem;border-radius:3px;line-height:1.1}',
+  '.v20-ep button:hover{background:var(--bg3)}',
+  '.v20-gp{display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:.42rem;margin-top:.32rem}',
+  '.v20-gp.on{display:block}',
+  '.v20-gs{width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:3px;padding:.36rem .6rem;font-family:var(--mono);font-size:.74rem;color:var(--text1);outline:none;margin-bottom:.4rem;box-sizing:border-box}',
+  '.v20-gs:focus{border-color:var(--green)}',
+  '.v20-gg{display:grid;grid-template-columns:repeat(4,1fr);gap:.28rem;max-height:170px;overflow-y:auto}',
+  '.v20-gg img{width:100%;height:62px;object-fit:cover;border-radius:3px;cursor:pointer;border:1px solid transparent;transition:border-color .1s;background:var(--bg0)}',
+  '.v20-gg img:hover{border-color:var(--green)}',
+  '.inserted-gif{max-width:280px;max-height:220px;border-radius:5px;margin:.35rem 0;display:block}'
+].join('');
+document.head.appendChild(css);
+
+var _seq=0;
+
+// Inserta texto en el input objetivo
+function insertInto(inputId, txt){
+  var inp=document.getElementById(inputId);
+  if(!inp)return;
+  var pre=inp.value||'';
+  var sp=(txt.charAt(0)==='['&&pre&&!/\s$/.test(pre))?' ':'';
+  var s=typeof inp.selectionStart==='number'?inp.selectionStart:pre.length;
+  inp.value=pre.slice(0,s)+sp+txt+pre.slice(s);
+  inp.focus();
+  try{var pos=s+sp.length+txt.length;inp.selectionStart=inp.selectionEnd=pos;}catch(e){}
+  if(typeof inp.dispatchEvent==='function')inp.dispatchEvent(new Event('input',{bubbles:true}));
+}
+
+// Construye la barra + pickers inline. Devuelve HTML.
+window.buildMediaBar=function(inputId){
+  var uid='v20-'+(_seq++);
+  return '<div class="v20-bar" data-v20-for="'+inputId+'">'+
+      '<button type="button" class="v20-btn" data-v20="emoji" data-v20-uid="'+uid+'" data-v20-input="'+inputId+'">😊</button>'+
+      '<button type="button" class="v20-btn" data-v20="gif" data-v20-uid="'+uid+'" data-v20-input="'+inputId+'">GIF</button>'+
+    '</div>'+
+    '<div class="v20-ep" id="'+uid+'-ep"></div>'+
+    '<div class="v20-gp" id="'+uid+'-gp">'+
+      '<input type="text" class="v20-gs" id="'+uid+'-gs" placeholder="buscar GIF + Enter">'+
+      '<div class="v20-gg" id="'+uid+'-gg"></div>'+
+    '</div>';
+};
+
+// Compatibilidad: showEmojiPicker / showGifPicker reciben inputId y abren el picker más cercano
+window.showEmojiPicker=function(inputId){ var b=findBtn(inputId,'emoji'); if(b) toggleEmoji(b); };
+window.showGifPicker=function(inputId){ var b=findBtn(inputId,'gif'); if(b) toggleGif(b); };
+
+function findBtn(inputId,mode){
+  return document.querySelector('.v20-btn[data-v20="'+mode+'"][data-v20-input="'+inputId+'"]');
+}
+
+function fillEmojis(uid){
+  var ep=document.getElementById(uid+'-ep');
+  if(!ep||ep.dataset.init)return;
+  ep.dataset.init='1';
+  EMOJIS.forEach(function(e){
+    var b=document.createElement('button');
+    b.type='button'; b.textContent=e; b.setAttribute('data-v20-emoji','1');
+    ep.appendChild(b);
+  });
+}
+
+function toggleEmoji(btn){
+  var uid=btn.getAttribute('data-v20-uid');
+  var ep=document.getElementById(uid+'-ep');
+  var gp=document.getElementById(uid+'-gp');
+  if(!ep)return;
+  fillEmojis(uid);
+  var opening=!ep.classList.contains('on');
+  if(gp)gp.classList.remove('on');
+  ep.classList.toggle('on',opening);
+  // marcar botones
+  var bar=btn.parentElement;
+  if(bar)bar.querySelectorAll('.v20-btn').forEach(function(b){b.classList.remove('on');});
+  if(opening)btn.classList.add('on');
+}
+
+function toggleGif(btn){
+  var uid=btn.getAttribute('data-v20-uid');
+  var ep=document.getElementById(uid+'-ep');
+  var gp=document.getElementById(uid+'-gp');
+  if(!gp)return;
+  var opening=!gp.classList.contains('on');
+  if(ep)ep.classList.remove('on');
+  gp.classList.toggle('on',opening);
+  var bar=btn.parentElement;
+  if(bar)bar.querySelectorAll('.v20-btn').forEach(function(b){b.classList.remove('on');});
+  if(opening){
+    btn.classList.add('on');
+    var grid=document.getElementById(uid+'-gg');
+    if(grid&&!grid.dataset.loaded){grid.dataset.loaded='1';loadGifs(uid,'meme chile');}
+    var search=document.getElementById(uid+'-gs');
+    if(search&&!search.dataset.bound){
+      search.dataset.bound='1';
+      search.addEventListener('keydown',function(ev){if(ev.key==='Enter'){ev.preventDefault();loadGifs(uid,this.value);}});
+    }
+  }
+}
+
+function loadGifs(uid, query){
+  var grid=document.getElementById(uid+'-gg');
+  var inputId=null;
+  var bar=document.querySelector('.v20-btn[data-v20-uid="'+uid+'"]');
+  if(bar)inputId=bar.getAttribute('data-v20-input');
+  if(!grid)return;
+  query=String(query||'meme chile').trim();
+  grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.25rem;font-family:var(--mono)">// buscando...</span>';
+  function draw(urls){
+    grid.innerHTML='';
+    urls.forEach(function(url){
+      var img=document.createElement('img');
+      img.src=url; img.loading='lazy'; img.alt='gif';
+      img.addEventListener('click',function(){
+        if(inputId)insertInto(inputId,'[gif:'+url+']');
+        var gp=document.getElementById(uid+'-gp');
+        if(gp)gp.classList.remove('on');
+        var b=document.querySelector('.v20-btn[data-v20="gif"][data-v20-uid="'+uid+'"]');
+        if(b)b.classList.remove('on');
+      });
+      grid.appendChild(img);
+    });
+  }
+  fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(query)+'&key='+TENOR_KEY+'&limit=12&media_filter=gif,tinygif',{cache:'no-store'})
+    .then(function(r){if(!r.ok)throw new Error('tenor');return r.json();})
+    .then(function(d){
+      var urls=(d.results||[]).map(function(it){var mf=it.media_formats||{};return (mf.gif&&mf.gif.url)||(mf.tinygif&&mf.tinygif.url)||'';}).filter(Boolean);
+      draw(urls.length?urls:GIF_FB);
+    })
+    .catch(function(){draw(GIF_FB);});
+}
+
+// Delegación global de clicks (un solo listener, sin capture para no chocar)
+document.addEventListener('click',function(ev){
+  var btn=ev.target.closest&&ev.target.closest('.v20-btn');
+  if(btn){
+    ev.preventDefault();
+    var mode=btn.getAttribute('data-v20');
+    if(mode==='gif')toggleGif(btn); else toggleEmoji(btn);
+    return;
+  }
+  var em=ev.target.closest&&ev.target.closest('[data-v20-emoji]');
+  if(em){
+    ev.preventDefault();
+    var ep=em.closest('.v20-ep');
+    var uid=ep?ep.id.replace('-ep',''):null;
+    var bar=uid?document.querySelector('.v20-btn[data-v20-uid="'+uid+'"]'):null;
+    var inputId=bar?bar.getAttribute('data-v20-input'):null;
+    if(inputId)insertInto(inputId,em.textContent);
+    return; // no cerrar: permite insertar varios
+  }
+});
+
+// Re-inyectar la barra en el post-view modal (que usa HTML fijo)
+function patchPostView(){
+  var box=document.querySelector('#post-view-content .pv-comment-box');
+  if(!box||box.querySelector('.v20-bar'))return;
+  // quitar cualquier barra vieja
+  box.querySelectorAll('.media-bar').forEach(function(m){m.remove();});
+  var div=document.createElement('div');
+  div.innerHTML=window.buildMediaBar('pv-comment-input');
+  while(div.firstChild)box.appendChild(div.firstChild);
+}
+
+// Hook a openPostView para inyectar tras render
+var _origOPV=window.openPostView;
+if(_origOPV){
+  window.openPostView=function(id){
+    var r=_origOPV.apply(this,arguments);
+    requestAnimationFrame(patchPostView);
+    setTimeout(patchPostView,60);
+    return r;
+  };
+}
+
+// Observador: si el modal cambia, re-parchear
+var mo=new MutationObserver(function(){
+  var wrap=document.getElementById('post-view-wrap');
+  if(wrap&&wrap.classList.contains('on'))patchPostView();
+});
+try{mo.observe(document.getElementById('post-view-content')||document.body,{childList:true,subtree:true});}catch(e){}
+
+console.log('[RandomPlan V20] media inline definitivo cargado');
 })();
 </script>
 
