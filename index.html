@@ -177,7 +177,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .post-view-lock{overflow:hidden}
 .post-view-wrap{display:none;position:fixed;inset:0;z-index:650;background:rgba(0,0,0,.86);backdrop-filter:blur(4px);align-items:flex-start;justify-content:center;padding:3.8rem .8rem 1.2rem;overflow-y:auto}
 .post-view-wrap.on{display:flex}
-.post-view{width:100%;max-width:860px;background:var(--bg1);border:1px solid var(--border2);border-radius:5px;box-shadow:0 20px 60px rgba(0,0,0,.55);overflow:hidden;position:relative}
+.post-view{width:100%;max-width:860px;background:var(--bg1);border:1px solid var(--border2);border-radius:5px;box-shadow:0 20px 60px rgba(0,0,0,.55);overflow:visible;position:relative}
 .post-view-top{position:sticky;top:0;z-index:2;background:var(--bg0);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem;padding:.55rem .75rem}
 .post-view-label{font-size:.65rem;color:var(--green);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono)}
 .post-view-label::before{content:'// ';color:var(--text3);font-weight:400}
@@ -1546,7 +1546,15 @@ function openPostView(id){
         '<input id="pv-comment-input" placeholder="comentar en el hilo..." onkeydown="if(event.key===\'Enter\')sendPostViewComment('+p.id+')">'+
         '<button class="pv-comment-send" onclick="sendPostViewComment('+p.id+')">SEND</button>'+
       '</div>'+
-      buildMediaBar('pv-comment-input')+
+      '<div style="display:flex;gap:.35rem;margin-top:.38rem">'+
+        '<button type="button" class="media-btn" onclick="pvToggleEmoji(event)">😊</button>'+
+        '<button type="button" class="media-btn" onclick="pvToggleGif(event)">GIF</button>'+
+      '</div>'+
+      '<div id="pv-emoji-box" style="display:none;flex-wrap:wrap;gap:.06rem;padding:.38rem;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;margin-top:.3rem;max-height:144px;overflow-y:auto"></div>'+
+      '<div id="pv-gif-box" style="display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:.4rem;margin-top:.3rem">'+
+        '<input id="pv-gif-search" placeholder="buscar GIF + Enter" style="width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:3px;padding:.35rem .6rem;font-family:var(--mono);font-size:.74rem;color:var(--text1);outline:none;margin-bottom:.38rem;box-sizing:border-box" onkeydown="if(event.key===\'Enter\'){event.preventDefault();pvSearchGif(this.value)}">'+
+        '<div id="pv-gif-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.28rem;max-height:160px;overflow-y:auto"></div>'+
+      '</div>'+
     '</div>'+
     '<div class="pv-comments-list" id="pv-comments-list"></div>';
   wrap.classList.add('on');
@@ -1562,6 +1570,88 @@ function closePostView(){
 
 function closePostViewBg(e){
   if(e.target&&e.target.id==='post-view-wrap')closePostView();
+}
+
+/* ── Post-view inline emoji/GIF pickers ── */
+var _pvEmojis=['😂','🔥','💀','🤣','😭','🤯','👀','😤','🫡','🤔','💯','🎯','🤙','👊','😎','🥲','😬','🤦','🙄','👏','🫠','😅','🤡','💪','🫶','❤️','🖤','⚡','🌊','🏔','🐍','🦅','🦁','🐺','💻','📱','🎮','🏆','💰','📈','📉','🔑','⚠️','❌','✅','🚀','🌙','☀️','🌧','❄️','🍺','🍕','🌮','☕','🤝','🙏','👋','✌️','🤞','🧠','💬','🔊','🎵','🎶'];
+var _pvGifFB=['https://media.giphy.com/media/3oEjHI8WJv4x6UPDB6/giphy.gif','https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif','https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif','https://media.giphy.com/media/111ebonMs90YLu/giphy.gif','https://media.giphy.com/media/5VKbvrjxpVJCM/giphy.gif','https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif','https://media.giphy.com/media/LCdPNT81vlv3y/giphy.gif','https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif','https://media.giphy.com/media/3o7TKr3nzbh5WgCFxe/giphy.gif','https://media.giphy.com/media/ToMjGpKniGqRNLGBrhu/giphy.gif','https://media.giphy.com/media/GCvktC0KFy9l6/giphy.gif','https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif'];
+
+function pvInsert(txt){
+  var inp=document.getElementById('pv-comment-input');
+  if(!inp)return;
+  var s=typeof inp.selectionStart==='number'?inp.selectionStart:inp.value.length;
+  inp.value=inp.value.slice(0,s)+txt+inp.value.slice(s);
+  inp.focus();
+  try{inp.selectionStart=inp.selectionEnd=s+txt.length;}catch(e){}
+}
+
+function pvToggleEmoji(ev){
+  ev&&ev.stopPropagation();
+  var ep=document.getElementById('pv-emoji-box');
+  var gp=document.getElementById('pv-gif-box');
+  if(!ep)return;
+  if(gp)gp.style.display='none';
+  var opening=ep.style.display==='none';
+  ep.style.display=opening?'flex':'none';
+  if(opening&&!ep.dataset.init){
+    ep.dataset.init='1';
+    ep.style.flexWrap='wrap';
+    _pvEmojis.forEach(function(e){
+      var b=document.createElement('button');
+      b.type='button';b.textContent=e;
+      b.style.cssText='background:none;border:none;font-size:1.1rem;cursor:pointer;padding:.14rem .18rem;border-radius:3px;line-height:1.1';
+      b.onmouseover=function(){this.style.background='var(--bg3)'};
+      b.onmouseout=function(){this.style.background='none'};
+      b.onclick=function(ev2){ev2.stopPropagation();pvInsert(e);};
+      ep.appendChild(b);
+    });
+  }
+}
+
+function pvToggleGif(ev){
+  ev&&ev.stopPropagation();
+  var ep=document.getElementById('pv-emoji-box');
+  var gp=document.getElementById('pv-gif-box');
+  if(!gp)return;
+  if(ep)ep.style.display='none';
+  var opening=gp.style.display==='none';
+  gp.style.display=opening?'block':'none';
+  if(opening){
+    var grid=document.getElementById('pv-gif-grid');
+    if(grid&&!grid.dataset.loaded){grid.dataset.loaded='1';pvSearchGif('meme chile');}
+  }
+}
+
+function pvGifClick(url){
+  pvInsert(' [gif:'+url+']');
+  var gp=document.getElementById('pv-gif-box');
+  if(gp)gp.style.display='none';
+}
+
+async function pvSearchGif(query){
+  var grid=document.getElementById('pv-gif-grid');
+  if(!grid)return;
+  query=String(query||'meme chile').trim();
+  grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.25rem;font-family:var(--mono)">// buscando...</span>';
+  function drawImgs(urls){
+    grid.innerHTML='';
+    urls.forEach(function(url){
+      var img=document.createElement('img');
+      img.src=url;img.loading='lazy';img.alt='gif';
+      img.style.cssText='width:100%;height:62px;object-fit:cover;border-radius:3px;cursor:pointer;border:1px solid transparent';
+      img.onmouseover=function(){this.style.borderColor='var(--green)'};
+      img.onmouseout=function(){this.style.borderColor='transparent'};
+      img.onclick=function(){pvGifClick(url);};
+      grid.appendChild(img);
+    });
+  }
+  try{
+    var r=await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(query)+'&key=AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY&limit=12&media_filter=gif,tinygif',{cache:'no-store'});
+    if(!r.ok)throw new Error('tenor');
+    var d=await r.json();
+    var urls=(d.results||[]).map(function(it){var mf=it.media_formats||{};return (mf.gif&&mf.gif.url)||(mf.tinygif&&mf.tinygif.url)||'';}).filter(Boolean);
+    if(urls.length){drawImgs(urls);}else{drawImgs(_pvGifFB);}
+  }catch(e){drawImgs(_pvGifFB);}
 }
 
 function setPostViewSort(btn, postId, sort){
@@ -6937,9 +7027,9 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closePostVi
   }
   var RP18_BANKS=(function(){
     var commonOpen=[
-      'Buen punto: {s}, {c}.','A mí me parece que {s}, {c}.','El detalle acá es {s}; {c}.','Ojo con {s}: {c}.',
-      'Esto no se entiende sin mirar {s}; {c}.','La conversación mejora cuando aparece {s}, porque {c}.','Acá el foco debería ser {s}; {c}.',
-      'Si se mira con calma, {s} termina siendo clave: {c}.','No es menor lo de {s}; {c}.','Lo interesante es {s}, sobre todo porque {c}.'
+      '{s}, {c}.','Para mí, {s} es lo que define si esto avanza o no: {c}.','Sin mirar {s} de verdad, {c}.','Lo que pocas veces se menciona es {s}: {c}.',
+      'El tema de fondo acá es {s}; {c}.','Si la discusión parte por {s}, {c}.','Mucha gente ignora {s} y por eso {c}.','{s} importa más de lo que parece: {c}.',
+      'Difícil no mencionar {s} en esto, porque {c}.','Ojo que {s} no es menor; {c}.','Lo que cambia todo es prestarle atención a {s}: {c}.','Cuando se habla en serio, {s} siempre aparece y {c}.'
     ];
     return {
       noticias: make([
@@ -7141,17 +7231,38 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closePostVi
     for(var k=0;k<bots.length;k++){var b=bots[(start+k)%bots.length];if(!used||!used[b.name])return b;}
     return bots[start%bots.length];
   }
-  function pickPhrase(p,i,used){
-    var bank=bankFor(p),start=h((p&&p.id)+'|'+(p&&p.title)+'|rp18phrase|'+i,bank.length);
-    // Mezcla longitud: cada hilo alterna corto, medio y largo para que no se lea robótico.
-    var want=i%3;
-    for(var pass=0;pass<2;pass++){
-      for(var k=0;k<bank.length;k++){
-        var ph=bank[(start+k*7+pass)%bank.length],len=ph.length,kind=len<78?0:(len<128?1:2),key=ntxt(ph);
-        if(!used[key]&&(pass||kind===want))return ph;
-      }
+  // Cache de bancos mezclados por post (Fisher-Yates seeded)
+  var _rp18SC={};
+  function getShuffledBank(p){
+    var seed=String((p&&p.id)||'x')+(p&&p.sub||'');
+    if(_rp18SC[seed])return _rp18SC[seed];
+    var bank=bankFor(p).slice();
+    var s=2166136261>>>0;
+    for(var ci=0;ci<seed.length;ci++){s^=seed.charCodeAt(ci);s=Math.imul(s,16777619)>>>0;}
+    s=s||1;
+    for(var n=bank.length-1;n>0;n--){
+      s=Math.imul(s,1664525)+1013904223>>>0;
+      var jj=s%(n+1);
+      var tt=bank[n];bank[n]=bank[jj];bank[jj]=tt;
     }
-    return bank[start%bank.length];
+    _rp18SC[seed]=bank;
+    return bank;
+  }
+  function pickPhrase(p,i,used){
+    var bank=getShuffledBank(p);
+    // Primer pase: frase no usada Y con inicio diferente a las ya elegidas
+    var usedStarts={};
+    Object.keys(used).forEach(function(k){ usedStarts[k.slice(0,28)]=1; });
+    for(var k=0;k<bank.length;k++){
+      var ph=bank[k],key=ntxt(ph),start=ntxt(ph).slice(0,28);
+      if(ph&&key&&!used[key]&&!usedStarts[start])return ph;
+    }
+    // Segundo pase: al menos que no sea exactamente la misma frase
+    for(var k2=0;k2<bank.length;k2++){
+      var ph2=bank[k2],key2=ntxt(ph2);
+      if(ph2&&key2&&!used[key2])return ph2;
+    }
+    return bank[i%bank.length]||bank[0];
   }
   function rp18CleanComments(p,target,gradual){
     if(!p)return [];
@@ -7215,482 +7326,6 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closePostVi
     if(window.renderFeed)window.renderFeed(window._currentFilter||null);
     console.log('[RandomPlan V18] banco amplio activo: '+window.RP18_BANK_COUNT+' frases base');
   },700);
-})();
-</script>
-
-<script>
-/* ═══════════════════════════════════════════════════════════════
-   RANDOMPLAN V19 — Corrección definitiva
-   1) Comentarios sin repetición: usa el banco amplio del V18 con
-      Fisher-Yates seeded por post.id → cada hilo = orden distinto.
-   2) Emoji + GIF dentro del post-view modal (pickers inline,
-      sin position:fixed que sea cortado por overflow:hidden).
-   Sobreescribe solo las funciones exactas necesarias.
-═══════════════════════════════════════════════════════════════ */
-(function(){
-'use strict';
-
-/* ── helpers ── */
-function $id(id){ return document.getElementById(id); }
-function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
-
-/* LCG seeded por post.id → Fisher-Yates determinístico
-   Mismo post → siempre mismo orden. Posts distintos → ordenes distintos. */
-function seededShuffle(arr, seed){
-  var a = arr.slice();
-  seed = String(seed||'x');
-  /* FNV-1a seed */
-  var s = 2166136261>>>0;
-  for(var i=0;i<seed.length;i++){ s ^= seed.charCodeAt(i); s = Math.imul(s,16777619)>>>0; }
-  s = s || 1;
-  for(var n=a.length-1; n>0; n--){
-    s = Math.imul(s,1664525)+1013904223>>>0;
-    var j = s%(n+1);
-    var t=a[n]; a[n]=a[j]; a[j]=t;
-  }
-  return a;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   MEJORA 1 — comentarios únicos por hilo
-   Reemplaza topicBank + pickPhrase + cleanComments del V17.
-   Ahora topicBank devuelve el banco V18 mezclado (50-70 frases),
-   pickPhrase toma de esa lista en orden sin repetir.
-═══════════════════════════════════════════════════════════════ */
-
-/* Obtiene el banco del V18 apropiado para el post, lo mezcla y deduplica */
-function v19Bank(p){
-  var banks = window.RP18_BANKS;
-  if(!banks) return null; /* V18 no cargado aún → no tocar */
-
-  var sub = (typeof window.normalizeCommunitySub==='function')
-    ? (window.normalizeCommunitySub(p&&p.sub)||'chile')
-    : String(p&&p.sub||'chile').replace(/^p\//,'');
-
-  var txt = (String(p&&p.title||'')+' '+String(p&&p.prev||'')).toLowerCase();
-  var isNews = !!(p&&(p.isNews||String(p.user&&p.user.name||'').toLowerCase()==='noticias_cl'));
-
-  /* Elegir banco por tema */
-  var key = 'chile';
-  if(isNews) key='noticias';
-  else if(/registro civil|domicilio|clave|tramite|trámite|sii|afc|fonasa|licencia|municipal|banco|cartola|certificado|servicio p[uú]blico|notaria|impuesto|carpeta tributaria/.test(txt)) key='tramites';
-  else if(sub==='futbol') key='futbol';
-  else if(sub==='finanzas') key='finanzas';
-  else if(sub==='marketplace') key='marketplace';
-  else if(sub==='memescl') key='memescl';
-  else if(sub==='debate'||sub==='contingencia') key='debate';
-  else if(sub==='tecnologia') key='tecnologia';
-  else if(/\bdólar\b|\busd\b|\bclp\b|\barriendo\b|\bsueldo\b|\bapv\b/.test(txt)) key='finanzas';
-  else if(/\bfútbol\b|\bfutbol\b|\broja\b|\bcolo\b|\buniversidad de chile\b/.test(txt)) key='futbol';
-  else if(/\bdebate\b|\bcentralismo\b|\bpolitica\b|\bpolítica\b/.test(txt)) key='debate';
-
-  var raw = banks[key] || banks.chile || [];
-  /* Mezcla única por post — seed = id + sub + key */
-  var mixed = seededShuffle(raw, String(p.id)+sub+key);
-  /* Deduplica manteniendo orden */
-  var seen={}, out=[];
-  mixed.forEach(function(ph){
-    var k=ph.toLowerCase().slice(0,55);
-    if(ph && ph.length>=45 && !seen[k]){ seen[k]=1; out.push(ph); }
-  });
-  /* Si banco propio es pequeño, completar con chile mezclado */
-  if(out.length < 22 && key!=='chile'){
-    var gen = seededShuffle(banks.chile||[], String(p.id)+'gen');
-    gen.forEach(function(ph){
-      var k=ph.toLowerCase().slice(0,55);
-      if(ph && ph.length>=45 && !seen[k]){ seen[k]=1; out.push(ph); }
-    });
-  }
-  return out.length ? out : null;
-}
-
-/* Guardar referencia al V17 cleanComments original */
-var _v17cleanComments = null;
-
-/* Sobreescribir renderPostViewComments para usar banco V18+shuffle */
-function v19renderPVC(postId, sort){
-  var p = (window.POSTS||[]).find(function(x){return parseInt(x.id,10)===parseInt(postId,10);});
-  var list = $id('pv-comments-list');
-  if(!p||!list) return;
-  sort = sort||'top';
-  window.__rpCommentContextPost = p;
-
-  /* Generar comentarios con el nuevo sistema si V18 está disponible */
-  var bank = v19Bank(p);
-  var all;
-  if(bank){
-    all = v19buildComments(p, bank, p.coms||(p.cd&&p.cd.length)||0);
-  } else {
-    /* fallback al V17 si V18 no cargó */
-    all = (p.cd||[]).slice();
-  }
-
-  if(sort==='new') all=all.slice().reverse();
-  else if(sort==='top') all=all.slice().sort(function(a,b){return(b.v||0)-(a.v||0);});
-
-  list.innerHTML = all.length
-    ? all.map(function(c){
-        var bot=c.bot||{name:c.username||'usuario_cl'};
-        var txt = typeof window.linkify==='function' ? window.linkify(c.txt||c.texto||'') : esc(c.txt||c.texto||'');
-        return '<div class="pv-comment">'+
-          '<div class="pv-comment-v"><button onclick="pvVote(this,1)">▲</button><strong>'+esc(String(c.v||0))+'</strong><button onclick="pvVote(this,-1)">▼</button></div>'+
-          '<div><div class="pv-comment-meta"><span class="u">u/'+esc(bot.name||'usuario_cl')+'</span> · '+esc(c.t||'ahora')+'</div>'+
-          '<div class="pv-comment-text">'+txt+'</div></div></div>';
-      }).join('')
-    : '<div class="pv-empty">// todavía no hay comentarios</div>';
-}
-
-/* Sobreescribir loadComments para posts bot (id < 9000) */
-function v19loadComments(postId, sort, offset){
-  var list = $id('clist-'+postId);
-  if(!list) return;
-  var more = $id('cmore-'+postId);
-  var p = (window.POSTS||[]).find(function(x){return parseInt(x.id,10)===parseInt(postId,10);});
-
-  /* Posts reales de Supabase → no tocar */
-  if(!p || parseInt(postId,10)>=9000){
-    /* Llamar al original del V17 que maneja Supabase */
-    if(window._v19origLoadComments) window._v19origLoadComments(postId,sort,offset);
-    return;
-  }
-
-  sort=sort||'top'; offset=offset||0;
-  var LIMIT=10;
-  window.__rpCommentContextPost = p;
-
-  var bank = v19Bank(p);
-  var all;
-  if(bank){
-    all = v19buildComments(p, bank, p.coms||(p.cd&&p.cd.length)||0);
-  } else {
-    all = (p.cd||[]).slice();
-  }
-
-  if(sort==='new') all=all.slice().reverse();
-  else if(sort==='old'){ /* orden de inserción */ }
-  else all=all.slice().sort(function(a,b){return(b.v||0)-(a.v||0);});
-
-  var page = all.slice(offset, offset+LIMIT);
-  var html='';
-  page.forEach(function(c){
-    var bot=c.bot||{name:c.username||'usuario_cl',ciudad:'Chile'};
-    if(typeof window.renderCommentHTML==='function'){
-      /* FNV hash para id único del comentario */
-      var hval=2166136261>>>0;
-      var hs=String(postId)+'|'+(c.txt||'')+'|'+offset+'|'+Math.random();
-      for(var hi=0;hi<hs.length;hi++){ hval^=hs.charCodeAt(hi); hval=Math.imul(hval,16777619)>>>0; }
-      html+=window.renderCommentHTML('v19-'+hval.toString(36), bot.name||'usuario_cl', bot.ciudad||'Chile', c.t||'ahora', c.txt||c.texto||'', c.v||0, !!c.isUser, c.realComId||null);
-    } else {
-      html+='<div class="comment"><div class="cctext">'+esc(c.txt||c.texto||'')+'</div></div>';
-    }
-  });
-
-  if(offset===0) list.innerHTML=html; else list.innerHTML+=html;
-  if(more){
-    more.innerHTML = all.length>offset+LIMIT
-      ? '<button class="com-more-btn" onclick="loadComments('+postId+',\''+sort+'\','+(offset+LIMIT)+')">ver más comentarios ('+(all.length-offset-LIMIT)+' restantes)</button>'
-      : '';
-  }
-}
-
-/* Construye el array de comentarios de bots sin repetición */
-var V19_TIEMPOS=['ahora','1min','4min','9min','16min','25min','38min','52min','1h','1h 20min','1h 45min','2h','3h','4h','5h','6h','8h','12h'];
-function v19buildComments(p, bank, target){
-  target = Math.min(parseInt(target||0,10)||0, 20);
-  if(!target) target = Math.min(6, Math.max(3,(p.cd&&p.cd.length)||3));
-
-  /* Preservar comentarios reales del usuario */
-  var userComs=[], usedPhrases={}, usedBots={};
-  (p.cd||[]).forEach(function(c){
-    var isUser=!!(c.realComId||c.userId||c.isUser||c.fromUser||
-      String((c.bot&&c.bot.name)||c.username||'').toLowerCase()==='tu_usuario'||
-      (window.currentPerfil&&String((c.bot&&c.bot.name)||c.username||'').toLowerCase()===String(window.currentPerfil.username||'').toLowerCase()));
-    if(isUser){ userComs.push(c); usedPhrases[(c.txt||c.texto||'').toLowerCase().slice(0,55)]=1; }
-  });
-
-  /* Bot pool para el sub */
-  var sub=(typeof window.normalizeCommunitySub==='function')?window.normalizeCommunitySub(p.sub)||'chile':String(p.sub||'chile').replace(/^p\//,'');
-  var bots=(window.BOTS||[]);
-  var wants={chile:['chile','debate'],contingencia:['chile','debate'],finanzas:['finanzas','chile'],futbol:['futbol','chile'],marketplace:['chile','finanzas'],memescl:['memescl','chile'],debate:['debate','chile'],tecnologia:['tecnologia','chile']}[sub]||['chile'];
-  var pool=bots.filter(function(b){var a=b.arq&&window.BOT_ARQUETIPOS?window.BOT_ARQUETIPOS[b.arq]:null;return a&&a.intereses&&wants.some(function(w){return a.intereses.indexOf(w)!==-1;});});
-  if(pool.length<10) pool=bots.slice();
-  if(!pool.length) pool=[{name:'usuario_cl',ciudad:'Chile',av:'👤'}];
-
-  /* Mezclar pool de bots con seed distinta al banco */
-  var mixedPool = seededShuffle(pool, String(p.id)+'bots'+sub);
-
-  var slotsNeeded = Math.max(0, target-userComs.length);
-  var botComs=[];
-  var phraseIdx=0;
-
-  for(var i=0; i<slotsNeeded; i++){
-    /* Frase: siguiente en el banco mezclado no usada */
-    var phrase=null;
-    while(phraseIdx<bank.length){
-      var candidate=bank[phraseIdx++];
-      var k=candidate.toLowerCase().slice(0,55);
-      if(!usedPhrases[k]){ phrase=candidate; usedPhrases[k]=1; break; }
-    }
-    if(!phrase) break; /* banco agotado → no generar más */
-
-    /* Bot: siguiente no usado */
-    var bot=null;
-    for(var bi=0;bi<mixedPool.length;bi++){
-      var b=mixedPool[(i+bi)%mixedPool.length];
-      if(!usedBots[b.name]){ bot=b; usedBots[b.name]=1; break; }
-    }
-    if(!bot) bot=mixedPool[i%mixedPool.length];
-
-    /* Votos pseudo-realistas */
-    var vseed=2166136261>>>0;
-    var vs=String(p.id)+'v19'+i;
-    for(var vi=0;vi<vs.length;vi++){ vseed^=vs.charCodeAt(vi); vseed=Math.imul(vseed,16777619)>>>0; }
-    var votos = 1+(vseed%11);
-
-    botComs.push({bot:bot, txt:phrase, v:votos, t:V19_TIEMPOS[i%V19_TIEMPOS.length]});
-  }
-
-  return botComs.concat(userComs);
-}
-
-/* Sobreescribir generateBotComments (usada por varios paths del V17/V18) */
-window.generateBotComments = function(count, existingCd){
-  var p = window.__rpCommentContextPost||null;
-  if(p){
-    var bank=v19Bank(p);
-    if(bank) return v19buildComments(p,bank,count||p.coms||(p.cd&&p.cd.length)||6).slice(0,Math.min(count||20,20));
-  }
-  var tmp={id:'tmp-'+Date.now(),sub:'chile',title:'',prev:'',coms:count||6,cd:existingCd||[]};
-  var bank2=v19Bank(tmp);
-  if(bank2) return v19buildComments(tmp,bank2,count||6);
-  return existingCd||[];
-};
-
-/* Hook loadComments — guardar original primero */
-window._v19origLoadComments = window.loadComments;
-window.loadComments = v19loadComments;
-window.renderPostViewComments = v19renderPVC;
-
-/* ═══════════════════════════════════════════════════════════════
-   MEJORA 2 — Emoji + GIF inline dentro del post-view modal
-   El modal tiene .post-view { overflow:hidden } que corta cualquier
-   picker position:fixed. Solución: pickers embebidos en el DOM
-   del modal, sin position:fixed.
-═══════════════════════════════════════════════════════════════ */
-
-/* CSS de los pickers inline */
-var pvCSS = document.createElement('style');
-pvCSS.textContent = [
-  /* Barra de media dentro del pv-comment-box */
-  '.pv-mb{display:flex;gap:.35rem;margin-top:.38rem;align-items:center}',
-  '.pv-mb-btn{background:none;border:1px solid var(--border2);color:var(--text3);padding:.22rem .55rem;',
-  'border-radius:3px;font-size:.72rem;font-family:var(--mono);cursor:pointer;transition:all .12s;user-select:none}',
-  '.pv-mb-btn:hover,.pv-mb-btn.active{border-color:var(--green);color:var(--green);background:var(--greendim)}',
-  /* Emoji picker inline */
-  '#pv-ep{display:none;flex-wrap:wrap;gap:.08rem;padding:.42rem;background:var(--bg2);',
-  'border:1px solid var(--border2);border-radius:4px;margin-top:.32rem;max-height:148px;overflow-y:auto}',
-  '#pv-ep.on{display:flex}',
-  '#pv-ep button{background:none;border:none;font-size:1.1rem;cursor:pointer;padding:.15rem .2rem;',
-  'border-radius:3px;line-height:1.1}',
-  '#pv-ep button:hover{background:var(--bg3)}',
-  /* GIF picker inline */
-  '#pv-gp{display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;',
-  'padding:.42rem;margin-top:.32rem}',
-  '#pv-gp.on{display:block}',
-  '#pv-gs{width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:3px;',
-  'padding:.36rem .6rem;font-family:var(--mono);font-size:.74rem;color:var(--text1);outline:none;',
-  'margin-bottom:.38rem;box-sizing:border-box}',
-  '#pv-gs:focus{border-color:var(--green)}',
-  '#pv-gg{display:grid;grid-template-columns:repeat(4,1fr);gap:.28rem;max-height:170px;overflow-y:auto}',
-  '#pv-gg img{width:100%;height:62px;object-fit:cover;border-radius:3px;cursor:pointer;',
-  'border:1px solid transparent;transition:border-color .1s}',
-  '#pv-gg img:hover{border-color:var(--green)}'
-].join('');
-document.head.appendChild(pvCSS);
-
-var PV_EMOJIS=['😂','🔥','💀','🤣','😭','🤯','👀','😤','🫡','🤔','💯','🎯','🤙','👊','😎','🥲','😬','🤦','🙄','👏','🫠','😅','🤡','💪','🫶','❤️','🖤','⚡','🌊','🏔','🐍','🦅','🦁','🐺','💻','📱','🎮','🏆','💰','📈','📉','🔑','⚠️','❌','✅','🚀','🌙','☀️','🌧','❄️','🍺','🍕','🌮','☕','🤝','🙏','👋','✌️','🤞','🧠','💬','🔊','🎵','🎶'];
-var PV_GIF_KEY='AIzaSyAyimkuYQYF_FXVALexPzFkC5PSv7XoBFY';
-var PV_GIF_FB=[
-  'https://media.giphy.com/media/3oEjHI8WJv4x6UPDB6/giphy.gif',
-  'https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif',
-  'https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif',
-  'https://media.giphy.com/media/111ebonMs90YLu/giphy.gif',
-  'https://media.giphy.com/media/5VKbvrjxpVJCM/giphy.gif',
-  'https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif',
-  'https://media.giphy.com/media/LCdPNT81vlv3y/giphy.gif',
-  'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif',
-  'https://media.giphy.com/media/3o7TKr3nzbh5WgCFxe/giphy.gif',
-  'https://media.giphy.com/media/ToMjGpKniGqRNLGBrhu/giphy.gif',
-  'https://media.giphy.com/media/GCvktC0KFy9l6/giphy.gif',
-  'https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif'
-];
-
-/* Inserta texto en el input del post-view */
-function pvInsert(txt){
-  var inp=$id('pv-comment-input');
-  if(!inp)return;
-  var s=typeof inp.selectionStart==='number'?inp.selectionStart:inp.value.length;
-  inp.value=inp.value.slice(0,s)+txt+inp.value.slice(s);
-  inp.focus();
-  try{inp.selectionStart=inp.selectionEnd=s+txt.length;}catch(e){}
-}
-
-/* Toggle emoji picker inline */
-window.pvEmoji=function(){
-  var ep=$id('pv-ep'), gp=$id('pv-gp');
-  var eb=$id('pv-eb'), gb=$id('pv-gb');
-  if(!ep)return;
-  /* Inicializar botones de emoji solo una vez */
-  if(!ep.dataset.init){
-    ep.dataset.init='1';
-    PV_EMOJIS.forEach(function(e){
-      var b=document.createElement('button');
-      b.type='button'; b.textContent=e;
-      b.addEventListener('click',function(ev){
-        ev.preventDefault(); ev.stopPropagation();
-        pvInsert(e);
-        /* mantener abierto para insertar varios */
-      });
-      ep.appendChild(b);
-    });
-  }
-  var opening=!ep.classList.contains('on');
-  if(gp){gp.classList.remove('on');} if(gb)gb.classList.remove('active');
-  ep.classList.toggle('on',opening);
-  if(eb)eb.classList.toggle('active',opening);
-};
-
-/* Toggle GIF picker inline */
-window.pvGif=function(){
-  var ep=$id('pv-ep'), gp=$id('pv-gp');
-  var eb=$id('pv-eb'), gb=$id('pv-gb');
-  if(!gp)return;
-  var opening=!gp.classList.contains('on');
-  if(ep){ep.classList.remove('on');} if(eb)eb.classList.remove('active');
-  gp.classList.toggle('on',opening);
-  if(gb)gb.classList.toggle('active',opening);
-  if(opening){
-    var grid=$id('pv-gg');
-    if(grid&&!grid.dataset.loaded){
-      grid.dataset.loaded='1';
-      pvLoadGifs('meme chile');
-    }
-  }
-};
-
-/* Cargar GIFs con Tenor v2 + fallback Giphy */
-window.pvLoadGifs=async function(query){
-  var grid=$id('pv-gg');
-  if(!grid)return;
-  query=String(query||'meme chile').trim();
-  grid.innerHTML='<span style="color:var(--text3);font-size:.7rem;padding:.25rem;font-family:var(--mono)">// buscando...</span>';
-
-  function drawFallback(){
-    grid.innerHTML='';
-    PV_GIF_FB.forEach(function(u){
-      var img=document.createElement('img');
-      img.src=u; img.loading='lazy'; img.alt='gif';
-      img.addEventListener('click',function(ev){
-        ev.preventDefault();
-        pvInsert((grid.previousElementSibling?'':'')+' [gif:'+u+']');
-        var gp=$id('pv-gp');var gb=$id('pv-gb');
-        if(gp)gp.classList.remove('on'); if(gb)gb.classList.remove('active');
-      });
-      grid.appendChild(img);
-    });
-  }
-
-  try{
-    var url='https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(query)+'&key='+PV_GIF_KEY+'&limit=12&media_filter=gif,tinygif';
-    var r=await fetch(url,{cache:'no-store'});
-    if(!r.ok) throw new Error('tenor '+r.status);
-    var d=await r.json();
-    var results=(d.results||[]).map(function(it){
-      var mf=it.media_formats||{};
-      var thumb=(mf.tinygif&&mf.tinygif.url)||(mf.gif&&mf.gif.url)||'';
-      var full=(mf.gif&&mf.gif.url)||thumb;
-      return {url:full,thumb:thumb};
-    }).filter(function(x){return x.url;});
-    if(!results.length){drawFallback();return;}
-    grid.innerHTML='';
-    results.forEach(function(item){
-      var img=document.createElement('img');
-      img.src=item.thumb||item.url; img.loading='lazy'; img.alt='gif';
-      img.addEventListener('click',function(ev){
-        ev.preventDefault();
-        pvInsert(' [gif:'+item.url+']');
-        var gp=$id('pv-gp');var gb=$id('pv-gb');
-        if(gp)gp.classList.remove('on'); if(gb)gb.classList.remove('active');
-      });
-      grid.appendChild(img);
-    });
-    if(!grid.children.length) drawFallback();
-  }catch(e){ drawFallback(); }
-};
-
-/* Inyectar los pickers dentro del pv-comment-box cuando se abre openPostView */
-var _origOpenPostView = window.openPostView;
-window.openPostView = function(id){
-  if(_origOpenPostView) _origOpenPostView.call(this,id);
-
-  /* Esperar un tick para que el modal esté en el DOM */
-  requestAnimationFrame(function(){
-    var cont=$id('post-view-content');
-    if(!cont) return;
-
-    /* Evitar duplicados */
-    if(cont.querySelector('#pv-ep')) return;
-
-    /* Buscar el pv-comment-box */
-    var box=cont.querySelector('.pv-comment-box');
-    if(!box) return;
-
-    /* Añadir barra de media + pickers inline */
-    var mb=document.createElement('div');
-    mb.className='pv-mb';
-    mb.innerHTML=
-      '<button type="button" class="pv-mb-btn" id="pv-eb" onclick="pvEmoji()">😊 emoji</button>'+
-      '<button type="button" class="pv-mb-btn" id="pv-gb" onclick="pvGif()">GIF</button>';
-    box.appendChild(mb);
-
-    var ep=document.createElement('div');
-    ep.id='pv-ep';
-    box.appendChild(ep);
-
-    var gpDiv=document.createElement('div');
-    gpDiv.id='pv-gp';
-    gpDiv.innerHTML=
-      '<input id="pv-gs" class="pv-gif-search" placeholder="buscar GIF + Enter" '+
-      'onkeydown="if(event.key===\'Enter\'){event.preventDefault();pvLoadGifs(this.value);}">'+
-      '<div id="pv-gg"></div>';
-    box.appendChild(gpDiv);
-  });
-};
-
-/* Sobreescribir setPostViewSort para re-llamar al nuevo renderPostViewComments */
-window.setPostViewSort = function(btn, postId, sort){
-  document.querySelectorAll('.pv-sort button').forEach(function(b){b.classList.remove('on');});
-  if(btn) btn.classList.add('on');
-  v19renderPVC(postId, sort);
-};
-
-/* ── Arranque ── */
-setTimeout(function(){
-  /* Re-procesar todos los posts bot con el nuevo sistema */
-  (window.POSTS||[]).forEach(function(p){
-    var isNews=!!(p.isNews||String(p.user&&p.user.name||'').toLowerCase()==='noticias_cl');
-    if(!isNews){
-      var bank=v19Bank(p);
-      if(bank){
-        var fresh=v19buildComments(p,bank,p.coms||(p.cd&&p.cd.length)||0);
-        p.cd=fresh; p.coms=fresh.length;
-      }
-    }
-  });
-  if(window.renderFeed) window.renderFeed(window._currentFilter||null);
-  console.log('[RandomPlan V19] comentarios únicos + emoji/GIF inline activos');
-}, 1100);
-
 })();
 </script>
 
