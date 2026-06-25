@@ -8150,5 +8150,70 @@ console.log('[RandomPlan CLEAN] loaded');
   };
 })();
 </script>
+
+<script>
+(function(){
+  var NEWS_BANK=[
+    'bien que la fuente quede visible, así la discusión parte desde algo verificable',
+    'antes de pelear por el titular conviene leer la bajada y mirar de dónde viene la noticia',
+    'me gusta que esto quede como hilo, porque se puede comentar sin perder el contexto',
+    'si es tema nacional, faltan datos y contexto antes de sacar conclusiones fuertes',
+    'esto puede funcionar si se separa noticia real de opinión de usuarios',
+    'hay que leer el artículo completo antes de opinar, el titular no cuenta todo',
+    'importante verificar la fuente antes de compartir, hay mucha desinformación circulando',
+    'interesante, aunque faltaría más contexto para entender bien el tema',
+    'esto confirma lo que se venía viendo hace rato en el país',
+    'qué piensan de esto? parece relevante para lo que está pasando en Chile'
+  ];
+
+  function scheduleNewsComments(p){
+    if(!p||!p.isNews||p._newsSched)return;
+    p._newsSched=true;
+    p.cd=Array.isArray(p.cd)?p.cd:[];
+    p.coms=0;
+    var num=2+Math.floor(Math.random()*3);
+    for(var d=0;d<num;d++){
+      (function(pid,delay,idx){
+        setTimeout(function(){
+          var post=(window.POSTS||[]).find(function(x){return x.id===pid;});
+          if(!post)return;
+          var bots=window.BOTS||[];if(!bots.length)return;
+          var usedB={};(post.cd||[]).forEach(function(c){if(c.bot)usedB[c.bot.name]=1;});
+          var avB=bots.filter(function(b){return !usedB[b.name];});
+          var bot=avB.length?avB[Math.floor(Math.random()*avB.length)]:bots[Math.floor(Math.random()*bots.length)];
+          var usedT={};(post.cd||[]).forEach(function(c){if(c.txt)usedT[c.txt]=1;});
+          var avT=NEWS_BANK.filter(function(t){return !usedT[t];});
+          if(!avT.length)avT=NEWS_BANK;
+          var txt=avT[Math.floor(Math.random()*avT.length)];
+          post.cd=post.cd||[];
+          post.cd.push({bot:bot,txt:txt,v:1+Math.floor(Math.random()*5),t:idx===0?'1min':(idx*2)+'min'});
+          post.coms=post.cd.length;
+          var btn=document.querySelector('#post-'+pid+' .comments-toggle-btn');
+          if(btn&&btn.textContent.indexOf('cerrar')===-1)btn.textContent='// '+post.coms+' comentarios';
+          var clist=document.getElementById('clist-'+pid);
+          if(clist&&typeof renderCommentHTML==='function'){
+            var el=document.createElement('div');
+            el.innerHTML=renderCommentHTML('nc-'+Date.now(),bot.name,bot.ciudad||'Chile','ahora',txt,post.cd[post.cd.length-1].v,false,null);
+            var node=el.firstChild;
+            if(node){node.style.opacity='0';node.style.transition='opacity .6s';clist.insertBefore(node,clist.firstChild);setTimeout(function(){node.style.opacity='1';},50);}
+          }
+        },delay);
+      })(p.id,(d+1)*40000+Math.random()*20000,d+1);
+    }
+  }
+
+  var _oLN=window.loadNews;
+  window.loadNews=async function(){
+    var r=_oLN?await _oLN.apply(this,arguments):null;
+    setTimeout(function(){
+      (window.POSTS||[]).forEach(function(p){if(p&&p.isNews&&!p._newsSched)scheduleNewsComments(p);});
+    },600);
+    return r;
+  };
+  window.loadNews.__rpStickyWrapped=true;
+  window.loadNews.__rpV7Wrapped=true;
+  console.log('[RandomPlan] noticias_cl delayed comments activos');
+})();
+</script>
 </body>
 </html>
