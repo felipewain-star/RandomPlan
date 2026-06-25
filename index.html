@@ -1506,6 +1506,9 @@ function rpAddComment(){var i=document.getElementById('rpNewComment'),v=i.value.
 
 
 
+
+
+
 </body></html>`;
 }
 
@@ -6673,5 +6676,964 @@ console.log('[RandomPlan CLEAN] loaded');
 })();
 </script>
 <!-- RP_FINAL_FIX_V9_END -->
+
+<!-- RP_FINAL_FIX_V10_START -->
+<script>
+/* ─────────────────────────────────────────────────────────────
+   RandomPlan V10 definitivo
+   - Elimina duplicados/triplicados en hilos internos.
+   - Los bots automáticos quedan siempre en 3 a 5 comentarios por post.
+   - Los comentarios reales del usuario NO se recortan.
+   - Inline: solo emoji. Hilo interno: emoji + GIF.
+───────────────────────────────────────────────────────────── */
+(function(){
+  function byId(id){return document.getElementById(id);}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function attr(s){return esc(s).replace(/`/g,'&#96;');}
+  function hash(s){s=String(s||'');var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h+=(h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24);}return Math.abs(h>>>0);}
+  function normSub(sub){sub=String(sub||'').toLowerCase().trim().replace(/^p\//,'').replace(/^r\//,'').replace(/^#/,'');var m={inicio:null,home:null,feria:'marketplace',market:'marketplace',compraventa:'marketplace','compra-venta':'marketplace',memes:'memescl',meme:'memescl',noticias:'contingencia',news:'contingencia',actualidad:'contingencia',polemicas:'debate','polémicas':'debate',polemica:'debate','polémica':'debate',tech:'tecnologia','tecnología':'tecnologia'};return Object.prototype.hasOwnProperty.call(m,sub)?m[sub]:sub;}
+  function cleanKey(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').replace(/[“”"'`]+/g,'').trim();}
+  function getPost(id){return (window.POSTS||[]).find(function(p){return String(p.id)===String(id);})||null;}
+  function getUserName(p){return String((p&&p.user&&p.user.name)||p.username||'').trim();}
+  function userKey(p){return cleanKey(getUserName(p));}
+  function botNameSet(){var o={};(window.BOTS||[]).forEach(function(b){if(b&&b.name)o[cleanKey(b.name)]=1;});o['noticias_cl']=1;o['noticia_cl']=1;o['bot']=1;o['usuario_bot']=1;return o;}
+  function isBotLikePost(p){if(!p)return false;if(!p.realId)return true;if(p.isNews||userKey(p)==='noticias_cl'||userKey(p)==='noticias cl'||userKey(p)==='noticia_cl'||userKey(p)==='noticia cl')return true;return !!botNameSet()[userKey(p)];}
+  function isUserRow(c){return !!(c&&(c._rpUser||c.isUser||c.realComId||c.userId||c.user_id));}
+  function targetCount(p){return 3+(hash((p&&p.id)+'|'+(p&&p.title)+'|rpv10')%3);}
+  function lowEffort(txt){return /^(si|sí|no|ok|jaja|jajaja|lol|xd|xddd|wtf|bruh|same|literal|facts|sipo|no po|exacto|eso|tal cual|uff|uf|ya|bueno)$/i.test(String(txt||'').trim());}
+  function badText(txt){return !String(txt||'').trim()||lowEffort(txt)||/predicci|marcador exacto|va a ganar|ganara|ganará|colocolo vs la u|colo colo vs la u|este fin de semana.*jugar/i.test(String(txt||''));}
+  function topicBank(p){
+    var sub=normSub(p&&p.sub)||'chile';
+    var whole=cleanKey(((p&&p.title)||'')+' '+((p&&p.prev)||''));
+    if((p&&p.isNews)||userKey(p)==='noticias_cl'||sub==='contingencia')return [
+      'bien que la fuente quede visible, así la discusión parte desde algo verificable',
+      'antes de pelear por el titular conviene leer la bajada y mirar de dónde viene la noticia',
+      'me gusta que esto quede como hilo, porque se puede comentar sin perder el contexto',
+      'si es tema nacional, faltan datos y contexto antes de sacar conclusiones fuertes',
+      'esto puede funcionar si se separa noticia real de opinión de usuarios'
+    ];
+    if(/registro civil|domicilio|clave|tramite|trámite|sii|afc|fonasa|municipal|banco|notaria|notaría/.test(whole))return [
+      'en trámites online siempre conviene guardar captura y número de solicitud',
+      'si el sistema te bota, probaría temprano y desde computador antes de insistir desde el celular',
+      'esto es muy chileno: el trámite existe online, pero igual termina pareciendo oficina pública',
+      'revisaría si quedó una solicitud pendiente, porque a veces eso bloquea el siguiente intento',
+      'cuando es SII, banco o Registro Civil, el navegador y la sesión vencida suelen romper todo'
+    ];
+    if(sub==='finanzas')return [
+      'lo primero es separar gasto fijo, deuda y ahorro; si no se ve en números, la UF se come todo',
+      'en Chile el arriendo y el supermercado te cambian el presupuesto más que cualquier gasto chico',
+      'el dólar importa incluso si uno no invierte, porque termina pegando en precios importados',
+      'buena discusión, pero hay que distinguir ahorro de emergencia de inversión con riesgo',
+      'sin flujo mensual claro, cualquier consejo financiero queda medio en el aire'
+    ];
+    if(sub==='futbol')return [
+      'más que un resultado puntual, el problema es estructura: canteras, dirigentes y continuidad técnica',
+      'si seguimos esperando un salvador cada proceso, vamos a repetir el mismo ciclo',
+      'el campeonato local tiene que subir nivel si queremos recambio real',
+      'hay talento, pero falta trabajo sostenido y menos humo cada vez que aparece un nombre nuevo',
+      'la discusión debería partir por formación y minutos para jugadores jóvenes'
+    ];
+    if(sub==='marketplace')return [
+      'precio claro, comuna y fotos reales debería ser regla básica para publicar',
+      'sin reputación y comentarios visibles, una feria online se llena de spam al tiro',
+      'me gusta que las preguntas queden públicas, así otros compradores ven la misma información',
+      'sería bueno exigir estado del producto y forma de entrega desde el primer post',
+      'si esto crece, moderación y reportes van a ser más importantes que el diseño'
+    ];
+    if(sub==='debate')return [
+      'buen tema si logramos discutirlo sin convertirlo en pelea de consignas',
+      'hay que separar experiencia personal de datos, porque las dos cosas importan pero no son lo mismo',
+      'el centralismo aparece en casi todos los debates aunque no sea el tema inicial',
+      'Chile tiene muchos diagnósticos repetidos; el problema es ejecutar soluciones',
+      'me interesa más leer propuestas concretas que la típica pelea izquierda/derecha'
+    ];
+    if(sub==='tecnologia')return [
+      'la identidad local no debería ser solo estética; tiene que sentirse en las funciones y en el lenguaje',
+      'si funciona rápido en celular, ya tiene una ventaja enorme para Chile',
+      'producto chileno no significa copiar algo gringo y cambiarle los colores',
+      'moderación, datos y comunidad son más importantes que meter cien features al inicio',
+      'lo difícil no es armar la demo, es que la gente vuelva todos los días'
+    ];
+    if(sub==='memescl')return [
+      'jajaja esto sí es humor chileno de supervivencia',
+      'demasiado real, me dolió un poco reconocerlo',
+      'esto lo mandas al grupo familiar y se arma debate de una hora',
+      'la risa nacional siempre sale después de mirar la cuenta del banco',
+      'meme país, pero con demasiada verdad escondida'
+    ];
+    return [
+      'este tema pega distinto según la región, no todo se vive desde Santiago',
+      'me gusta que sea una pregunta concreta, así se puede comentar desde experiencia real',
+      'acá hay tema para hilo largo, sobre todo si la gente cuenta casos propios',
+      'lo importante es que no se pierda el contexto chileno de la discusión',
+      'buen punto, esto en otra red se llenaría de pelea pero acá puede salir conversación útil'
+    ];
+  }
+  function botPool(p){
+    var sub=normSub(p&&p.sub)||'chile';
+    var wants={marketplace:['marketplace','chile','finanzas'],contingencia:['contingencia','chile','debate'],memescl:['memescl','chile'],datos:['chile','finanzas'],desahogo:['chile','debate'],tecnologia:['tecnologia','chile']}[sub]||[sub];
+    var arr=(window.BOTS||[]).filter(function(b){var a=b&&b.arq&&window.BOT_ARQUETIPOS?BOT_ARQUETIPOS[b.arq]:null;return a&&a.intereses&&wants.some(function(w){return a.intereses.indexOf(w)!==-1;});});
+    return arr.length?arr:(window.BOTS||[]).slice();
+  }
+  function pickBot(p,i,used){var arr=botPool(p);if(!arr.length)return {name:'usuario_cl',ciudad:'Chile',av:'👤'};for(var step=0;step<arr.length;step++){var b=arr[(hash((p&&p.id)+'|'+i+'|'+step)%arr.length)];var k=cleanKey(b&&b.name);if(!used||!used[k])return b;}return arr[hash((p&&p.id)+'|fallback|'+i)%arr.length];}
+  function rowFrom(c,p,i,forceBot){
+    c=c||{};var rawBot=c.bot||{};var bot=rawBot.name?rawBot:null;var name=String(c.username||c.name||(bot&&bot.name)||'').trim();
+    if(forceBot||!name){bot=bot||pickBot(p,i,{});name=bot.name;}
+    var txt=String(c.txt||c.texto||c.body||'').trim();
+    if(forceBot&&badText(txt)){var b=topicBank(p);txt=b[hash((p&&p.id)+'|txt|'+i)%b.length];}
+    if(!bot)bot={name:name||'usuario_cl',ciudad:c.ciudad||c.city||'Chile',av:c.av||'👤'};
+    var v=parseInt(c.v!=null?c.v:(c.votos!=null?c.votos:c.votes),10); if(isNaN(v))v=Math.max(1,hash((p&&p.id)+'|v|'+i)%9);
+    var t=c.t||c.tiempo||c.time||(['1min','6min','12min','28min','45min','1h','2h'][i%7]);
+    return {bot:bot,username:name||bot.name,ciudad:c.ciudad||bot.ciudad||'Chile',txt:txt,texto:txt,v:v,votos:v,t:t,tiempo:t,_rpUser:!!c._rpUser,isUser:!!c.isUser,realComId:c.realComId||c.id,userId:c.userId||c.user_id};
+  }
+  function captureUserRows(p){
+    if(!p)return [];
+    var out=Array.isArray(p._rpV10UserComments)?p._rpV10UserComments.slice():[];
+    (Array.isArray(p.cd)?p.cd:[]).forEach(function(c,i){if(isUserRow(c)){out.unshift(rowFrom(c,p,i,false));}});
+    var seen={};out=out.filter(function(c){var k=cleanKey((c.username||'')+'|'+(c.txt||'')+'|'+(c.t||''));if(seen[k])return false;seen[k]=1;return true;});
+    p._rpV10UserComments=out;return out;
+  }
+  function ensureBotSeed(p){
+    if(!p)return [];
+    var savedUsers=captureUserRows(p);
+    var target=targetCount(p), out=[], usedTxt={}, usedBot={};
+    function add(row){
+      row=rowFrom(row,p,out.length,true);
+      var tk=cleanKey(row.txt), bk=cleanKey((row.bot&&row.bot.name)||row.username);
+      if(!tk||usedTxt[tk]||usedBot[bk])return false;
+      usedTxt[tk]=1;usedBot[bk]=1;out.push(row);return true;
+    }
+    (Array.isArray(p._rpV10BotComments)?p._rpV10BotComments:[]).forEach(function(c){if(out.length<target)add(c);});
+    (Array.isArray(p.cd)?p.cd:[]).forEach(function(c){if(out.length<target&&!isUserRow(c))add(c);});
+    var bank=topicBank(p), guard=0;
+    while(out.length<target&&guard<80){
+      var i=guard+out.length+1;var bot=pickBot(p,i,usedBot);var txt=bank[hash((p&&p.id)+'|fill|'+i+'|'+(p&&p.title))%bank.length];guard++;
+      add({bot:bot,txt:txt,v:Math.max(1,hash((p&&p.id)+'|vote|'+i)%9),t:['1min','6min','12min','28min','45min','1h'][out.length%6]});
+    }
+    p._rpV10BotComments=out.slice(0,target);
+    p._rpV10UserComments=savedUsers;
+    p.cd=p._rpV10BotComments.slice();
+    p.coms=p._rpV10BotComments.length+savedUsers.length;
+    return p._rpV10BotComments;
+  }
+  function dedupeRows(rows){var seen={};return (rows||[]).filter(function(c){var name=cleanKey((c.bot&&c.bot.name)||c.username);var txt=cleanKey(c.txt||c.texto);var k=name+'|'+txt;if(!txt||seen[k])return false;seen[k]=1;return true;});}
+  function sortRows(rows,sort){rows=dedupeRows(rows).slice();if(sort==='new')return rows.sort(function(a,b){return (a._rpUser?0:1)-(b._rpUser?0:1);});if(sort==='old')return rows.slice().reverse();return rows.sort(function(a,b){return (parseInt(b.v||b.votos||0,10)||0)-(parseInt(a.v||a.votos||0,10)||0);});}
+  async function fetchRealRows(p,sort){
+    if(!p||!p.realId||!window.db)return [];
+    try{
+      var q=db.from('comentarios').select('*, perfiles(username,ciudad)').eq('post_id',p.realId).limit(60);
+      if(sort==='new')q=q.order('created_at',{ascending:false}); else if(sort==='old')q=q.order('created_at',{ascending:true}); else q=q.order('votos',{ascending:false});
+      var r=await q;if(r.error)return [];
+      return (r.data||[]).map(function(c,i){var u=c.perfiles||{};return rowFrom({username:u.username||'anon',ciudad:u.ciudad||'Chile',texto:c.texto||'',votos:c.votos||0,tiempo:'ahora',realComId:c.id,userId:c.user_id,_rpUser:true},p,i,false);});
+    }catch(e){return [];}
+  }
+  async function displayRows(p,sort){
+    if(isBotLikePost(p))return sortRows(ensureBotSeed(p).concat(captureUserRows(p)),sort);
+    var rows=await fetchRealRows(p,sort);
+    if(rows.length)return sortRows(rows,sort);
+    if(Array.isArray(p&&p.cd)&&p.cd.length)return sortRows(p.cd.slice(0,5).map(function(c,i){return rowFrom(c,p,i,true);}),sort);
+    return [];
+  }
+  function safeLinkify(txt){return (typeof window.linkify==='function')?linkify(txt):esc(txt).replace(/\[gif:(https?:\/\/[^\]]+)\]/g,function(_,u){return '<img src="'+attr(u)+'" class="inserted-gif" loading="lazy">';});}
+  function avatar(name,size){return (typeof window.makeAvatar==='function')?makeAvatar(name,size):'<span class="u-avatar">'+esc(String(name||'u').slice(0,1).toUpperCase())+'</span>';}
+  function renderInlineComment(c,i,p){c=rowFrom(c,p,i,false);var name=(c.bot&&c.bot.name)||c.username||'anon';var city=(c.bot&&c.bot.ciudad)||c.ciudad||'Chile';return '<div class="comment rpv10-comment"><div class="cava">'+avatar(name)+'</div><div class="ccont"><div class="ccmeta"><span class="u">u/'+esc(name)+'</span> · <span class="ci">'+esc(city)+'</span> · '+esc(c.t||c.tiempo||'ahora')+'</div><div class="cctext">'+safeLinkify(c.txt||c.texto||'')+'</div><div class="ccacts"><button class="ccact ccvote-up" data-votes="'+attr(c.v||c.votos||0)+'" onclick="voteComment(this,1)">▲ '+esc(c.v||c.votos||0)+'</button><button class="ccact ccvote-down" onclick="voteComment(this,-1)">▼</button></div></div></div>';}
+  function renderPVComment(c,i,p){c=rowFrom(c,p,i,false);var name=(c.bot&&c.bot.name)||c.username||'anon';return '<div class="pv-comment rpv10-pv-comment"><div class="pv-comment-v"><button onclick="pvVote(this,1)">▲</button><strong>'+esc(c.v||c.votos||0)+'</strong><button onclick="pvVote(this,-1)">▼</button></div><div><div class="pv-comment-meta"><span class="u">u/'+esc(name)+'</span> · '+esc(c.t||c.tiempo||'ahora')+'</div><div class="pv-comment-text">'+safeLinkify(c.txt||c.texto||'')+'</div></div></div>';}
+  function renderThreadComment(c,i,p){c=rowFrom(c,p,i,false);var name=(c.bot&&c.bot.name)||c.username||'anon';var city=(c.bot&&c.bot.ciudad)||c.ciudad||'';return '<div class="rp-thread-comment"><div class="rp-thread-votes"><button>▲</button><strong>'+esc(c.v||c.votos||0)+'</strong><button>▼</button></div><div class="rp-thread-comment-body"><div class="rp-thread-comment-meta">u/'+esc(name)+(city?' · '+esc(city):'')+' · '+esc(c.t||c.tiempo||'ahora')+'</div><div class="rp-thread-comment-text">'+safeLinkify(c.txt||c.texto||'')+'</div></div></div>';}
+
+  var EMOJIS='😂 🔥 💀 🤣 😭 🤯 👀 😤 🫡 🤔 💯 🎯 🤙 👊 😎 🥲 😬 🤦 🙄 👏 🫠 😅 🤡 💪 🫶 ❤️ 🖤 💜 ⚡ 🌊 🏔 🐍 🦅 💻 📱 🎮 🏆 💰 📈 📉 🔑 ⚠️ ❌ ✅ 🚀 🌙 ☀️ 🌧 🍺 🍕 🌮 ☕ 🍿 🧠 💬 🇨🇱'.split(' ');
+  var GIFS=[
+    ['meme risa laugh jajaja','https://media.giphy.com/media/3oEjHI8WJv4x6UPDB6/giphy.gif'],['espera wait','https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif'],['sorpresa wow','https://media.giphy.com/media/5VKbvrjxpVJCM/giphy.gif'],['facepalm fail','https://media.giphy.com/media/3o7TKr3nzbh5WgCFxe/giphy.gif'],['ok bien','https://media.giphy.com/media/GCvktC0KFy9l6/giphy.gif'],['popcorn drama','https://media.giphy.com/media/tyqcJoNjNv0Fq/giphy.gif'],['gato cat','https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif'],['money finanzas','https://media.giphy.com/media/LCdPNT81vlv3y/giphy.gif'],['tech codigo','https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif'],['aplauso clap','https://media.giphy.com/media/3o6Zt481isNVuQI1l6/giphy.gif'],['confundido que','https://media.giphy.com/media/3o7btPCcdNniyf0ArS/giphy.gif'],['chill tranqui','https://media.giphy.com/media/3o7aD2saalBwwftBIY/giphy.gif']
+  ].map(function(x){return {tags:x[0],url:x[1]};});
+  var activeInput=null;
+  function pickerCss(){if(byId('rpv10-style'))return;var st=document.createElement('style');st.id='rpv10-style';st.textContent='.rpv10-picker{display:none;position:fixed;z-index:2147483647;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.55rem;box-shadow:0 8px 34px rgba(0,0,0,.92)}.rpv10-emoji{width:315px;max-width:calc(100vw - 12px);flex-wrap:wrap;gap:.12rem;max-height:230px;overflow-y:auto}.rpv10-emoji button{background:transparent;border:none;font-size:1.18rem;line-height:1.1;cursor:pointer;padding:.22rem .26rem;border-radius:3px}.rpv10-emoji button:hover{background:#1c2733}.rpv10-gif{width:350px;max-width:calc(100vw - 12px)}.rpv10-gif input{width:100%;background:#0d1117;border:1px solid #2a3f55;border-radius:3px;padding:.42rem .6rem;font-family:monospace;font-size:.75rem;color:#e6edf3;outline:none;margin-bottom:.45rem;box-sizing:border-box}.rpv10-gif-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.32rem;max-height:250px;overflow-y:auto}.rpv10-gif-grid img{width:100%;height:76px;object-fit:cover;border:1px solid transparent;border-radius:3px;cursor:pointer;background:#080b0f}.rpv10-gif-grid img:hover{border-color:#00ff88}.rpv10-inline-media .rpv10-gif-trigger{display:none!important}';document.head.appendChild(st);}
+  function ensureEmoji(){pickerCss();var ep=byId('rpv10-emoji-picker');if(!ep){ep=document.createElement('div');ep.id='rpv10-emoji-picker';ep.className='rpv10-picker rpv10-emoji';document.body.appendChild(ep);}if(ep.dataset.ready!=='1'){ep.dataset.ready='1';ep.innerHTML='';EMOJIS.forEach(function(e){var b=document.createElement('button');b.type='button';b.textContent=e;b.onclick=function(ev){ev.preventDefault();ev.stopPropagation();insertActive(e);hidePickers();};ep.appendChild(b);});}return ep;}
+  function ensureGif(){pickerCss();var gp=byId('rpv10-gif-picker');if(!gp){gp=document.createElement('div');gp.id='rpv10-gif-picker';gp.className='rpv10-picker rpv10-gif';gp.innerHTML='<input id="rpv10-gif-search" placeholder="buscar GIF + Enter"><div id="rpv10-gif-grid" class="rpv10-gif-grid"></div>';document.body.appendChild(gp);}var s=byId('rpv10-gif-search');if(s&&s.dataset.bound!=='1'){s.dataset.bound='1';s.addEventListener('keydown',function(ev){if(ev.key==='Enter'){ev.preventDefault();drawGifs(s.value||'meme chile');}});}return gp;}
+  function place(el,anchor){var r=anchor&&anchor.getBoundingClientRect?anchor.getBoundingClientRect():null;var w=el.id.indexOf('gif')!==-1?350:315;if(r){el.style.top=Math.max(6,Math.min(window.innerHeight-90,r.bottom+8))+'px';el.style.left=Math.max(6,Math.min(r.left,window.innerWidth-w-8))+'px';}else{el.style.top='92px';el.style.left='12px';}}
+  function hidePickers(){var ep=byId('rpv10-emoji-picker'),gp=byId('rpv10-gif-picker');if(ep)ep.style.display='none';if(gp)gp.style.display='none';}
+  function insertActive(txt){var inp=byId(activeInput);if(!inp)return;var pos=typeof inp.selectionStart==='number'?inp.selectionStart:inp.value.length;inp.value=inp.value.slice(0,pos)+txt+inp.value.slice(pos);inp.focus();try{inp.selectionStart=inp.selectionEnd=pos+String(txt).length;}catch(e){}try{inp.dispatchEvent(new Event('input',{bubbles:true}));}catch(e){}}
+  function drawGifs(q){var gp=ensureGif(),grid=byId('rpv10-gif-grid');if(!grid)return;q=cleanKey(q||'meme chile');var words=q.split(/\s+/).filter(Boolean);var list=GIFS.filter(function(g){return !words.length||q==='meme chile'||words.some(function(w){return g.tags.indexOf(w)!==-1;});});if(!list.length)list=GIFS.slice();grid.innerHTML='';function add(url,thumb){var im=document.createElement('img');im.src=thumb||url;im.loading='lazy';im.alt='GIF';im.onerror=function(){im.style.display='none';};im.onclick=function(ev){ev.preventDefault();ev.stopPropagation();insertActive((byId(activeInput)&&byId(activeInput).value?' ':'')+'[gif:'+url+']');hidePickers();};grid.appendChild(im);}list.slice(0,18).forEach(function(g){add(g.url,g.url);});try{fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q)+'&key=LIVDSRZULELA&client_key=randomplan&limit=12&media_filter=gif,tinygif',{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('tenor');return r.json();}).then(function(d){var arr=(d.results||[]).map(function(it){var mf=it.media_formats||{};var th=(mf.tinygif&&mf.tinygif.url)||(mf.gif&&mf.gif.url)||'';var fu=(mf.gif&&mf.gif.url)||th;return {url:fu,thumb:th};}).filter(function(x){return x.url;});if(!arr.length)return;grid.innerHTML='';arr.forEach(function(x){add(x.url,x.thumb||x.url);});}).catch(function(){});}catch(e){}}
+  window.RPV10_showEmoji=function(inputId,anchor){activeInput=inputId;var gp=byId('rpv10-gif-picker');if(gp)gp.style.display='none';var ep=ensureEmoji();if(ep.style.display==='flex'&&ep.dataset.input===inputId){ep.style.display='none';return;}ep.dataset.input=inputId;place(ep,anchor);ep.style.display='flex';};
+  window.RPV10_showGif=function(inputId,anchor){activeInput=inputId;var ep=byId('rpv10-emoji-picker');if(ep)ep.style.display='none';var gp=ensureGif();if(gp.style.display==='block'&&gp.dataset.input===inputId){gp.style.display='none';return;}gp.dataset.input=inputId;place(gp,anchor);gp.style.display='block';drawGifs((byId('rpv10-gif-search')&&byId('rpv10-gif-search').value)||'meme chile');};
+  function inlineBar(inputId){return '<div class="media-bar rpv10-inline-media"><button class="media-btn rpv10-emoji-trigger" type="button" data-rpv10-input="'+attr(inputId)+'" onclick="event.preventDefault();event.stopPropagation();RPV10_showEmoji(this.dataset.rpv10Input,this)">😊</button></div>';}
+  function threadBar(inputId){return '<div class="media-bar rpv10-thread-media"><button class="media-btn rpv10-emoji-trigger" type="button" data-rpv10-input="'+attr(inputId)+'" onclick="event.preventDefault();event.stopPropagation();RPV10_showEmoji(this.dataset.rpv10Input,this)">😊</button><button class="media-btn rpv10-gif-trigger" type="button" data-rpv10-input="'+attr(inputId)+'" onclick="event.preventDefault();event.stopPropagation();RPV10_showGif(this.dataset.rpv10Input,this)">GIF</button></div>';}
+  document.addEventListener('click',function(ev){var t=ev.target;if(t&&t.closest&&t.closest('.rpv10-emoji-trigger')){ev.preventDefault();ev.stopPropagation();var b=t.closest('.rpv10-emoji-trigger');RPV10_showEmoji(b.dataset.rpv10Input,b);return;}if(t&&t.closest&&t.closest('.rpv10-gif-trigger')){ev.preventDefault();ev.stopPropagation();var g=t.closest('.rpv10-gif-trigger');RPV10_showGif(g.dataset.rpv10Input,g);return;}if(t&&t.closest&&(t.closest('#rpv10-emoji-picker')||t.closest('#rpv10-gif-picker')||t.closest('.rpv10-emoji-trigger')||t.closest('.rpv10-gif-trigger')))return;hidePickers();},true);
+
+  async function publishLocalComment(p,txt){var prof=window.currentPerfil||{};var name=prof.username||(window.currentUser&&currentUser.email?String(currentUser.email).split('@')[0]:'tu_usuario');var city=prof.ciudad||'Chile';var row={bot:{name:name,ciudad:city,av:'👤'},username:name,ciudad:city,txt:txt,texto:txt,v:0,votos:0,t:'ahora',tiempo:'ahora',_rpUser:true,isUser:true};p._rpV10UserComments=p._rpV10UserComments||[];p._rpV10UserComments.unshift(row);p.coms=ensureBotSeed(p).length+p._rpV10UserComments.length;return row;}
+  function mustLogin(){if(!window.currentUser){if(typeof showModal==='function')showModal('login');return true;}return false;}
+
+  window.generateBotComments=function(count,existingCd){var p=window.__rpCommentContextPost||null;if(p){if(isBotLikePost(p))return ensureBotSeed(p).concat(captureUserRows(p));return (existingCd||p.cd||[]).slice(0,5).map(function(c,i){return rowFrom(c,p,i,true);});}var tmp={id:'tmp',sub:'chile',title:'tema chileno',coms:5,cd:existingCd||[]};return ensureBotSeed(tmp);};
+  window.renderPostViewComments=async function(postId,sort){var p=getPost(postId),list=byId('pv-comments-list');if(!p||!list)return;list.innerHTML='<div class="pv-empty">// cargando comentarios...</div>';var rows=await displayRows(p,sort||'top');list.innerHTML=rows.length?rows.map(function(c,i){return renderPVComment(c,i,p);}).join(''):'<div class="pv-empty">// todavía no hay comentarios</div>';};
+  window.openPostView=function(id){var p=getPost(id);if(!p){if(typeof toast==='function')toast('post no encontrado');return;}if(isBotLikePost(p))ensureBotSeed(p);var wrap=byId('post-view-wrap'),cont=byId('post-view-content');if(!wrap||!cont)return;var refUrl=(typeof getPostReference==='function'?getPostReference(p):(p.url||p.link||''));var isNews=(p.isNews===true)||userKey(p)==='noticias_cl';var bodyText=p.prev||p.contenido||'';var voteTotal=(p.votos||0)+((window.votes&&votes[p.id])||0);var source='';if(refUrl){var refJs=(typeof jsStr==='function'?jsStr(refUrl):String(refUrl).replace(/\\/g,'\\\\').replace(/'/g,"\\'"));source='<div class="pv-source-box"><div class="pv-source-copy">Referencia externa detectada:<br><strong>'+esc(typeof getDomain==='function'?getDomain(refUrl):refUrl)+'</strong></div><button class="pv-source-btn" onclick="openPostReference(\''+attr(refJs)+'\')">leer fuente original ↗</button></div>';}else if(isNews){source='<div class="pv-source-box"><div class="pv-source-copy"><strong>sin fuente externa disponible</strong><br>Este post de noticias_cl no trae URL válida.</div></div>';}
+    var inputId='pv-comment-input';cont.innerHTML='<div class="pv-meta"><span class="csub">'+esc((p.ic||'')+' '+(p.sub||''))+'</span><span class="dot">::</span><span>'+avatar(getUserName(p)||'usuario','sm')+' u/'+esc(getUserName(p)||'usuario')+'</span><span class="dot">::</span><span>'+esc(p.t||'ahora')+'</span><span class="flair '+esc(p.fc||'g')+'">'+esc(p.flair||'post')+'</span></div><h1 class="pv-title">'+esc(p.title||'sin título')+'</h1><div class="pv-excerpt">'+(bodyText?safeLinkify(bodyText):'<span style="color:var(--text3)">// sin bajada disponible</span>')+'</div>'+source+'<div class="pv-actions"><div class="pv-vote"><button class="vbtn up" onclick="vote('+p.id+',1);openPostView('+p.id+')">▲</button><strong>'+esc(typeof fmtV==='function'?fmtV(voteTotal):voteTotal)+'</strong><button class="vbtn down" onclick="vote('+p.id+',-1);openPostView('+p.id+')">▼</button></div><button class="cact" onclick="toast(&quot;enlace del hilo copiado&quot;)">// compartir hilo</button></div><div class="pv-comments-head"><div class="pv-comments-title">comentarios</div><div class="pv-sort"><button class="on" onclick="setPostViewSort(this,'+p.id+',\'top\')">destacados</button><button onclick="setPostViewSort(this,'+p.id+',\'new\')">recientes</button><button onclick="setPostViewSort(this,'+p.id+',\'old\')">antiguos</button></div></div><div class="pv-comment-box"><div class="pv-comment-input-row"><input id="'+inputId+'" placeholder="comentar en el hilo..." onkeydown="if(event.key===\'Enter\')sendPostViewComment('+p.id+')"><button class="pv-comment-send" onclick="sendPostViewComment('+p.id+')">SEND</button></div>'+threadBar(inputId)+'</div><div class="pv-comments-list" id="pv-comments-list"></div>';wrap.classList.add('on');document.body.classList.add('post-view-lock');renderPostViewComments(p.id,'top');};
+  window.setPostViewSort=function(btn,postId,sort){var box=btn&&btn.parentElement;if(box)box.querySelectorAll('button').forEach(function(b){b.classList.remove('on');});if(btn)btn.classList.add('on');renderPostViewComments(postId,sort||'top');};
+  window.renderComSection=function(postId,sort){var cs=byId('cs-'+postId);if(!cs)return;Array.prototype.slice.call(cs.children).forEach(function(ch){if(ch.classList&&(ch.classList.contains('comment')||ch.classList.contains('com-section-inner')||ch.classList.contains('rpv9-com-section-inner')||ch.classList.contains('rpv10-com-section-inner')))ch.remove();});var oldBox=cs.querySelector('.comment-box');if(oldBox)oldBox.style.display='none';var inputId='cinp-'+postId;var inner=document.createElement('div');inner.className='rpv10-com-section-inner';inner.innerHTML='<div class="com-write" id="cwrite-'+postId+'"><input type="text" id="'+inputId+'" placeholder="escribe un comentario..." onkeydown="if(event.key===\'Enter\')sendCommentInline('+postId+')" style="flex:1;background:var(--bg0);border:1px solid var(--border);border-radius:3px;padding:.38rem .6rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none"><button class="com-send-btn" onclick="sendCommentInline('+postId+')">SEND</button></div>'+inlineBar(inputId)+'<div class="com-sort-bar"><span class="com-sort-lbl">ordenar:</span><button class="com-sort-btn '+((sort||'top')==='top'?'on':'')+'" onclick="changeSort('+postId+',this,\'top\')">destacados</button><button class="com-sort-btn '+((sort||'top')==='new'?'on':'')+'" onclick="changeSort('+postId+',this,\'new\')">recientes</button><button class="com-sort-btn '+((sort||'top')==='old'?'on':'')+'" onclick="changeSort('+postId+',this,\'old\')">antiguos</button></div><div class="com-list" id="clist-'+postId+'"></div><div class="com-load-more" id="cmore-'+postId+'"></div>';cs.insertBefore(inner,cs.firstChild);loadComments(postId,sort||'top',0);};
+  window.loadComments=async function(postId,sort,offset){var p=getPost(postId),list=byId('clist-'+postId),more=byId('cmore-'+postId);if(!p||!list)return;var rows=await displayRows(p,sort||'top');list.innerHTML=rows.length?rows.map(function(c,i){return renderInlineComment(c,i,p);}).join(''):'<div class="pv-empty" style="color:var(--text3);font-size:.75rem;padding:.4rem 0">// todavía no hay comentarios</div>';if(more)more.innerHTML='';};
+  window.toggleComs=function(id){window.openComs=window.openComs||{};openComs[id]=!openComs[id];var el=byId('cs-'+id);if(!el)return;el.classList.toggle('open',openComs[id]);var p=getPost(id);if(isBotLikePost(p))ensureBotSeed(p);var btn=document.querySelector('#post-'+id+' .comments-toggle-btn');if(btn)btn.textContent=openComs[id]?'// cerrar comentarios':'// '+((p&&p.coms)||0)+' comentarios';if(openComs[id])renderComSection(id,'top');};
+  window.changeSort=function(postId,btn,sort){document.querySelectorAll('#cs-'+postId+' .com-sort-btn').forEach(function(b){b.classList.remove('on');});if(btn)btn.classList.add('on');loadComments(postId,sort||'top',0);};
+  window.sendPostViewComment=async function(postId){var p=getPost(postId),inp=byId('pv-comment-input');if(!p||!inp)return;var texto=String(inp.value||'').trim();if(!texto)return;if(mustLogin())return;if(window.currentPerfil==null&&typeof loadPerfil==='function'){try{await loadPerfil();}catch(e){}}if(isBotLikePost(p)){await publishLocalComment(p,texto);inp.value='';renderPostViewComments(postId,'new');var btn=document.querySelector('#post-'+postId+' .comments-toggle-btn');if(btn)btn.textContent='// '+p.coms+' comentarios';if(typeof toast==='function')toast('comentario publicado');return;}try{var uid=currentUser&&currentUser.id;var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||p.realId||postId;var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});if(r.error){if(typeof toast==='function')toast('error: '+r.error.message);return;}inp.value='';renderPostViewComments(postId,'new');if(typeof toast==='function')toast('comentario publicado');}catch(e){if(typeof toast==='function')toast('comentarios no disponibles');}};
+  window.sendCommentInline=async function(postId){var p=getPost(postId),inp=byId('cinp-'+postId);if(!p||!inp)return;var texto=String(inp.value||'').trim();if(!texto)return;if(mustLogin())return;if(window.currentPerfil==null&&typeof loadPerfil==='function'){try{await loadPerfil();}catch(e){}}if(isBotLikePost(p)){await publishLocalComment(p,texto);inp.value='';loadComments(postId,'new',0);var btn=document.querySelector('#post-'+postId+' .comments-toggle-btn');if(btn)btn.textContent='// '+p.coms+' comentarios';if(typeof toast==='function')toast('comentario publicado');return;}try{var uid=currentUser&&currentUser.id;var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||p.realId||postId;var r=await db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});if(r.error){if(typeof toast==='function')toast('error: '+r.error.message);return;}inp.value='';loadComments(postId,'new',0);if(typeof toast==='function')toast('comentario publicado');}catch(e){if(typeof toast==='function')toast('comentarios no disponibles');}};
+  window.openPostThreadWindow=async function(id){var p=getPost(id);if(!p){if(typeof toast==='function')toast('post no encontrado');return;}if(isBotLikePost(p))ensureBotSeed(p);var refUrl=(typeof getPostReference==='function'?getPostReference(p):(p.url||p.link||''));var rows=await displayRows(p,'top');var commentsHtml=rows.length?rows.map(function(c,i){return renderThreadComment(c,i,p);}).join(''):'<div class="empty">// todavía no hay comentarios</div>';var w=window.open('', '_blank');if(!w){openPostView(id);if(typeof toast==='function')toast('popup bloqueado: abrí el hilo interno');return;}w.document.open();if(typeof buildPostThreadWindowHTML==='function')w.document.write(buildPostThreadWindowHTML(p,refUrl,commentsHtml));else w.document.write('<!doctype html><html><body>'+commentsHtml+'</body></html>');w.document.close();};
+  window.openNewsThreadWindow=function(id){openPostThreadWindow(id);};
+  function patchRenderPost(){if(window.renderPost&&window.renderPost.__rpV10)return;var old=window.renderPost;if(typeof old!=='function')return;window.renderPost=function(p){if(isBotLikePost(p))ensureBotSeed(p);window.__rpCommentContextPost=p;var html=old.call(this,p);window.__rpCommentContextPost=null;return html;};window.renderPost.__rpV10=true;}
+  function cleanCurrentInline(){document.querySelectorAll('.comments-section').forEach(function(cs){Array.prototype.slice.call(cs.children).forEach(function(ch){if(ch.classList&&(ch.classList.contains('comment')||ch.classList.contains('com-section-inner')||ch.classList.contains('rpv9-com-section-inner')))ch.remove();});});}
+  function init(){try{(window.POSTS||[]).forEach(function(p){if(isBotLikePost(p))ensureBotSeed(p);});}catch(e){}ensureEmoji();ensureGif();hidePickers();patchRenderPost();cleanCurrentInline();if(typeof renderFeed==='function'){try{var active=(window._currentFilter&&window._currentFilter!=='inicio')?window._currentFilter:null;renderFeed(active);}catch(e){}}console.log('[RandomPlan V10] hilos sin duplicados + bots 3-5 + usuarios reales sin recorte');}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,0);
+  setTimeout(init,900);
+})();
+</script>
+<!-- RP_FINAL_FIX_V10_END -->
+
+
+<!-- RP_FINAL_FIX_V11_START -->
+<script>
+/* ─────────────────────────────────────────────────────────────
+   RandomPlan V11 quirúrgico
+   - Bots: comentarios internos/inline únicos, 3–5 por post.
+   - Evita comienzos repetidos en comentarios automáticos.
+   - Deduplica posts de bots/noticias por tema/título.
+   - Inline: solo emoji. Hilo interno: emoji + GIF.
+   - Pickers autónomos: no dependen de scripts anteriores.
+───────────────────────────────────────────────────────────── */
+(function(){
+  'use strict';
+  var DEBUG=false;
+  function log(){if(DEBUG&&window.console)console.log.apply(console,arguments);}
+  function byId(id){return document.getElementById(id);}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function attr(s){return esc(s).replace(/`/g,'&#96;');}
+  function hash(s){s=String(s||'');var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h+=(h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24);}return Math.abs(h>>>0);}
+  function cleanKey(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/https?:\/\/\S+/g,' ').replace(/[^a-z0-9ñáéíóúü\s]/gi,' ').replace(/\s+/g,' ').trim();}
+  function normSub(sub){sub=cleanKey(String(sub||'').replace(/^p\//i,'').replace(/^r\//i,'').replace(/^#/,'')).replace(/ /g,'');var m={inicio:null,home:null,feed:null,feria:'marketplace',market:'marketplace',compraventa:'marketplace','compra-venta':'marketplace',memes:'memescl',meme:'memescl',noticias:'contingencia',news:'contingencia',actualidad:'contingencia',polemicas:'debate',polemica:'debate',tech:'tecnologia',tecnologia:'tecnologia'};return Object.prototype.hasOwnProperty.call(m,sub)?m[sub]:sub;}
+  function getPost(id){return (window.POSTS||[]).find(function(p){return String(p&&p.id)===String(id);})||null;}
+  function getUserName(p){return String((p&&p.user&&p.user.name)||p.username||p.author||'').trim();}
+  function userKey(p){return cleanKey(getUserName(p));}
+  function botNames(){var o={};(window.BOTS||[]).forEach(function(b){if(b&&b.name)o[cleanKey(b.name)]=1;});o.noticias_cl=1;o['noticias cl']=1;o.noticia_cl=1;o['noticia cl']=1;o.bot=1;o['usuario bot']=1;o.usuario_bot=1;return o;}
+  function isBotPost(p){if(!p)return false;if(p.isNews===true)return true;if(userKey(p)==='noticias_cl'||userKey(p)==='noticias cl'||userKey(p)==='noticia_cl'||userKey(p)==='noticia cl')return true;if(!p.realId)return true;return !!botNames()[userKey(p)];}
+  function isUserRow(c){return !!(c&&(c._rpUser||c.isUser||c.realComId||c.userId||c.user_id||c.from_user));}
+  function targetCount(p){return 3+(hash((p&&p.id)+'|'+(p&&p.title)+'|rpv11-target')%3);}
+  function firstWords(s,n){return cleanKey(s).split(/\s+/).filter(Boolean).slice(0,n||4).join(' ');}
+  function openingKey(s){
+    var words=cleanKey(s).split(/\s+/).filter(Boolean);
+    return words.slice(0,Math.min(4,words.length)).join(' ');
+  }
+  function weakOpening(s){return /^(si|sí|no|ok|jaja|jajaja|lol|xd|xddd|wtf|bruh|same|literal|facts|sipo|exacto|eso|tal cual|uff|uf|ya|bueno)\b/i.test(String(s||'').trim());}
+  function badComment(s){return !String(s||'').trim()||weakOpening(s)||/predicci|marcador exacto|va a ganar|ganara|ganará|colocolo vs la u|colo colo vs la u|este fin de semana.*jugar|apuesto que|seguro gana/i.test(String(s||''));}
+
+  function topicBank(p){
+    var sub=normSub(p&&p.sub)||'chile';
+    var text=cleanKey(((p&&p.title)||'')+' '+((p&&p.prev)||'')+' '+((p&&p.contenido)||''));
+    if((p&&p.isNews)||userKey(p)==='noticias_cl'||sub==='contingencia')return [
+      'La fuente visible ayuda harto, porque así no comentamos solo desde el titular.',
+      'Antes de pelear la noticia conviene mirar fecha, medio y contexto completo.',
+      'Este formato de hilo sirve si separa dato duro de opinión personal.',
+      'Ojo con sacar conclusiones rápidas; en temas país casi siempre falta una segunda capa.',
+      'Buen punto para debatir, pero el titular solo no alcanza para entender todo.',
+      'Me quedo con revisar el origen de la información antes de comprar la primera lectura.',
+      'Acá la conversación puede ser útil si nadie convierte la noticia en barra brava.',
+      'Falta que alguien complemente con cifras o antecedentes, porque el tema da para más.'
+    ];
+    if(/registro civil|domicilio|clave|tramite|trámite|sii|afc|fonasa|municipal|banco|notaria|notaría|licencia|certificado/.test(text))return [
+      'Primero guardaría captura y número de solicitud, porque después nadie encuentra nada.',
+      'Cuando el trámite es online en Chile, el navegador termina siendo parte del problema.',
+      'Revisaría si quedó una sesión pendiente antes de intentar de nuevo desde cero.',
+      'Muchas veces funciona mejor temprano y desde computador que insistiendo en celular.',
+      'La parte absurda es que existe digital, pero igual se siente como fila de oficina.',
+      'Si hay banco, SII o Registro Civil metido, probaría limpiar sesión y cambiar navegador.',
+      'Conviene anotar hora, error y folio; eso salva cuando toca reclamar.',
+      'El diseño debería explicar el siguiente paso, no dejarte adivinando qué falló.'
+    ];
+    if(sub==='finanzas')return [
+      'Primero separaría gasto fijo, deuda y ahorro; sin eso cualquier consejo queda cojo.',
+      'En Chile el arriendo y el súper te cambian más el mes que cualquier gustito chico.',
+      'La UF parece invisible hasta que miras dividendos, salud, arriendo o educación.',
+      'Ojo con confundir ahorro de emergencia con inversión de riesgo, son bolsillos distintos.',
+      'Para opinar bien falta saber flujo mensual, deuda y cuánto margen real queda.',
+      'El dólar importa aunque uno no invierta, porque igual se filtra a precios importados.',
+      'Miraría el costo alternativo antes de inmovilizar plata en algo poco líquido.',
+      'Buena discusión si la llevamos a números concretos y no solo a sensación de bolsillo.'
+    ];
+    if(sub==='futbol')return [
+      'Más que adivinar resultados, el tema de fondo es formación y continuidad deportiva.',
+      'El campeonato local necesita subir ritmo si queremos recambio real para la selección.',
+      'Hay talento, pero sin minutos serios los nombres nuevos se queman demasiado rápido.',
+      'La discusión debería mirar dirigentes, canteras y procesos, no solo al técnico de turno.',
+      'Cada ciclo esperamos un salvador y después nos sorprendemos con el mismo problema.',
+      'Me interesa más hablar de estructura que de humo previo a cada fecha.',
+      'Sin trabajo sostenido en juveniles, cualquier mejora termina siendo parche.',
+      'El hincha comenta con pasión, pero el diagnóstico requiere bastante más que rabia.'
+    ];
+    if(sub==='marketplace')return [
+      'Precio claro, comuna y fotos reales deberían ser la base mínima para publicar.',
+      'Una feria online funciona mejor cuando las preguntas quedan públicas para todos.',
+      'La reputación del vendedor va a ser clave si esto empieza a moverse más.',
+      'Sería bueno exigir estado del producto, forma de entrega y si acepta transferencia.',
+      'Sin reglas simples, cualquier marketplace chico se llena de spam en dos días.',
+      'Me gusta que sea local, porque coordinar entrega en Chile siempre tiene su ciencia.',
+      'Conviene dejar todo conversado dentro del post para evitar malos entendidos después.',
+      'El diseño puede estar lindo, pero confianza y moderación van primero acá.'
+    ];
+    if(sub==='debate')return [
+      'Buen tema si logramos discutirlo sin convertir cada respuesta en trinchera.',
+      'Hay que separar experiencia personal de dato verificable; ambas cosas pesan distinto.',
+      'El centralismo aparece incluso cuando el tema inicial parecía ir por otro lado.',
+      'Chile tiene muchos diagnósticos repetidos; lo difícil es aterrizar soluciones.',
+      'Me interesa más leer propuestas concretas que otra pelea izquierda/derecha.',
+      'La gracia sería que alguien responda el argumento y no solo la identidad del que habla.',
+      'Este tipo de debate necesita matices, porque la consigna rápida deja todo peor.',
+      'Podría salir una conversación buena si no caemos en caricaturas desde el primer comentario.'
+    ];
+    if(sub==='tecnologia')return [
+      'La identidad local no debería ser puro color; tiene que sentirse en uso y lenguaje.',
+      'Si carga rápido en celular barato, ya tiene ventaja real para el público chileno.',
+      'Producto chileno no significa copiar algo gringo y ponerle modismos encima.',
+      'Moderación, datos y comunidad pesan más que meter cien funciones al comienzo.',
+      'Lo difícil no es armar la demo, es lograr que la gente vuelva cada semana.',
+      'Un MVP así necesita menos humo y más loops simples que enganchen al usuario.',
+      'Me fijaría primero en retención antes de seguir sumando pestañas nuevas.',
+      'La parte técnica importa, pero la confianza de comunidad va a decidir si prende.'
+    ];
+    if(sub==='memescl')return [
+      'Jajaja esto sí tiene olor a humor chileno de supervivencia.',
+      'Demasiado real, me dio risa y vergüenza reconocerlo al mismo tiempo.',
+      'Este meme lo mandas al grupo familiar y se arma debate de una hora.',
+      'La risa nacional siempre aparece justo después de mirar la cuenta del banco.',
+      'Meme país, pero con una verdad incómoda escondida debajo.',
+      'Hay chistes que solo funcionan si has hecho fila, pagado cuentas y tomado micro.',
+      'La gracia está en que parece absurdo, pero igual todos conocemos a alguien así.',
+      'Esto resume más Chile que varios informes de cien páginas.'
+    ];
+    return [
+      'Este tema cambia harto según la región, no todo se vive desde Santiago.',
+      'Me gusta que la pregunta sea concreta, porque invita a contar casos reales.',
+      'Acá hay material para hilo largo si la gente aporta experiencias propias.',
+      'Lo importante es no perder el contexto chileno de la discusión.',
+      'Buen punto, en otra red esto se llenaría de pelea antes del tercer comentario.',
+      'Desde regiones estas cosas se leen distinto, sobre todo cuando el servicio llega tarde.',
+      'La conversación mejora cuando alguien baja la idea a ejemplos cotidianos.',
+      'Podría quedar buen hilo si mezclamos datos, experiencia y menos frase hecha.'
+    ];
+  }
+
+  function botsFor(p){
+    var sub=normSub(p&&p.sub)||'chile';
+    var wants={marketplace:['marketplace','chile','finanzas'],contingencia:['contingencia','chile','debate'],memescl:['memescl','chile'],datos:['chile','finanzas'],desahogo:['chile','debate'],tecnologia:['tecnologia','chile'],futbol:['futbol','chile','debate']}[sub]||[sub,'chile','debate'];
+    var arr=(window.BOTS||[]).filter(function(b){var a=b&&b.arq&&window.BOT_ARQUETIPOS?window.BOT_ARQUETIPOS[b.arq]:null;return a&&a.intereses&&wants.some(function(w){return a.intereses.indexOf(w)!==-1;});});
+    return arr.length?arr:(window.BOTS||[]).slice();
+  }
+  function pickBot(p,i,used){var arr=botsFor(p);if(!arr.length)return {name:'usuario_cl',ciudad:'Chile',av:'👤'};for(var step=0;step<arr.length+4;step++){var b=arr[hash((p&&p.id)+'|bot|'+i+'|'+step)%arr.length];var k=cleanKey(b&&b.name);if(!used||!used[k])return b;}return arr[hash((p&&p.id)+'|fallback|'+i)%arr.length];}
+  function rowFrom(c,p,i,forceBot){
+    c=c||{};var bot=c.bot&&c.bot.name?c.bot:null;var name=String(c.username||c.name||(bot&&bot.name)||'').trim();
+    if(forceBot||!name){bot=bot||pickBot(p,i,{});name=bot.name;}
+    var txt=String(c.txt||c.texto||c.body||'').trim();
+    if(forceBot&&badComment(txt)){var bank=topicBank(p);txt=bank[hash((p&&p.id)+'|txt|'+i+'|'+(p&&p.title))%bank.length];}
+    if(!bot)bot={name:name||'usuario_cl',ciudad:c.ciudad||c.city||'Chile',av:c.av||'👤'};
+    var v=parseInt(c.v!=null?c.v:(c.votos!=null?c.votos:c.votes),10);if(isNaN(v))v=Math.max(1,hash((p&&p.id)+'|v|'+i)%12);
+    var t=c.t||c.tiempo||c.time||(['1min','6min','12min','28min','45min','1h','2h'][i%7]);
+    return {bot:bot,username:name||bot.name,ciudad:c.ciudad||bot.ciudad||'Chile',txt:txt,texto:txt,v:v,votos:v,t:t,tiempo:t,_rpUser:!!(c._rpUser||c.isUser||c.realComId||c.userId||c.user_id),isUser:!!(c._rpUser||c.isUser),realComId:c.realComId||c.id,userId:c.userId||c.user_id};
+  }
+  function captureUsers(p){
+    var out=[];
+    ['_rpV11UserComments','_rpV10UserComments'].forEach(function(k){if(Array.isArray(p&&p[k]))out=out.concat(p[k]);});
+    (Array.isArray(p&&p.cd)?p.cd:[]).forEach(function(c,i){if(isUserRow(c))out.push(rowFrom(c,p,i,false));});
+    var seen={};out=out.filter(function(c){var k=cleanKey((c.username||c.name||(c.bot&&c.bot.name)||'')+'|'+(c.txt||c.texto||''));if(seen[k])return false;seen[k]=1;return true;});
+    if(p)p._rpV11UserComments=out;
+    return out;
+  }
+  function makeSeed(p){
+    if(!p)return [];
+    var users=captureUsers(p);
+    var target=targetCount(p), out=[], usedTxt={}, usedBot={}, usedOpen={};
+    var bank=topicBank(p);
+    var order=[];for(var j=0;j<bank.length;j++)order.push(j);
+    order.sort(function(a,b){return hash((p.id||'x')+'|ord|'+a)-hash((p.id||'x')+'|ord|'+b);});
+    function tryAdd(txt,idx){
+      txt=String(txt||'').trim();
+      if(badComment(txt))return false;
+      var ok=openingKey(txt), tk=cleanKey(txt);
+      if(!ok||usedOpen[ok]||usedTxt[tk])return false;
+      var bot=pickBot(p,idx,usedBot), bk=cleanKey(bot&&bot.name);
+      if(usedBot[bk])return false;
+      usedOpen[ok]=1;usedTxt[tk]=1;usedBot[bk]=1;
+      out.push(rowFrom({bot:bot,txt:txt,v:Math.max(1,hash((p.id||'x')+'|vote|'+idx)%12),t:['1min','6min','12min','28min','45min','1h'][out.length%6]},p,idx,true));
+      return true;
+    }
+    // Regeneramos semilla desde banco curado: evita arrastrar comentarios viejos duplicados/triplicados.
+    order.forEach(function(idx){if(out.length<target)tryAdd(bank[idx],idx+1);});
+    var guard=0;
+    while(out.length<target&&guard<80){
+      var idx=guard+bank.length+1;
+      var txt=bank[hash((p.id||'x')+'|fill|'+idx+'|'+(p.title||''))%bank.length];
+      if(!tryAdd(txt,idx)){
+        // fallback con prefijo distinto para no repetir inicio, solo si el banco se queda corto.
+        var prefixes=['Desde otra mirada, ','Sumaría algo más: ','En la práctica, ','Aterrizándolo, ','Visto desde acá, '];
+        tryAdd(prefixes[guard%prefixes.length]+txt.charAt(0).toLowerCase()+txt.slice(1),idx+100);
+      }
+      guard++;
+    }
+    p._rpV11BotComments=out.slice(0,target);
+    p._rpV10BotComments=p._rpV11BotComments.slice();
+    p._rpV10UserComments=users;
+    p.cd=p._rpV11BotComments.slice();
+    p.coms=p._rpV11BotComments.length+users.length;
+    return p._rpV11BotComments;
+  }
+  function sortRows(rows,sort){
+    rows=(rows||[]).slice();
+    var seen={};rows=rows.filter(function(c){var k=cleanKey(((c.bot&&c.bot.name)||c.username||'')+'|'+(c.txt||c.texto||''));if(!cleanKey(c.txt||c.texto)||seen[k])return false;seen[k]=1;return true;});
+    if(sort==='new')return rows.sort(function(a,b){return (a._rpUser?0:1)-(b._rpUser?0:1);});
+    if(sort==='old')return rows.reverse();
+    return rows.sort(function(a,b){return (parseInt(b.v||b.votos||0,10)||0)-(parseInt(a.v||a.votos||0,10)||0);});
+  }
+  async function fetchRealRows(p,sort){
+    if(!p||!p.realId||!window.db)return [];
+    try{
+      var q=window.db.from('comentarios').select('*, perfiles(username,ciudad)').eq('post_id',p.realId).limit(80);
+      if(sort==='new')q=q.order('created_at',{ascending:false});else if(sort==='old')q=q.order('created_at',{ascending:true});else q=q.order('votos',{ascending:false});
+      var r=await q;if(r&&r.error)return [];
+      return (r.data||[]).map(function(c,i){var u=c.perfiles||{};return rowFrom({username:u.username||'anon',ciudad:u.ciudad||'Chile',texto:c.texto||'',votos:c.votos||0,tiempo:'ahora',realComId:c.id,userId:c.user_id,_rpUser:true},p,i,false);});
+    }catch(e){return [];}
+  }
+  async function displayRows(p,sort){
+    if(isBotPost(p))return sortRows(makeSeed(p).concat(captureUsers(p)),sort);
+    var rows=await fetchRealRows(p,sort);
+    if(rows.length)return sortRows(rows,sort);
+    if(Array.isArray(p&&p.cd)&&p.cd.length)return sortRows(p.cd.map(function(c,i){return rowFrom(c,p,i,false);}),sort);
+    return [];
+  }
+
+  function postTokens(p){
+    var txt=cleanKey((p&&p.title)||'');
+    var stop={que:1,para:1,por:1,con:1,una:1,uno:1,los:1,las:1,del:1,desde:1,como:1,esta:1,este:1,esto:1,sera:1,seria:1,sobre:1,tema:1,chileno:1,chilena:1,chile:1,randomplan:1};
+    return txt.split(/\s+/).filter(function(w){return w.length>2&&!stop[w];});
+  }
+  function jacc(a,b){var A={},B={},i,inter=0,uni=0;a.forEach(function(x){A[x]=1;});b.forEach(function(x){B[x]=1;});for(i in A){if(A[i]&&B[i])inter++;uni++;}for(i in B){if(B[i]&&!A[i])uni++;}return uni?inter/uni:0;}
+  function exactPostKey(p){return (normSub(p&&p.sub)||'inicio')+'|'+cleanKey((p&&p.title)||'').replace(/\b\d{1,2}:\d{2}\b/g,'').trim();}
+  function isDuplicateBotPost(p,kept){
+    if(!isBotPost(p))return false;
+    var key=exactPostKey(p); if(!key.split('|')[1])return false;
+    for(var i=0;i<kept.length;i++){
+      var q=kept[i]; if(!isBotPost(q))continue;
+      if(exactPostKey(q)===key)return true;
+      if(normSub(q.sub)!==normSub(p.sub))continue;
+      var a=postTokens(p), b=postTokens(q); if(a.length<4||b.length<4)continue;
+      var sim=jacc(a,b);
+      var ta=cleanKey(p.title), tb=cleanKey(q.title);
+      if(sim>=0.78)return true;
+      if(Math.min(ta.length,tb.length)>28&&(ta.indexOf(tb)!==-1||tb.indexOf(ta)!==-1))return true;
+    }
+    return false;
+  }
+  function dedupeBotPosts(){
+    if(!Array.isArray(window.POSTS))return;
+    var oldLen=window.POSTS.length;
+    var out=[];
+    window.POSTS.forEach(function(p){
+      if(isBotPost(p)&&isDuplicateBotPost(p,out))return;
+      out.push(p);
+    });
+    if(out.length!==oldLen){window.POSTS=out;try{POSTS=out;}catch(e){}log('[RP V11] posts dedupe',oldLen,'->',out.length);}
+  }
+
+  function linkMedia(txt){
+    var raw=String(txt||'');
+    var pieces=[], last=0, re=/\[(gif|img):(https?:\/\/[^\]\s]+)\]/ig, m;
+    while((m=re.exec(raw))){pieces.push(esc(raw.slice(last,m.index)));pieces.push('<img src="'+attr(m[2])+'" class="inserted-gif" loading="lazy" alt="GIF">');last=m.index+m[0].length;}
+    pieces.push(esc(raw.slice(last)));
+    var html=pieces.join('');
+    html=html.replace(/(https?:\/\/[^\s<]+)/g,function(u){return '<a href="'+attr(u)+'" target="_blank" rel="noopener" class="inline-link">'+esc(u)+'</a>';});
+    return html;
+  }
+  function avatar(name,size){return (typeof window.makeAvatar==='function')?window.makeAvatar(name,size):'<span class="u-avatar">'+esc(String(name||'u').slice(0,1).toUpperCase())+'</span>';}
+  function renderInlineComment(c,i,p){c=rowFrom(c,p,i,false);var name=(c.bot&&c.bot.name)||c.username||'anon';var city=(c.bot&&c.bot.ciudad)||c.ciudad||'Chile';return '<div class="comment rpv11-comment"><div class="cava">'+avatar(name)+'</div><div class="ccont"><div class="ccmeta"><span class="u">u/'+esc(name)+'</span> · <span class="ci">'+esc(city)+'</span> · '+esc(c.t||c.tiempo||'ahora')+'</div><div class="cctext">'+linkMedia(c.txt||c.texto||'')+'</div><div class="ccacts"><button class="ccact ccvote-up" data-votes="'+attr(c.v||c.votos||0)+'" onclick="voteComment(this,1)">▲ '+esc(c.v||c.votos||0)+'</button><button class="ccact ccvote-down" onclick="voteComment(this,-1)">▼</button></div></div></div>';}
+  function renderPVComment(c,i,p){c=rowFrom(c,p,i,false);var name=(c.bot&&c.bot.name)||c.username||'anon';return '<div class="pv-comment rpv11-pv-comment"><div class="pv-comment-v"><button onclick="pvVote(this,1)">▲</button><strong>'+esc(c.v||c.votos||0)+'</strong><button onclick="pvVote(this,-1)">▼</button></div><div><div class="pv-comment-meta"><span class="u">u/'+esc(name)+'</span> · '+esc(c.t||c.tiempo||'ahora')+'</div><div class="pv-comment-text">'+linkMedia(c.txt||c.texto||'')+'</div></div></div>';}
+
+  // MEDIA PICKERS V11
+  var activeInputId=null, activeInputEl=null;
+  var EMOJIS='😂 🤣 🔥 💀 😭 🤯 👀 😤 🫡 🤔 💯 🎯 🤙 👊 😎 🥲 😬 🤦 🙄 👏 🫠 😅 🤡 💪 🫶 ❤️ 🖤 💜 💚 ⚡ 🌊 🏔 🐍 🦅 💻 📱 🎮 🏆 💰 📈 📉 🔑 ⚠️ ❌ ✅ 🚀 🌙 ☀️ 🌧 ❄️ 🍺 🍕 🌮 ☕ 🍿 🧠 💬 🇨🇱'.split(' ');
+  var GIFS=[
+    ['risa jajaja meme laugh chile','https://media.giphy.com/media/3oEjHI8WJv4x6UPDB6/giphy.gif'],
+    ['espera paciencia waiting','https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif'],
+    ['sorpresa wow mind blown','https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif'],
+    ['fuego hype fire','https://media.giphy.com/media/5VKbvrjxpVJCM/giphy.gif'],
+    ['facepalm fail error','https://media.giphy.com/media/3o7TKr3nzbh5WgCFxe/giphy.gif'],
+    ['ok bien si approve','https://media.giphy.com/media/GCvktC0KFy9l6/giphy.gif'],
+    ['popcorn drama mirando','https://media.giphy.com/media/tyqcJoNjNv0Fq/giphy.gif'],
+    ['gato cat meme','https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif'],
+    ['money plata finanzas','https://media.giphy.com/media/LCdPNT81vlv3y/giphy.gif'],
+    ['tech codigo computador','https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif'],
+    ['aplauso clap bravo','https://media.giphy.com/media/3o6Zt481isNVuQI1l6/giphy.gif'],
+    ['confundido que confused','https://media.giphy.com/media/3o7btPCcdNniyf0ArS/giphy.gif'],
+    ['baile fiesta dance','https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif'],
+    ['no nope rechazo','https://media.giphy.com/media/ToMjGpKniGqRNLGBrhu/giphy.gif'],
+    ['chill tranquilo','https://media.giphy.com/media/3o7aD2saalBwwftBIY/giphy.gif']
+  ].map(function(x){return {tags:x[0],url:x[1]};});
+  function mediaCss(){if(byId('rpv11-style'))return;var st=document.createElement('style');st.id='rpv11-style';st.textContent='.rpv11-picker{display:none;position:fixed;z-index:2147483647;background:#141c25;border:1px solid #2a3f55;border-radius:7px;padding:.55rem;box-shadow:0 12px 38px rgba(0,0,0,.95)}.rpv11-emoji{width:320px;max-width:calc(100vw - 12px);flex-wrap:wrap;gap:.12rem;max-height:235px;overflow-y:auto}.rpv11-emoji button{background:transparent;border:none;font-size:1.2rem;line-height:1.1;cursor:pointer;padding:.22rem .27rem;border-radius:3px}.rpv11-emoji button:hover{background:#1c2733}.rpv11-gif{width:360px;max-width:calc(100vw - 12px)}.rpv11-gif input{width:100%;background:#0d1117;border:1px solid #2a3f55;border-radius:3px;padding:.45rem .62rem;font-family:monospace;font-size:.75rem;color:#e6edf3;outline:none;margin-bottom:.45rem;box-sizing:border-box}.rpv11-gif-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.32rem;max-height:260px;overflow-y:auto}.rpv11-gif-grid img{width:100%;height:78px;object-fit:cover;border:1px solid transparent;border-radius:3px;cursor:pointer;background:#080b0f}.rpv11-gif-grid img:hover{border-color:#00ff88}.comments-section .rpv11-gif-trigger,.rpv11-inline-media .rpv11-gif-trigger{display:none!important}.media-btn.rpv11-emoji-trigger,.media-btn.rpv11-gif-trigger{user-select:none}';document.head.appendChild(st);}
+  function ensureEmoji(){mediaCss();var p=byId('rpv11-emoji-picker');if(!p){p=document.createElement('div');p.id='rpv11-emoji-picker';p.className='rpv11-picker rpv11-emoji';document.body.appendChild(p);}if(p.dataset.ready!=='1'){p.dataset.ready='1';p.innerHTML='';EMOJIS.forEach(function(e){var b=document.createElement('button');b.type='button';b.textContent=e;b.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();insertMedia(e);hideMedia();});p.appendChild(b);});}return p;}
+  function ensureGif(){mediaCss();var p=byId('rpv11-gif-picker');if(!p){p=document.createElement('div');p.id='rpv11-gif-picker';p.className='rpv11-picker rpv11-gif';p.innerHTML='<input id="rpv11-gif-search" placeholder="buscar GIF + Enter"><div id="rpv11-gif-grid" class="rpv11-gif-grid"></div>';document.body.appendChild(p);}var s=byId('rpv11-gif-search');if(s&&s.dataset.bound!=='1'){s.dataset.bound='1';s.addEventListener('keydown',function(ev){if(ev.key==='Enter'){ev.preventDefault();drawGifs(s.value||'meme chile');}});s.addEventListener('input',function(){clearTimeout(s._t);s._t=setTimeout(function(){drawGifs(s.value||'meme chile');},250);});}return p;}
+  function hideMedia(){var a=byId('rpv11-emoji-picker'),g=byId('rpv11-gif-picker');if(a)a.style.display='none';if(g)g.style.display='none';}
+  function place(el,anchor){var r=anchor&&anchor.getBoundingClientRect?anchor.getBoundingClientRect():null;var w=el.className.indexOf('gif')!==-1?360:320;if(r){el.style.top=Math.max(8,Math.min(window.innerHeight-90,r.bottom+8))+'px';el.style.left=Math.max(8,Math.min(r.left,window.innerWidth-w-8))+'px';}else{el.style.top='94px';el.style.left='12px';}}
+  function resolveInput(anchor){
+    var id=anchor&&(anchor.dataset.rpv11Input||anchor.dataset.rpv10Input||anchor.dataset.input||anchor.getAttribute('data-input'));
+    var el=id?byId(id):null;
+    if(!el&&anchor){var root=anchor.closest('.pv-comment-box,.comments-section,.comment-box,.modal,.post-view,.rp-thread-comment-box');if(root)el=root.querySelector('input[type="text"], textarea, input:not([type])');}
+    if(!el&&(document.activeElement&&/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)))el=document.activeElement;
+    activeInputEl=el||null;activeInputId=el&&el.id?el.id:null;return el;
+  }
+  function insertMedia(txt){var el=activeInputEl||(activeInputId?byId(activeInputId):null);if(!el)return;var val=String(txt||'');var pos=typeof el.selectionStart==='number'?el.selectionStart:el.value.length;var before=el.value.slice(0,pos), after=el.value.slice(pos);el.value=before+val+after;el.focus();try{el.selectionStart=el.selectionEnd=pos+val.length;}catch(e){}try{el.dispatchEvent(new Event('input',{bubbles:true}));}catch(e){}}
+  function drawGifs(q){var gp=ensureGif(),grid=byId('rpv11-gif-grid');if(!grid)return;q=cleanKey(q||'meme chile');var words=q.split(/\s+/).filter(Boolean);var list=GIFS.filter(function(g){return !words.length||q==='meme chile'||words.some(function(w){return g.tags.indexOf(w)!==-1;});});if(!list.length)list=GIFS.slice();grid.innerHTML='';function add(url,thumb){var im=document.createElement('img');im.src=thumb||url;im.loading='lazy';im.alt='GIF';im.onerror=function(){im.style.opacity='.25';};im.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();var el=activeInputEl||(activeInputId?byId(activeInputId):null);insertMedia((el&&el.value&&!/\s$/.test(el.value)?' ':'')+'[gif:'+url+']');hideMedia();});grid.appendChild(im);}list.slice(0,18).forEach(function(g){add(g.url,g.url);});try{fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q)+'&key=LIVDSRZULELA&client_key=randomplan&limit=12&media_filter=gif,tinygif',{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('tenor');return r.json();}).then(function(d){var arr=(d.results||[]).map(function(it){var mf=it.media_formats||{};var th=(mf.tinygif&&mf.tinygif.url)||(mf.gif&&mf.gif.url)||'';var fu=(mf.gif&&mf.gif.url)||th;return {url:fu,thumb:th};}).filter(function(x){return x.url;});if(!arr.length)return;grid.innerHTML='';arr.forEach(function(x){add(x.url,x.thumb||x.url);});}).catch(function(){});}catch(e){} }
+  function showEmoji(anchor){resolveInput(anchor);var ep=ensureEmoji(), gp=byId('rpv11-gif-picker');if(gp)gp.style.display='none';place(ep,anchor);ep.style.display=(ep.style.display==='flex')?'none':'flex';}
+  function showGif(anchor){resolveInput(anchor);var gp=ensureGif(), ep=byId('rpv11-emoji-picker');if(ep)ep.style.display='none';place(gp,anchor);gp.style.display=(gp.style.display==='block')?'none':'block';drawGifs((byId('rpv11-gif-search')&&byId('rpv11-gif-search').value)||'meme chile');}
+  window.RPV11_showEmoji=function(inputId,anchor){var el=inputId?byId(inputId):null;if(el){activeInputEl=el;activeInputId=inputId;}showEmoji(anchor||el);};
+  window.RPV11_showGif=function(inputId,anchor){var el=inputId?byId(inputId):null;if(el){activeInputEl=el;activeInputId=inputId;}showGif(anchor||el);};
+  function inlineBar(inputId){return '<div class="media-bar rpv11-inline-media"><button class="media-btn rpv11-emoji-trigger" type="button" data-rpv11-input="'+attr(inputId)+'">😊 emoji</button></div>';}
+  function threadBar(inputId){return '<div class="media-bar rpv11-thread-media"><button class="media-btn rpv11-emoji-trigger" type="button" data-rpv11-input="'+attr(inputId)+'">😊 emoji</button><button class="media-btn rpv11-gif-trigger" type="button" data-rpv11-input="'+attr(inputId)+'">GIF</button></div>';}
+  document.addEventListener('click',function(ev){
+    var t=ev.target;
+    if(t&&t.closest&&(t.closest('#rpv11-emoji-picker')||t.closest('#rpv11-gif-picker')))return;
+    var b=t&&t.closest&&t.closest('.rpv11-emoji-trigger,.rpv10-emoji-trigger,.media-btn');
+    if(b){var txt=String(b.textContent||'').trim().toLowerCase();var isGif=b.classList.contains('rpv11-gif-trigger')||b.classList.contains('rpv10-gif-trigger')||txt==='gif'||txt.indexOf('gif')!==-1;var isEmoji=b.classList.contains('rpv11-emoji-trigger')||b.classList.contains('rpv10-emoji-trigger')||txt.indexOf('emoji')!==-1||txt.indexOf('😊')!==-1;if(isGif||isEmoji){ev.preventDefault();ev.stopPropagation();if(ev.stopImmediatePropagation)ev.stopImmediatePropagation();if(isGif)showGif(b);else showEmoji(b);return;}}
+    hideMedia();
+  },true);
+
+  async function publishLocal(p,txt){var prof=window.currentPerfil||{};var name=prof.username||(window.currentUser&&window.currentUser.email?String(window.currentUser.email).split('@')[0]:'tu_usuario');var city=prof.ciudad||'Chile';var row={bot:{name:name,ciudad:city,av:'👤'},username:name,ciudad:city,txt:txt,texto:txt,v:0,votos:0,t:'ahora',tiempo:'ahora',_rpUser:true,isUser:true};p._rpV11UserComments=p._rpV11UserComments||[];p._rpV11UserComments.unshift(row);p._rpV10UserComments=p._rpV11UserComments.slice();p.coms=makeSeed(p).length+p._rpV11UserComments.length;return row;}
+  function mustLogin(){if(!window.currentUser){if(typeof window.showModal==='function')window.showModal('login');return true;}return false;}
+
+  window.generateBotComments=function(count,existingCd){var p=window.__rpCommentContextPost||null;if(p){if(isBotPost(p))return makeSeed(p).concat(captureUsers(p));return (existingCd||p.cd||[]).map(function(c,i){return rowFrom(c,p,i,false);});}var tmp={id:'tmp',sub:'chile',title:'tema chileno',cd:existingCd||[]};return makeSeed(tmp);};
+  window.renderPostViewComments=async function(postId,sort){var p=getPost(postId),list=byId('pv-comments-list');if(!p||!list)return;list.innerHTML='<div class="pv-empty">// cargando comentarios...</div>';var rows=await displayRows(p,sort||'top');list.innerHTML=rows.length?rows.map(function(c,i){return renderPVComment(c,i,p);}).join(''):'<div class="pv-empty">// todavía no hay comentarios</div>';};
+  window.renderComSection=function(postId,sort){var cs=byId('cs-'+postId);if(!cs)return;Array.prototype.slice.call(cs.children).forEach(function(ch){if(ch.classList&&(ch.classList.contains('comment')||ch.classList.contains('com-section-inner')||ch.classList.contains('rpv9-com-section-inner')||ch.classList.contains('rpv10-com-section-inner')||ch.classList.contains('rpv11-com-section-inner')))ch.remove();});var oldBox=cs.querySelector('.comment-box');if(oldBox)oldBox.style.display='none';var inputId='cinp-'+postId;var inner=document.createElement('div');inner.className='rpv11-com-section-inner';inner.innerHTML='<div class="com-write" id="cwrite-'+postId+'"><input type="text" id="'+inputId+'" placeholder="escribe un comentario..." onkeydown="if(event.key===\'Enter\')sendCommentInline('+postId+')" style="flex:1;background:var(--bg0);border:1px solid var(--border);border-radius:3px;padding:.38rem .6rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none"><button class="com-send-btn" onclick="sendCommentInline('+postId+')">SEND</button></div>'+inlineBar(inputId)+'<div class="com-sort-bar"><span class="com-sort-lbl">ordenar:</span><button class="com-sort-btn '+((sort||'top')==='top'?'on':'')+'" onclick="changeSort('+postId+',this,\'top\')">destacados</button><button class="com-sort-btn '+((sort||'top')==='new'?'on':'')+'" onclick="changeSort('+postId+',this,\'new\')">recientes</button><button class="com-sort-btn '+((sort||'top')==='old'?'on':'')+'" onclick="changeSort('+postId+',this,\'old\')">antiguos</button></div><div class="com-list" id="clist-'+postId+'"></div><div class="com-load-more" id="cmore-'+postId+'"></div>';cs.insertBefore(inner,cs.firstChild);window.loadComments(postId,sort||'top',0);};
+  window.loadComments=async function(postId,sort,offset){var p=getPost(postId),list=byId('clist-'+postId),more=byId('cmore-'+postId);if(!p||!list)return;var rows=await displayRows(p,sort||'top');list.innerHTML=rows.length?rows.map(function(c,i){return renderInlineComment(c,i,p);}).join(''):'<div class="pv-empty" style="color:var(--text3);font-size:.75rem;padding:.4rem 0">// todavía no hay comentarios</div>';if(more)more.innerHTML='';};
+  window.toggleComs=function(id){window.openComs=window.openComs||{};window.openComs[id]=!window.openComs[id];var el=byId('cs-'+id);if(!el)return;el.classList.toggle('open',window.openComs[id]);var p=getPost(id);if(p&&isBotPost(p))makeSeed(p);var btn=document.querySelector('#post-'+id+' .comments-toggle-btn');if(btn)btn.textContent=window.openComs[id]?'// cerrar comentarios':'// '+((p&&p.coms)||0)+' comentarios';if(window.openComs[id])window.renderComSection(id,'top');};
+  window.changeSort=function(postId,btn,sort){document.querySelectorAll('#cs-'+postId+' .com-sort-btn').forEach(function(b){b.classList.remove('on');});if(btn)btn.classList.add('on');window.loadComments(postId,sort||'top',0);};
+  window.sendCommentInline=async function(postId){var p=getPost(postId),inp=byId('cinp-'+postId);if(!p||!inp)return;var texto=String(inp.value||'').trim();if(!texto)return;if(mustLogin())return;if(window.currentPerfil==null&&typeof window.loadPerfil==='function'){try{await window.loadPerfil();}catch(e){}}if(isBotPost(p)){await publishLocal(p,texto);inp.value='';window.loadComments(postId,'new',0);var btn=document.querySelector('#post-'+postId+' .comments-toggle-btn');if(btn)btn.textContent='// '+p.coms+' comentarios';if(typeof window.toast==='function')window.toast('comentario publicado');return;}try{var uid=window.currentUser&&window.currentUser.id;var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||p.realId||postId;var r=await window.db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});if(r.error){if(typeof window.toast==='function')window.toast('error: '+r.error.message);return;}inp.value='';window.loadComments(postId,'new',0);if(typeof window.toast==='function')window.toast('comentario publicado');}catch(e){if(typeof window.toast==='function')window.toast('comentarios no disponibles');}};
+  window.sendPostViewComment=async function(postId){var p=getPost(postId),inp=byId('pv-comment-input');if(!p||!inp)return;var texto=String(inp.value||'').trim();if(!texto)return;if(mustLogin())return;if(window.currentPerfil==null&&typeof window.loadPerfil==='function'){try{await window.loadPerfil();}catch(e){}}if(isBotPost(p)){await publishLocal(p,texto);inp.value='';window.renderPostViewComments(postId,'new');var btn=document.querySelector('#post-'+postId+' .comments-toggle-btn');if(btn)btn.textContent='// '+p.coms+' comentarios';if(typeof window.toast==='function')window.toast('comentario publicado');return;}try{var uid=window.currentUser&&window.currentUser.id;var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||p.realId||postId;var r=await window.db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});if(r.error){if(typeof window.toast==='function')window.toast('error: '+r.error.message);return;}inp.value='';window.renderPostViewComments(postId,'new');if(typeof window.toast==='function')window.toast('comentario publicado');}catch(e){if(typeof window.toast==='function')window.toast('comentarios no disponibles');}};
+
+  window.openPostView=function(id){
+    var p=getPost(id);if(!p){if(typeof window.toast==='function')window.toast('post no encontrado');return;}if(isBotPost(p))makeSeed(p);
+    var wrap=byId('post-view-wrap'),cont=byId('post-view-content');if(!wrap||!cont)return;
+    var refUrl=(typeof window.getPostReference==='function'?window.getPostReference(p):(p.url||p.link||''));
+    var bodyText=p.prev||p.contenido||'';var voteTotal=(p.votos||0)+((window.votes&&window.votes[p.id])||0);var source='';
+    if(refUrl){var safeUrl=String(refUrl).replace(/\\/g,'\\\\').replace(/'/g,"\\'");source='<div class="pv-source-box"><div class="pv-source-copy">Referencia externa detectada:<br><strong>'+esc(typeof window.getDomain==='function'?window.getDomain(refUrl):refUrl)+'</strong></div><button class="pv-source-btn" onclick="openPostReference(\''+attr(safeUrl)+'\')">leer fuente original ↗</button></div>';}
+    else if(p.isNews||userKey(p)==='noticias_cl'){source='<div class="pv-source-box"><div class="pv-source-copy"><strong>sin fuente externa disponible</strong><br>Este post de noticias_cl no trae URL válida.</div></div>';}
+    var inputId='pv-comment-input';
+    cont.innerHTML='<div class="pv-meta"><span class="csub">'+esc((p.ic||'')+' '+(p.sub||''))+'</span><span class="dot">::</span><span>'+avatar(getUserName(p)||'usuario','sm')+' u/'+esc(getUserName(p)||'usuario')+'</span><span class="dot">::</span><span>'+esc(p.t||'ahora')+'</span><span class="flair '+esc(p.fc||'g')+'">'+esc(p.flair||'post')+'</span></div><h1 class="pv-title">'+esc(p.title||'sin título')+'</h1><div class="pv-excerpt">'+(bodyText?linkMedia(bodyText):'<span style="color:var(--text3)">// sin bajada disponible</span>')+'</div>'+source+'<div class="pv-actions"><div class="pv-vote"><button class="vbtn up" onclick="vote('+p.id+',1);openPostView('+p.id+')">▲</button><strong>'+esc(typeof window.fmtV==='function'?window.fmtV(voteTotal):voteTotal)+'</strong><button class="vbtn down" onclick="vote('+p.id+',-1);openPostView('+p.id+')">▼</button></div><button class="cact" onclick="toast(&quot;enlace del hilo copiado&quot;)">// compartir hilo</button></div><div class="pv-comments-head"><div class="pv-comments-title">comentarios</div><div class="pv-sort"><button class="on" onclick="setPostViewSort(this,'+p.id+',\'top\')">destacados</button><button onclick="setPostViewSort(this,'+p.id+',\'new\')">recientes</button><button onclick="setPostViewSort(this,'+p.id+',\'old\')">antiguos</button></div></div><div class="pv-comment-box"><div class="pv-comment-input-row"><input id="'+inputId+'" placeholder="comentar en el hilo..." onkeydown="if(event.key===\'Enter\')sendPostViewComment('+p.id+')"><button class="pv-comment-send" onclick="sendPostViewComment('+p.id+')">SEND</button></div>'+threadBar(inputId)+'</div><div class="pv-comments-list" id="pv-comments-list"></div>';
+    wrap.classList.add('on');document.body.classList.add('post-view-lock');window.renderPostViewComments(p.id,'top');
+  };
+  window.setPostViewSort=function(btn,postId,sort){var box=btn&&btn.parentElement;if(box)box.querySelectorAll('button').forEach(function(b){b.classList.remove('on');});if(btn)btn.classList.add('on');window.renderPostViewComments(postId,sort||'top');};
+  window.openPostThreadWindow=function(id){window.openPostView(id);};
+  window.openNewsThreadWindow=function(id){window.openPostView(id);};
+
+  function patchRender(){
+    if(window.renderPost&&!window.renderPost.__rpV11){var old=window.renderPost;window.renderPost=function(p){if(p&&isBotPost(p))makeSeed(p);window.__rpCommentContextPost=p;var html=old.call(this,p);window.__rpCommentContextPost=null;return html;};window.renderPost.__rpV11=true;}
+    if(window.renderFeed&&!window.renderFeed.__rpV11){var oldFeed=window.renderFeed;window.renderFeed=function(filter){dedupeBotPosts();return oldFeed.call(this,filter);};window.renderFeed.__rpV11=true;}
+    if(window.loadRealPosts&&!window.loadRealPosts.__rpV11){var oldReal=window.loadRealPosts;window.loadRealPosts=async function(filter){var r=await oldReal.call(this,filter);dedupeBotPosts();try{if(window.renderFeed)window.renderFeed((window._currentFilter&&window._currentFilter!=='inicio')?window._currentFilter:null);}catch(e){}return r;};window.loadRealPosts.__rpV11=true;}
+    if(window.loadNews&&!window.loadNews.__rpV11){var oldNews=window.loadNews;window.loadNews=async function(){var r=await oldNews.apply(this,arguments);dedupeBotPosts();try{if(window.renderFeed)window.renderFeed((window._currentFilter&&window._currentFilter!=='inicio')?window._currentFilter:null);}catch(e){}return r;};window.loadNews.__rpV11=true;}
+  }
+  function cleanInlineDOM(){document.querySelectorAll('.comments-section').forEach(function(cs){Array.prototype.slice.call(cs.children).forEach(function(ch){if(ch.classList&&(ch.classList.contains('comment')||ch.classList.contains('com-section-inner')||ch.classList.contains('rpv9-com-section-inner')||ch.classList.contains('rpv10-com-section-inner')))ch.remove();});});}
+  function init(){
+    mediaCss();ensureEmoji();ensureGif();hideMedia();patchRender();dedupeBotPosts();
+    try{(window.POSTS||[]).forEach(function(p){if(isBotPost(p))makeSeed(p);});}catch(e){}
+    cleanInlineDOM();
+    try{if(window.renderFeed)window.renderFeed((window._currentFilter&&window._currentFilter!=='inicio')?window._currentFilter:null);}catch(e){log(e);}
+    console.log('[RandomPlan V11] comentarios quirúrgicos + posts únicos + media activo');
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,0);
+  setTimeout(init,700);
+  setTimeout(init,1800);
+})();
+</script>
+<!-- RP_FINAL_FIX_V11_END -->
+
+
+<!-- RP_FINAL_FIX_V12_START -->
+<script>
+/* ─────────────────────────────────────────────────────────────
+   RandomPlan V12 quirúrgico
+   1) Feed por foros sin duplicados: no más prepend de posts reales.
+   2) Posts/temas bot únicos por comunidad.
+   3) Comentarios internos 3–5, únicos, con comienzos distintos.
+   4) Media estable: inline solo emoji; hilo interno emoji + GIF.
+───────────────────────────────────────────────────────────── */
+(function(){
+  'use strict';
+  var V='[RandomPlan V12]';
+  function byId(id){return document.getElementById(id);}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function attr(s){return esc(s).replace(/`/g,'&#96;');}
+  function cleanKey(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[“”"'`´.,;:!?¡¿()\[\]{}]/g,' ').replace(/\s+/g,' ').trim();}
+  function hash(s){s=String(s||'');var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h+=(h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24);}return Math.abs(h>>>0);}
+  function normSub(sub){
+    if(!sub)return null;
+    sub=String(sub).toLowerCase().trim().replace(/^p\//,'').replace(/^r\//,'').replace(/^#/,'');
+    var m={inicio:null,home:null,feed:null,feria:'marketplace',market:'marketplace','compra-venta':'marketplace',compraventa:'marketplace',memes:'memescl',meme:'memescl',noticias:'contingencia',news:'contingencia',actualidad:'contingencia',polemicas:'debate','polémicas':'debate',polemica:'debate','polémica':'debate',tech:'tecnologia','tecnología':'tecnologia',datoschile:'datos'};
+    return Object.prototype.hasOwnProperty.call(m,sub)?m[sub]:sub;
+  }
+  function getPost(id){return (window.POSTS||[]).find(function(p){return String(p.id)===String(id);})||null;}
+  function getUserName(p){return String((p&&p.user&&p.user.name)||p.username||'').trim();}
+  function userKey(p){return cleanKey(getUserName(p));}
+  function botNames(){var o={};(window.BOTS||[]).forEach(function(b){if(b&&b.name)o[cleanKey(b.name)]=1;});o.noticias_cl=1;o.noticia_cl=1;return o;}
+  function isBotPost(p){
+    if(!p)return false;
+    if(p.isNews||userKey(p)==='noticias_cl'||userKey(p)==='noticia_cl')return true;
+    if(!p.realId)return true;
+    return !!botNames()[userKey(p)];
+  }
+  function stableRealFakeId(realId){var n=parseInt(realId,10); if(!isNaN(n))return 900000+n; return 900000+hash('real|'+realId);}
+  function shortTitle(p){return cleanKey((p&&p.title)||'').replace(/\b\d{1,2}:\d{2}\b/g,'').replace(/\b\d{4}\b/g,'').trim();}
+  function postTokens(p){
+    var stop={que:1,para:1,por:1,con:1,una:1,uno:1,los:1,las:1,del:1,desde:1,como:1,esta:1,este:1,esto:1,sera:1,seria:1,sobre:1,tema:1,chile:1,chileno:1,chilena:1,randomplan:1,nuevo:1,nueva:1};
+    return shortTitle(p).split(/\s+/).filter(function(w){return w.length>2&&!stop[w];});
+  }
+  function jacc(a,b){var A={},B={},inter=0,uni=0;a.forEach(function(x){A[x]=1;});b.forEach(function(x){B[x]=1;});Object.keys(A).forEach(function(k){if(B[k])inter++;uni++;});Object.keys(B).forEach(function(k){if(!A[k])uni++;});return uni?inter/uni:0;}
+  function isDupPost(p,kept){
+    if(!p)return true;
+    if(p.realId){return kept.some(function(q){return q&&q.realId&&String(q.realId)===String(p.realId);});}
+    var sub=normSub(p.sub)||'inicio'; var title=shortTitle(p); if(!title)return false;
+    for(var i=0;i<kept.length;i++){
+      var q=kept[i]; if(!q||q.realId)continue; if((normSub(q.sub)||'inicio')!==sub)continue;
+      var qt=shortTitle(q); if(qt===title)return true;
+      if(title.length>22&&qt.length>22&&(title.indexOf(qt)!==-1||qt.indexOf(title)!==-1))return true;
+      var a=postTokens(p), b=postTokens(q); if(a.length>=3&&b.length>=3&&jacc(a,b)>=0.72)return true;
+    }
+    return false;
+  }
+  function dedupePosts(){
+    if(!Array.isArray(window.POSTS))return [];
+    var out=[];
+    window.POSTS.forEach(function(p){if(!isDupPost(p,out))out.push(p);});
+    window.POSTS=out; try{POSTS=out;}catch(e){}
+    return out;
+  }
+  function targetCount(p){return 3+(hash((p&&p.id)+'|'+(p&&p.title)+'|v12-target')%3);}
+  function botPool(p){
+    var sub=normSub(p&&p.sub)||'chile';
+    var wants={marketplace:['marketplace','chile','finanzas'],contingencia:['contingencia','chile','debate'],memescl:['memescl','chile'],datos:['chile','finanzas'],desahogo:['chile','debate'],tecnologia:['tecnologia','chile'],futbol:['futbol','chile','debate'],finanzas:['finanzas','chile'],debate:['debate','chile']}[sub]||[sub,'chile'];
+    var arr=(window.BOTS||[]).filter(function(b){var a=b&&b.arq&&window.BOT_ARQUETIPOS?window.BOT_ARQUETIPOS[b.arq]:null;return a&&a.intereses&&wants.some(function(w){return a.intereses.indexOf(w)!==-1;});});
+    return arr.length?arr:(window.BOTS||[]).slice();
+  }
+  function pickBot(p,i,used){var arr=botPool(p); if(!arr.length)return {name:'usuario_cl',ciudad:'Chile',av:'👤'}; for(var k=0;k<arr.length;k++){var b=arr[(hash((p&&p.id)+'|'+i+'|'+k+'|v12')%arr.length)];var nk=cleanKey(b&&b.name);if(!used||!used[nk])return b;}return arr[hash('fallback|'+(p&&p.id)+'|'+i)%arr.length];}
+  function titleHint(p){
+    var t=String((p&&p.title)||'').trim();
+    if(!t)return 'el tema';
+    t=t.replace(/\s+/g,' ');
+    if(t.length>62)t=t.slice(0,59).trim()+'...';
+    return t;
+  }
+  function commentBank(p){
+    var sub=normSub(p&&p.sub)||'chile';
+    var hint=titleHint(p);
+    var news=(p&&p.isNews)||userKey(p)==='noticias_cl'||sub==='contingencia';
+    var banks={
+      noticias:[
+        'Ojo con el detalle de “'+hint+'”: antes de opinar fuerte, yo miraría la fuente y la fecha exacta.',
+        'Acá lo clave no es solo el titular, sino qué dato concreto sostiene la nota.',
+        'Me tinca bien que quede como hilo, porque así la gente puede discutir la noticia sin perder la referencia.',
+        'La bajada cambia harto la lectura; el titular solo sirve para abrir la conversación.',
+        'Antes de convertir esto en pelea política, faltaría separar hecho confirmado de interpretación.',
+        'Buen caso para probar comentarios con contexto: noticia arriba, opiniones abajo y fuente visible.',
+        'Esto requiere más antecedentes, sobre todo si después se va a viralizar recortado.',
+        'La discusión mejora mucho cuando alguien trae el enlace original y no solo una captura.'
+      ],
+      futbol:[
+        'Más que mirar “'+hint+'” como caso aislado, el problema de fondo sigue siendo formación y continuidad.',
+        'Yo lo llevaría al plano estructural: dirigentes, canteras y minutos reales para jugadores jóvenes.',
+        'Hay talento, pero sin trabajo sostenido terminamos reciclando la misma discusión cada temporada.',
+        'El campeonato local necesita subir exigencia; sin eso la conversación se queda en nombres sueltos.',
+        'No compraría humo tan rápido: primero hay que mirar rendimiento, proceso y contexto competitivo.',
+        'La hinchada se engancha con el tema, pero la solución no sale de un puro partido ni de una frase viral.',
+        'Acá falta menos ansiedad y más planificación; cada ciclo parte como si el anterior no hubiera existido.',
+        'Buen debate futbolero, siempre que no termine reducido a club contra club.'
+      ],
+      finanzas:[
+        'Para “'+hint+'” partiría separando flujo mensual, deuda y ahorro; sin eso todo consejo queda cojo.',
+        'La UF y el dólar pegan aunque uno no invierta, porque terminan filtrándose al arriendo y al súper.',
+        'Primero colchón de emergencia, después inversión; saltarse ese orden suele salir caro.',
+        'Me gustaría ver números concretos, porque en finanzas la sensación muchas veces engaña.',
+        'El punto importante es distinguir gasto fijo de gasto emocional; ahí se ordena buena parte del presupuesto.',
+        'En Chile el problema no es solo ahorrar, es que el costo de vida cambia más rápido que el sueldo.',
+        'Buen tema, pero conviene separar estrategia personal de apuesta de mercado.',
+        'Si esto se vuelve foro fuerte, ojalá la gente suba ejemplos reales y no solo frases de gurú financiero.'
+      ],
+      marketplace:[
+        'Para “'+hint+'” yo pediría tres mínimos: precio claro, comuna y fotos reales.',
+        'Sin reputación visible, una feria online se llena de spam rapidísimo.',
+        'Las preguntas públicas ayudan mucho, porque el próximo comprador no parte desde cero.',
+        'Faltaría dejar estándar de publicación: estado del producto, entrega y forma de pago.',
+        'Si el vendedor responde dentro del hilo, se nota al tiro quién es serio y quién no.',
+        'El diseño puede estar bonito, pero la confianza la construyen reglas simples y moderación.',
+        'Buen enfoque para feria chilena: menos vitrina perfecta y más datos útiles para comprar sin miedo.',
+        'Yo sumaría reportes y reputación antes de que el volumen crezca demasiado.'
+      ],
+      memescl:[
+        'Este tipo de meme funciona porque parece chiste, pero tiene una verdad país escondida.',
+        'Me reí, pero también sentí que me estaban leyendo la cuenta corriente.',
+        'Esto lo mandas al grupo familiar y en cinco minutos alguien lo convierte en debate nacional.',
+        'La gracia está en que no explica demasiado; el chileno entiende el golpe al tiro.',
+        'Buen meme porque no depende de una moda gringa, se siente local de verdad.',
+        'Hay humor de supervivencia acá, del que sale después de hacer fila o revisar precios.',
+        'Simple, reconocible y con dolorcito chileno: así suelen pegar más.',
+        'Si RandomPlan arma comunidad de memes así, tiene material diario sin forzarla.'
+      ],
+      debate:[
+        'El punto de “'+hint+'” da para discutirlo mejor si separamos experiencia personal de datos.',
+        'Yo evitaría llevarlo al típico gallito ideológico; hay una pregunta concreta debajo.',
+        'Acá aparece de nuevo el centralismo, aunque el tema no parta explícitamente por regiones.',
+        'Me interesa más leer propuestas aplicables que la pelea automática de siempre.',
+        'Buen debate si la gente cuenta casos propios y no solo repite consignas.',
+        'Hay que mirar efectos reales, no solo si la idea suena bonita en abstracto.',
+        'La conversación puede crecer si cada comentario agrega un ángulo distinto y no solo aplausos.',
+        'Esto necesita matices; Chile suele discutir estos temas en blanco y negro.'
+      ],
+      tecnologia:[
+        'En “'+hint+'” lo importante es que la función resuelva algo real, no solo que se vea moderna.',
+        'Si carga rápido en celular, ya parte con ventaja para el usuario chileno promedio.',
+        'La identidad local no debería ser solo estética; tiene que sentirse en lenguaje, ritmo y moderación.',
+        'Menos features al inicio y más loop de uso diario: ahí se prueba si hay comunidad.',
+        'La demo puede verse potente, pero la retención se gana con conversaciones vivas.',
+        'Producto chileno no es copiar Reddit y cambiar colores; es entender cómo conversa la gente acá.',
+        'Yo priorizaría estabilidad, comentarios y búsqueda antes que seguir sumando módulos.',
+        'La parte difícil no es abrir el post, es que el usuario quiera volver mañana.'
+      ],
+      chile:[
+        'Con “'+hint+'” se nota que la experiencia cambia mucho según región, no todo se vive desde Santiago.',
+        'Buen tema para que la gente cuente casos propios en vez de responder con pura teoría.',
+        'Acá hay conversación larga si se mantiene el contexto chileno y no se va a pelea chica.',
+        'Me gusta porque es concreto; uno puede opinar desde experiencia y no solo desde ideología.',
+        'La clave es que cada comentario agregue algo distinto, no cinco versiones de la misma frase.',
+        'Esto en otra red se llenaría de ruido; acá podría ordenarse mejor si el hilo queda limpio.',
+        'Hay un ángulo cotidiano bien chileno que hace que el tema sea más cercano.',
+        'Si aparece gente de regiones, el hilo va a quedar mucho más interesante.'
+      ]
+    };
+    if(news)return banks.noticias;
+    return banks[sub]||banks.chile;
+  }
+  function badComment(txt){
+    txt=String(txt||'').trim();
+    return !txt||/^(si|sí|no|ok|jaja|jajaja|lol|xd|xddd|wtf|bruh|literal|facts|sipo|no po|exacto|eso|tal cual|uff|uf|ya|bueno)$/i.test(txt)||/predicci|marcador exacto|va a ganar|ganara|ganará|colocolo vs la u|colo colo vs la u|este fin de semana.*jugar/i.test(txt);
+  }
+  function firstKey(txt){return cleanKey(txt).split(/\s+/).slice(0,3).join(' ');}
+  function rowFrom(c,p,i,forceBot){
+    c=c||{}; var bot=(c.bot&&c.bot.name)?c.bot:null; var name=String(c.username||c.name||(bot&&bot.name)||'').trim();
+    if(forceBot||!name){bot=bot||pickBot(p,i,{}); name=bot.name;}
+    var txt=String(c.txt||c.texto||c.body||'').trim();
+    if(forceBot&&badComment(txt)){var bank=commentBank(p);txt=bank[hash((p&&p.id)+'|'+i+'|text')%bank.length];}
+    if(!bot)bot={name:name||'usuario_cl',ciudad:c.ciudad||c.city||'Chile',av:c.av||'👤'};
+    var v=parseInt(c.v!=null?c.v:(c.votos!=null?c.votos:c.votes),10); if(isNaN(v))v=Math.max(1,hash((p&&p.id)+'|vote|'+i)%14);
+    return {bot:bot,username:name||bot.name,ciudad:c.ciudad||bot.ciudad||'Chile',txt:txt,texto:txt,v:v,votos:v,t:c.t||c.tiempo||c.time||(['1min','5min','11min','23min','38min','1h','2h'][i%7]),tiempo:c.t||c.tiempo||c.time||(['1min','5min','11min','23min','38min','1h','2h'][i%7]),_rpUser:!!(c._rpUser||c.isUser||c.realComId||c.userId||c.user_id),isUser:!!(c._rpUser||c.isUser),realComId:c.realComId||c.id,userId:c.userId||c.user_id};
+  }
+  function captureUsers(p){
+    var all=[];
+    ['_rpV12UserComments','_rpV11UserComments','_rpV10UserComments'].forEach(function(k){if(Array.isArray(p&&p[k]))all=all.concat(p[k]);});
+    (Array.isArray(p&&p.cd)?p.cd:[]).forEach(function(c){if(c&&(c._rpUser||c.isUser||c.realComId||c.userId||c.user_id))all.push(c);});
+    var seen={}; all=all.map(function(c,i){return rowFrom(c,p,i,false);}).filter(function(c){var k=cleanKey((c.username||'')+'|'+(c.txt||'')); if(!cleanKey(c.txt)||seen[k])return false; seen[k]=1; return true;});
+    if(p){p._rpV12UserComments=all;p._rpV11UserComments=all.slice();p._rpV10UserComments=all.slice();}
+    return all;
+  }
+  function makeSeed(p){
+    if(!p)return [];
+    var users=captureUsers(p);
+    var target=targetCount(p), bank=commentBank(p), usedText={}, usedBot={}, usedStart={}, out=[];
+    function add(row,idx){
+      row=rowFrom(row,p,idx,true);
+      var tk=cleanKey(row.txt), sk=firstKey(row.txt), bk=cleanKey((row.bot&&row.bot.name)||row.username);
+      if(!tk||usedText[tk]||usedBot[bk]||usedStart[sk])return false;
+      usedText[tk]=1; usedBot[bk]=1; usedStart[sk]=1; out.push(row); return true;
+    }
+    // No confiamos ciegamente en semillas antiguas: solo rescatamos las que ya son buenas y distintas.
+    (Array.isArray(p._rpV12BotComments)?p._rpV12BotComments:[]).forEach(function(c,i){if(out.length<target)add(c,i);});
+    (Array.isArray(p.cd)?p.cd:[]).forEach(function(c,i){if(out.length<target&&!(c&&(c._rpUser||c.isUser||c.realComId||c.userId||c.user_id))&&!badComment(c.txt||c.texto))add(c,i+20);});
+    var guard=0;
+    while(out.length<target&&guard<120){
+      var idx=guard+out.length+7;
+      var txt=bank[hash((p&&p.id)+'|'+(p&&p.title)+'|v12-bank|'+idx)%bank.length];
+      var bot=pickBot(p,idx,usedBot);
+      add({bot:bot,username:bot.name,ciudad:bot.ciudad||'Chile',txt:txt,texto:txt,v:Math.max(1,hash((p&&p.id)+'|v12-v|'+idx)%14),votos:Math.max(1,hash((p&&p.id)+'|v12-v|'+idx)%14),t:['1min','5min','11min','23min','38min','1h','2h'][out.length%7]},idx);
+      guard++;
+    }
+    // Si aún falta, relajamos solo el comienzo pero nunca el texto completo ni el bot.
+    guard=0;
+    while(out.length<target&&guard<80){
+      var idx2=guard+77, bot2=pickBot(p,idx2,usedBot), txt2=bank[(idx2+hash(p.id))%bank.length];
+      var row=rowFrom({bot:bot2,txt:txt2,v:Math.max(1,hash('relax|'+p.id+'|'+idx2)%14),t:['1min','5min','11min','23min','38min','1h','2h'][out.length%7]},p,idx2,true);
+      var tk2=cleanKey(row.txt), bk2=cleanKey((row.bot&&row.bot.name)||row.username);
+      if(tk2&&!usedText[tk2]&&!usedBot[bk2]){usedText[tk2]=1;usedBot[bk2]=1;out.push(row);}
+      guard++;
+    }
+    p._rpV12BotComments=out.slice(0,target);
+    p._rpV11BotComments=p._rpV12BotComments.slice();
+    p._rpV10BotComments=p._rpV12BotComments.slice();
+    p.cd=p._rpV12BotComments.slice();
+    p.coms=p.cd.length+users.length;
+    return p.cd;
+  }
+  function sortRows(rows,sort){
+    rows=(rows||[]).slice(); var seen={};
+    rows=rows.filter(function(c){var k=cleanKey(((c.bot&&c.bot.name)||c.username||'')+'|'+(c.txt||c.texto||'')); if(!cleanKey(c.txt||c.texto)||seen[k])return false; seen[k]=1; return true;});
+    if(sort==='new')return rows.sort(function(a,b){return (a._rpUser?0:1)-(b._rpUser?0:1);});
+    if(sort==='old')return rows.reverse();
+    return rows.sort(function(a,b){return (parseInt(b.v||b.votos||0,10)||0)-(parseInt(a.v||a.votos||0,10)||0);});
+  }
+  async function fetchRealRows(p,sort){
+    if(!p||!p.realId||!window.db)return [];
+    try{
+      var q=window.db.from('comentarios').select('*, perfiles(username,ciudad)').eq('post_id',p.realId).limit(100);
+      if(sort==='new')q=q.order('created_at',{ascending:false});else if(sort==='old')q=q.order('created_at',{ascending:true});else q=q.order('votos',{ascending:false});
+      var r=await q; if(r&&r.error)return [];
+      return (r.data||[]).map(function(c,i){var u=c.perfiles||{};return rowFrom({username:u.username||'anon',ciudad:u.ciudad||'Chile',texto:c.texto||'',votos:c.votos||0,tiempo:'ahora',realComId:c.id,userId:c.user_id,_rpUser:true},p,i,false);});
+    }catch(e){return [];}
+  }
+  async function displayRows(p,sort){
+    if(isBotPost(p))return sortRows(makeSeed(p).concat(captureUsers(p)),sort||'top');
+    var rows=await fetchRealRows(p,sort||'top');
+    if(rows.length)return sortRows(rows,sort||'top');
+    if(Array.isArray(p&&p.cd)&&p.cd.length)return sortRows(p.cd.map(function(c,i){return rowFrom(c,p,i,false);}),sort||'top');
+    return [];
+  }
+  function linkMedia(txt){
+    var raw=String(txt||''), pieces=[], last=0, re=/\[(gif|img):(https?:\/\/[^\]\s]+)\]/ig, m;
+    while((m=re.exec(raw))){pieces.push(esc(raw.slice(last,m.index)));pieces.push('<img src="'+attr(m[2])+'" class="inserted-gif" loading="lazy" alt="GIF">');last=m.index+m[0].length;}
+    pieces.push(esc(raw.slice(last)));
+    return pieces.join('').replace(/(https?:\/\/[^\s<]+)/g,function(u){return '<a href="'+attr(u)+'" target="_blank" rel="noopener" class="inline-link">'+esc(u)+'</a>';});
+  }
+  function avatar(name,size){return (typeof window.makeAvatar==='function')?window.makeAvatar(name,size):'<span class="u-avatar">'+esc(String(name||'u').slice(0,1).toUpperCase())+'</span>';}
+  function renderInlineComment(c,i,p){c=rowFrom(c,p,i,false);var name=(c.bot&&c.bot.name)||c.username||'anon';var city=(c.bot&&c.bot.ciudad)||c.ciudad||'Chile';return '<div class="comment rpv12-comment"><div class="cava">'+avatar(name)+'</div><div class="ccont"><div class="ccmeta"><span class="u">u/'+esc(name)+'</span> · <span class="ci">'+esc(city)+'</span> · '+esc(c.t||c.tiempo||'ahora')+'</div><div class="cctext">'+linkMedia(c.txt||c.texto||'')+'</div><div class="ccacts"><button class="ccact ccvote-up" data-votes="'+attr(c.v||c.votos||0)+'" onclick="voteComment(this,1)">▲ '+esc(c.v||c.votos||0)+'</button><button class="ccact ccvote-down" onclick="voteComment(this,-1)">▼</button></div></div></div>';}
+  function renderPVComment(c,i,p){c=rowFrom(c,p,i,false);var name=(c.bot&&c.bot.name)||c.username||'anon';return '<div class="pv-comment rpv12-pv-comment"><div class="pv-comment-v"><button onclick="pvVote(this,1)">▲</button><strong>'+esc(c.v||c.votos||0)+'</strong><button onclick="pvVote(this,-1)">▼</button></div><div><div class="pv-comment-meta"><span class="u">u/'+esc(name)+'</span> · '+esc(c.t||c.tiempo||'ahora')+'</div><div class="pv-comment-text">'+linkMedia(c.txt||c.texto||'')+'</div></div></div>';}
+
+  // MEDIA V12: intercepta antes que handlers viejos en document capture.
+  var activeInputId=null;
+  var EMOJIS='😂 🤣 🔥 💀 😭 🤯 👀 😤 🫡 🤔 💯 🎯 🤙 👊 😎 🥲 😬 🤦 🙄 👏 🫠 😅 🤡 💪 🫶 ❤️ 🖤 💜 💚 ⚡ 🌊 🏔 🐍 🦅 💻 📱 🎮 🏆 💰 📈 📉 🔑 ⚠️ ❌ ✅ 🚀 🌙 ☀️ 🌧 ❄️ 🍺 🍕 🌮 ☕ 🍿 🧠 💬 🇨🇱'.split(' ');
+  var GIFS=[
+    ['risa jajaja meme laugh chile','https://media.giphy.com/media/3oEjHI8WJv4x6UPDB6/giphy.gif'],
+    ['espera paciencia waiting','https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif'],
+    ['sorpresa wow mind blown','https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif'],
+    ['fuego hype fire','https://media.giphy.com/media/5VKbvrjxpVJCM/giphy.gif'],
+    ['facepalm fail error','https://media.giphy.com/media/3o7TKr3nzbh5WgCFxe/giphy.gif'],
+    ['ok bien si approve','https://media.giphy.com/media/GCvktC0KFy9l6/giphy.gif'],
+    ['popcorn drama mirando','https://media.giphy.com/media/tyqcJoNjNv0Fq/giphy.gif'],
+    ['gato cat meme','https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif'],
+    ['money plata finanzas','https://media.giphy.com/media/LCdPNT81vlv3y/giphy.gif'],
+    ['tech codigo computador','https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif'],
+    ['aplauso clap bravo','https://media.giphy.com/media/3o6Zt481isNVuQI1l6/giphy.gif'],
+    ['confundido que confused','https://media.giphy.com/media/3o7btPCcdNniyf0ArS/giphy.gif'],
+    ['baile fiesta dance','https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif'],
+    ['no nope rechazo','https://media.giphy.com/media/ToMjGpKniGqRNLGBrhu/giphy.gif'],
+    ['chill tranquilo','https://media.giphy.com/media/3o7aD2saalBwwftBIY/giphy.gif']
+  ].map(function(x){return {tags:x[0],url:x[1]};});
+  function mediaCss(){
+    if(byId('rpv12-style'))return;
+    var st=document.createElement('style'); st.id='rpv12-style';
+    st.textContent='.rpv12-picker{display:none;position:fixed;z-index:2147483647;background:#141c25;border:1px solid #2a3f55;border-radius:7px;padding:.55rem;box-shadow:0 12px 38px rgba(0,0,0,.95)}.rpv12-emoji{width:320px;max-width:calc(100vw - 12px);flex-wrap:wrap;gap:.12rem;max-height:235px;overflow-y:auto}.rpv12-emoji button{background:transparent;border:none;font-size:1.2rem;line-height:1.1;cursor:pointer;padding:.22rem .27rem;border-radius:3px}.rpv12-emoji button:hover{background:#1c2733}.rpv12-gif{width:360px;max-width:calc(100vw - 12px)}.rpv12-gif input{width:100%;background:#0d1117;border:1px solid #2a3f55;border-radius:3px;padding:.45rem .62rem;font-family:monospace;font-size:.75rem;color:#e6edf3;outline:none;margin-bottom:.45rem;box-sizing:border-box}.rpv12-gif-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.32rem;max-height:260px;overflow-y:auto}.rpv12-gif-grid img{width:100%;height:78px;object-fit:cover;border:1px solid transparent;border-radius:3px;cursor:pointer;background:#080b0f}.rpv12-gif-grid img:hover{border-color:#00ff88}.comments-section .rpv12-gif-trigger,.comments-section .rpv11-gif-trigger,.comments-section .rpv10-gif-trigger{display:none!important}.media-btn.rpv12-emoji-trigger,.media-btn.rpv12-gif-trigger{user-select:none}.inserted-gif{max-width:280px;border-radius:4px;margin-top:.4rem;display:block}';
+    document.head.appendChild(st);
+  }
+  function ensureEmoji(){mediaCss();var p=byId('rpv12-emoji-picker');if(!p){p=document.createElement('div');p.id='rpv12-emoji-picker';p.className='rpv12-picker rpv12-emoji';document.body.appendChild(p);}if(p.dataset.ready!=='1'){p.dataset.ready='1';p.innerHTML='';EMOJIS.forEach(function(e){var b=document.createElement('button');b.type='button';b.textContent=e;b.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();insertMedia(e);hideMedia();});p.appendChild(b);});}return p;}
+  function ensureGif(){mediaCss();var p=byId('rpv12-gif-picker');if(!p){p=document.createElement('div');p.id='rpv12-gif-picker';p.className='rpv12-picker rpv12-gif';p.innerHTML='<input id="rpv12-gif-search" placeholder="buscar GIF + Enter"><div id="rpv12-gif-grid" class="rpv12-gif-grid"></div>';document.body.appendChild(p);}var s=byId('rpv12-gif-search');if(s&&s.dataset.bound!=='1'){s.dataset.bound='1';s.addEventListener('keydown',function(ev){if(ev.key==='Enter'){ev.preventDefault();drawGifs(s.value||'meme chile');}});s.addEventListener('input',function(){clearTimeout(s._t);s._t=setTimeout(function(){drawGifs(s.value||'meme chile');},200);});}return p;}
+  function hideMedia(){['rpv12-emoji-picker','rpv12-gif-picker','rpv11-emoji-picker','rpv11-gif-picker','global-emoji-picker','global-gif-picker'].forEach(function(id){var el=byId(id);if(el)el.style.display='none';});}
+  function place(el,anchor){var r=anchor&&anchor.getBoundingClientRect?anchor.getBoundingClientRect():null;var w=el.className.indexOf('gif')!==-1?360:320;if(r){el.style.top=Math.max(8,Math.min(window.innerHeight-100,r.bottom+8))+'px';el.style.left=Math.max(8,Math.min(r.left,window.innerWidth-w-10))+'px';}else{el.style.top='96px';el.style.left='12px';}}
+  function resolveInput(btnOrId){
+    var id=typeof btnOrId==='string'?btnOrId:null;
+    var b=typeof btnOrId==='object'?btnOrId:null;
+    if(b&&b.dataset){id=b.dataset.rpv12Input||b.dataset.rpv11Input||b.dataset.rpv10Input||b.dataset.inp||b.dataset.input||null;}
+    if(!id&&b){var wrap=b.closest&&b.closest('.pv-comment-box,.com-write,.comment-box,.media-bar');var inp=wrap&&wrap.querySelector&&wrap.querySelector('input,textarea');if(inp)id=inp.id;}
+    if(id&&byId(id)){activeInputId=id;return byId(id);} return activeInputId?byId(activeInputId):null;
+  }
+  function insertMedia(txt){var inp=activeInputId?byId(activeInputId):null;if(!inp)return;var pos=typeof inp.selectionStart==='number'?inp.selectionStart:inp.value.length;inp.value=inp.value.slice(0,pos)+txt+inp.value.slice(pos);try{inp.selectionStart=inp.selectionEnd=pos+String(txt).length;}catch(e){}inp.focus();try{inp.dispatchEvent(new Event('input',{bubbles:true}));}catch(e){}}
+  function drawGifs(q){var grid=byId('rpv12-gif-grid');if(!grid)return;q=cleanKey(q||'meme chile');var words=q.split(/\s+/).filter(Boolean);var list=GIFS.filter(function(g){return !words.length||q==='meme chile'||words.some(function(w){return g.tags.indexOf(w)!==-1;});});if(!list.length)list=GIFS.slice();grid.innerHTML='';list.slice(0,18).forEach(function(g){var im=document.createElement('img');im.src=g.url;im.loading='lazy';im.alt='GIF';im.onclick=function(ev){ev.preventDefault();ev.stopPropagation();insertMedia((resolveInput(activeInputId)&&byId(activeInputId).value?' ':'')+'[gif:'+g.url+']');hideMedia();};grid.appendChild(im);});}
+  function showEmojiFor(inputId,anchor){resolveInput(inputId||anchor);var ep=ensureEmoji();hideMedia();place(ep,anchor||byId(activeInputId));ep.style.display='flex';}
+  function showGifFor(inputId,anchor){resolveInput(inputId||anchor);var gp=ensureGif();hideMedia();place(gp,anchor||byId(activeInputId));gp.style.display='block';drawGifs((byId('rpv12-gif-search')&&byId('rpv12-gif-search').value)||'meme chile');}
+  window.RPV12_showEmoji=showEmojiFor; window.RPV12_showGif=showGifFor;
+  window.showEmojiPicker=function(inputId,anchor){showEmojiFor(inputId,anchor);};
+  window.showGifPicker=function(inputId,anchor){showGifFor(inputId,anchor);};
+  window.showEmoji=function(btn){showEmojiFor(resolveInput(btn),btn);};
+  window.showGif=function(btn){showGifFor(resolveInput(btn),btn);};
+  function inlineBar(inputId){return '<div class="media-bar rpv12-inline-media"><button class="media-btn rpv12-emoji-trigger" type="button" data-rpv12-input="'+attr(inputId)+'">😊 emoji</button></div>';}
+  function threadBar(inputId){return '<div class="media-bar rpv12-thread-media"><button class="media-btn rpv12-emoji-trigger" type="button" data-rpv12-input="'+attr(inputId)+'">😊 emoji</button><button class="media-btn rpv12-gif-trigger" type="button" data-rpv12-input="'+attr(inputId)+'">GIF</button></div>';}
+  window.addEventListener('click',function(ev){
+    var t=ev.target; if(!t||!t.closest)return;
+    if(t.closest('#rpv12-emoji-picker')||t.closest('#rpv12-gif-picker'))return;
+    var b=t.closest('.rpv12-emoji-trigger,.rpv12-gif-trigger,.rpv11-emoji-trigger,.rpv11-gif-trigger,.rpv10-emoji-trigger,.rpv10-gif-trigger,.media-btn');
+    if(b){var txt=String(b.textContent||'').trim().toLowerCase();var isGif=b.classList.contains('rpv12-gif-trigger')||b.classList.contains('rpv11-gif-trigger')||b.classList.contains('rpv10-gif-trigger')||txt==='gif'||txt.indexOf('gif')!==-1;var isEmoji=b.classList.contains('rpv12-emoji-trigger')||b.classList.contains('rpv11-emoji-trigger')||b.classList.contains('rpv10-emoji-trigger')||txt.indexOf('emoji')!==-1||txt.indexOf('😊')!==-1;if(isGif||isEmoji){ev.preventDefault();ev.stopPropagation();if(ev.stopImmediatePropagation)ev.stopImmediatePropagation();resolveInput(b);if(isGif){if(b.closest('.comments-section')){showEmojiFor(activeInputId,b);return;}showGifFor(activeInputId,b);}else showEmojiFor(activeInputId,b);return;}}
+    if(!t.closest('.rpv12-picker'))hideMedia();
+  },true);
+
+  async function publishLocal(p,txt){var prof=window.currentPerfil||{};var name=prof.username||(window.currentUser&&window.currentUser.email?String(window.currentUser.email).split('@')[0]:'tu_usuario');var city=prof.ciudad||'Chile';var row={bot:{name:name,ciudad:city,av:'👤'},username:name,ciudad:city,txt:txt,texto:txt,v:0,votos:0,t:'ahora',tiempo:'ahora',_rpUser:true,isUser:true};p._rpV12UserComments=p._rpV12UserComments||[];p._rpV12UserComments.unshift(row);p._rpV11UserComments=p._rpV12UserComments.slice();p._rpV10UserComments=p._rpV12UserComments.slice();p.coms=makeSeed(p).length+p._rpV12UserComments.length;return row;}
+  function mustLogin(){if(!window.currentUser){if(typeof window.showModal==='function')window.showModal('login');return true;}return false;}
+
+  window.generateBotComments=function(count,existingCd){var p=window.__rpV12RenderContext||window.__rpCommentContextPost||null;if(p&&isBotPost(p))return makeSeed(p).concat(captureUsers(p));var tmp={id:'tmp',sub:'chile',title:'tema chileno',cd:existingCd||[]};return makeSeed(tmp);};
+  window.renderPostViewComments=async function(postId,sort){var p=getPost(postId),list=byId('pv-comments-list');if(!p||!list)return;list.innerHTML='<div class="pv-empty">// cargando comentarios...</div>';var rows=await displayRows(p,sort||'top');list.innerHTML=rows.length?rows.map(function(c,i){return renderPVComment(c,i,p);}).join(''):'<div class="pv-empty">// todavía no hay comentarios</div>';};
+  window.renderComSection=function(postId,sort){var cs=byId('cs-'+postId);if(!cs)return;Array.prototype.slice.call(cs.children).forEach(function(ch){if(ch.classList&&(ch.classList.contains('comment')||ch.classList.contains('com-section-inner')||ch.classList.contains('rpv9-com-section-inner')||ch.classList.contains('rpv10-com-section-inner')||ch.classList.contains('rpv11-com-section-inner')||ch.classList.contains('rpv12-com-section-inner')))ch.remove();});var oldBox=cs.querySelector('.comment-box');if(oldBox)oldBox.style.display='none';var inputId='cinp-'+postId;var inner=document.createElement('div');inner.className='rpv12-com-section-inner';inner.innerHTML='<div class="com-write" id="cwrite-'+postId+'"><input type="text" id="'+inputId+'" placeholder="escribe un comentario..." onkeydown="if(event.key===\'Enter\')sendCommentInline('+postId+')" style="flex:1;background:var(--bg0);border:1px solid var(--border);border-radius:3px;padding:.38rem .6rem;font-family:var(--mono);font-size:.78rem;color:var(--text1);outline:none"><button class="com-send-btn" onclick="sendCommentInline('+postId+')">SEND</button></div>'+inlineBar(inputId)+'<div class="com-sort-bar"><span class="com-sort-lbl">ordenar:</span><button class="com-sort-btn '+((sort||'top')==='top'?'on':'')+'" onclick="changeSort('+postId+',this,\'top\')">destacados</button><button class="com-sort-btn '+((sort||'top')==='new'?'on':'')+'" onclick="changeSort('+postId+',this,\'new\')">recientes</button><button class="com-sort-btn '+((sort||'top')==='old'?'on':'')+'" onclick="changeSort('+postId+',this,\'old\')">antiguos</button></div><div class="com-list" id="clist-'+postId+'"></div><div class="com-load-more" id="cmore-'+postId+'"></div>';cs.insertBefore(inner,cs.firstChild);window.loadComments(postId,sort||'top',0);};
+  window.loadComments=async function(postId,sort,offset){var p=getPost(postId),list=byId('clist-'+postId),more=byId('cmore-'+postId);if(!p||!list)return;var rows=await displayRows(p,sort||'top');list.innerHTML=rows.length?rows.map(function(c,i){return renderInlineComment(c,i,p);}).join(''):'<div class="pv-empty" style="color:var(--text3);font-size:.75rem;padding:.4rem 0">// todavía no hay comentarios</div>';if(more)more.innerHTML='';};
+  window.toggleComs=function(id){window.openComs=window.openComs||{};window.openComs[id]=!window.openComs[id];var el=byId('cs-'+id);if(!el)return;el.classList.toggle('open',window.openComs[id]);var p=getPost(id);if(p&&isBotPost(p))makeSeed(p);var btn=document.querySelector('#post-'+id+' .comments-toggle-btn');if(btn)btn.textContent=window.openComs[id]?'// cerrar comentarios':'// '+((p&&p.coms)||0)+' comentarios';if(window.openComs[id])window.renderComSection(id,'top');};
+  window.changeSort=function(postId,btn,sort){document.querySelectorAll('#cs-'+postId+' .com-sort-btn').forEach(function(b){b.classList.remove('on');});if(btn)btn.classList.add('on');window.loadComments(postId,sort||'top',0);};
+  window.sendCommentInline=async function(postId){var p=getPost(postId),inp=byId('cinp-'+postId);if(!p||!inp)return;var texto=String(inp.value||'').trim();if(!texto)return;if(mustLogin())return;if(window.currentPerfil==null&&typeof window.loadPerfil==='function'){try{await window.loadPerfil();}catch(e){}}if(isBotPost(p)){await publishLocal(p,texto);inp.value='';window.loadComments(postId,'new',0);var btn=document.querySelector('#post-'+postId+' .comments-toggle-btn');if(btn)btn.textContent='// '+p.coms+' comentarios';if(typeof window.toast==='function')window.toast('comentario publicado');return;}try{var uid=window.currentUser&&window.currentUser.id;var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||p.realId||postId;var r=await window.db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});if(r.error){if(typeof window.toast==='function')window.toast('error: '+r.error.message);return;}inp.value='';window.loadComments(postId,'new',0);if(typeof window.toast==='function')window.toast('comentario publicado');}catch(e){if(typeof window.toast==='function')window.toast('comentarios no disponibles');}};
+  window.sendPostViewComment=async function(postId){var p=getPost(postId),inp=byId('pv-comment-input');if(!p||!inp)return;var texto=String(inp.value||'').trim();if(!texto)return;if(mustLogin())return;if(window.currentPerfil==null&&typeof window.loadPerfil==='function'){try{await window.loadPerfil();}catch(e){}}if(isBotPost(p)){await publishLocal(p,texto);inp.value='';window.renderPostViewComments(postId,'new');var btn=document.querySelector('#post-'+postId+' .comments-toggle-btn');if(btn)btn.textContent='// '+p.coms+' comentarios';if(typeof window.toast==='function')window.toast('comentario publicado');return;}try{var uid=window.currentUser&&window.currentUser.id;var realId=(window.realPostIdMap&&window.realPostIdMap[postId])||p.realId||postId;var r=await window.db.from('comentarios').insert({texto:texto,user_id:uid,post_id:realId,votos:0});if(r.error){if(typeof window.toast==='function')window.toast('error: '+r.error.message);return;}inp.value='';window.renderPostViewComments(postId,'new');if(typeof window.toast==='function')window.toast('comentario publicado');}catch(e){if(typeof window.toast==='function')window.toast('comentarios no disponibles');}};
+
+  // Render del hilo interno con barra media nueva.
+  window.openPostView=function(id){
+    var p=getPost(id);if(!p){if(typeof window.toast==='function')window.toast('post no encontrado');return;}if(isBotPost(p))makeSeed(p);
+    var wrap=byId('post-view-wrap'),cont=byId('post-view-content');if(!wrap||!cont)return;
+    var refUrl=(typeof window.getPostReference==='function'?window.getPostReference(p):(p.url||p.link||''));
+    var bodyText=p.prev||p.contenido||'';var voteTotal=(p.votos||0)+((window.votes&&window.votes[p.id])||0);var source='';
+    if(refUrl){var safeUrl=String(refUrl).replace(/\\/g,'\\\\').replace(/'/g,"\\'");source='<div class="pv-source-box"><div class="pv-source-copy">Referencia externa detectada:<br><strong>'+esc(typeof window.getDomain==='function'?window.getDomain(refUrl):refUrl)+'</strong></div><button class="pv-source-btn" onclick="openPostReference(\''+attr(safeUrl)+'\')">leer fuente original ↗</button></div>';}
+    else if(p.isNews||userKey(p)==='noticias_cl'){source='<div class="pv-source-box"><div class="pv-source-copy"><strong>sin fuente externa disponible</strong><br>Este post de noticias_cl no trae URL válida.</div></div>';}
+    var inputId='pv-comment-input';
+    cont.innerHTML='<div class="pv-meta"><span class="csub">'+esc((p.ic||'')+' '+(p.sub||''))+'</span><span class="dot">::</span><span>'+avatar(getUserName(p)||'usuario','sm')+' u/'+esc(getUserName(p)||'usuario')+'</span><span class="dot">::</span><span>'+esc(p.t||'ahora')+'</span><span class="flair '+esc(p.fc||'g')+'">'+esc(p.flair||'post')+'</span></div><h1 class="pv-title">'+esc(p.title||'sin título')+'</h1><div class="pv-excerpt">'+(bodyText?linkMedia(bodyText):'<span style="color:var(--text3)">// sin bajada disponible</span>')+'</div>'+source+'<div class="pv-actions"><div class="pv-vote"><button class="vbtn up" onclick="vote('+p.id+',1);openPostView('+p.id+')">▲</button><strong>'+esc(typeof window.fmtV==='function'?window.fmtV(voteTotal):voteTotal)+'</strong><button class="vbtn down" onclick="vote('+p.id+',-1);openPostView('+p.id+')">▼</button></div><button class="cact" onclick="toast(&quot;enlace del hilo copiado&quot;)">// compartir hilo</button></div><div class="pv-comments-head"><div class="pv-comments-title">comentarios</div><div class="pv-sort"><button class="on" onclick="setPostViewSort(this,'+p.id+',\'top\')">destacados</button><button onclick="setPostViewSort(this,'+p.id+',\'new\')">recientes</button><button onclick="setPostViewSort(this,'+p.id+',\'old\')">antiguos</button></div></div><div class="pv-comment-box"><div class="pv-comment-input-row"><input id="'+inputId+'" placeholder="comentar en el hilo..." onkeydown="if(event.key===\'Enter\')sendPostViewComment('+p.id+')"><button class="pv-comment-send" onclick="sendPostViewComment('+p.id+')">SEND</button></div>'+threadBar(inputId)+'</div><div class="pv-comments-list" id="pv-comments-list"></div>';
+    wrap.classList.add('on');document.body.classList.add('post-view-lock');window.renderPostViewComments(p.id,'top');
+  };
+  window.setPostViewSort=function(btn,postId,sort){var box=btn&&btn.parentElement;if(box)box.querySelectorAll('button').forEach(function(b){b.classList.remove('on');});if(btn)btn.classList.add('on');window.renderPostViewComments(postId,sort||'top');};
+  window.openPostThreadWindow=function(id){window.openPostView(id);};
+  window.openNewsThreadWindow=function(id){window.openPostView(id);};
+
+  // Feed sin duplicados y sin prepend de loadRealPosts.
+  var baseRenderPost=null;
+  function patchRenderPost(){
+    if(window.renderPost&&window.renderPost.__rpV12)return;
+    baseRenderPost=window.renderPost;
+    if(typeof baseRenderPost==='function'){
+      window.renderPost=function(p){if(p&&isBotPost(p))makeSeed(p);window.__rpV12RenderContext=p;window.__rpCommentContextPost=p;var html=baseRenderPost.call(this,p);window.__rpV12RenderContext=null;window.__rpCommentContextPost=null;return html;};
+      window.renderPost.__rpV12=true;
+    }
+  }
+  window.renderFeed=function(filter){
+    filter=normSub(filter); dedupePosts();
+    (window.POSTS||[]).forEach(function(p){if(p&&isBotPost(p))makeSeed(p);});
+    var list=filter?(window.POSTS||[]).filter(function(p){return normSub(p.sub)===filter;}):(window.POSTS||[]).slice();
+    if(!filter){var n=list.filter(function(p){return p.isNews;});var r=list.filter(function(p){return !p.isNews;});list=n.concat(r);}
+    var html='';
+    if(filter&&typeof window.renderCommunityHeader==='function')html+=window.renderCommunityHeader(filter,list.length);
+    html+=list.map(function(p){return typeof window.renderPost==='function'?window.renderPost(p):'';}).join('');
+    if(!list.length&&typeof window.renderCommunityEmpty==='function')html+=window.renderCommunityEmpty(filter);
+    var feed=byId('posts-feed'); if(feed)feed.innerHTML=html;
+    return html;
+  };
+  window.loadRealPosts=async function(filter){
+    if(!window.db||!window.db.from)return;
+    try{
+      var q=window.db.from('posts').select('*, perfiles(username,ciudad), comunidades(nombre,icono), comentarios(count)').order('created_at',{ascending:false}).limit(40);
+      var r=await q; if(!r||r.error||!r.data)return;
+      var converted=(r.data||[]).filter(function(p){return p&&p.perfiles&&p.comunidades;}).map(function(p){
+        var com=p.comunidades||{nombre:'chile',icono:'🇨🇱'}; var user=p.perfiles||{username:'anon',ciudad:'Chile'}; var fakeId=stableRealFakeId(p.id);
+        window.realPostIdMap=window.realPostIdMap||{}; window.realPostIdMap[fakeId]=p.id;
+        return {id:fakeId,realId:p.id,userId:p.user_id,sub:normSub(com.nombre)||com.nombre,ic:com.icono,user:{name:user.username,av:'👤',ciudad:user.ciudad||'Chile'},t:'ahora',flair:com.nombre,fc:'g',title:p.titulo,prev:p.contenido||null,contenido:p.contenido||null,url:p.url||p.link||p.source_url||p.reference_url||p.referencia||p.external_url||p.fuente_url||(typeof window.extractFirstUrl==='function'?window.extractFirstUrl(p.contenido):null),isNews:(cleanKey(user.username)==='noticias_cl'||cleanKey(user.username)==='noticia_cl'),votos:p.votos||0,coms:(p.comentarios&&p.comentarios[0]&&p.comentarios[0].count)||0,cd:[]};
+      });
+      if(!converted.length)return;
+      var seeds=(window.POSTS||[]).filter(function(p){return !p.realId;});
+      var existingReal=(window.POSTS||[]).filter(function(p){return p.realId&&!converted.some(function(c){return String(c.realId)===String(p.realId);});});
+      window.POSTS=converted.concat(existingReal,seeds); try{POSTS=window.POSTS;}catch(e){}
+      dedupePosts();
+      window.renderFeed((window._currentFilter&&window._currentFilter!=='inicio')?window._currentFilter:filter);
+    }catch(e){try{console.warn(V,'loadRealPosts',e);}catch(_){}}
+  };
+  window.filterFeed=function(sub,el){sub=normSub(sub);window._currentFilter=sub||null;document.querySelectorAll('.sf-item').forEach(function(i){i.classList.remove('on');});if(el)el.classList.add('on');else if(typeof window.setActiveCommunity==='function')window.setActiveCommunity(sub);window.renderFeed(sub);window.loadRealPosts(sub);try{history.replaceState(null,'',sub?'#p/'+sub:'#inicio');}catch(e){}};
+  window.openCommunityGroup=function(sub){sub=normSub(sub);window._currentFilter=sub||null;if(typeof window.setActiveCommunity==='function')window.setActiveCommunity(sub);window.renderFeed(sub);window.loadRealPosts(sub);try{history.replaceState(null,'',sub?'#p/'+sub:'#inicio');}catch(e){}var feed=document.querySelector('.feed');if(feed)feed.scrollIntoView({behavior:'smooth',block:'start'});};
+  window.filterFeedSub=function(sub){window.openCommunityGroup(sub);};
+
+  function cleanCommentDOM(){document.querySelectorAll('.comments-section').forEach(function(cs){Array.prototype.slice.call(cs.children).forEach(function(ch){if(ch.classList&&(ch.classList.contains('comment')||ch.classList.contains('com-section-inner')||ch.classList.contains('rpv9-com-section-inner')||ch.classList.contains('rpv10-com-section-inner')||ch.classList.contains('rpv11-com-section-inner')||ch.classList.contains('rpv12-com-section-inner')))ch.remove();});});}
+  function init(){mediaCss();ensureEmoji();ensureGif();hideMedia();patchRenderPost();dedupePosts();(window.POSTS||[]).forEach(function(p){if(p&&isBotPost(p))makeSeed(p);});cleanCommentDOM();try{window.renderFeed((window._currentFilter&&window._currentFilter!=='inicio')?window._currentFilter:null);}catch(e){try{console.warn(V,e);}catch(_){}}console.log(V,'feed único + comentarios finos + media activo');}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,0);
+  setTimeout(init,650); setTimeout(init,1700);
+})();
+</script>
+<!-- RP_FINAL_FIX_V12_END -->
+
 </body>
 </html>
