@@ -8291,5 +8291,122 @@ console.log('[RandomPlan CLEAN] loaded');
   console.log('[RandomPlan] news comments fix activo');
 })();
 </script>
+
+<script>
+(function(){
+  // Fix 1: Exponer linkify global como window.linkify
+  if(typeof linkify === 'function' && !window.linkify) {
+    window.linkify = linkify;
+  }
+
+  // Fix 2: Sincronizar contador de noticias cuando llegan comentarios delayed
+  // El scheduleNewsComments actualiza p.cd y p.coms pero no el botón DOM
+  var _origSchedule = window._scheduleNewsComments;
+  // Patch: wrap the push to p.cd to also update the counter button
+  function updateNewsCounter(postId, count) {
+    var btn = document.querySelector('#post-' + postId + ' .comments-toggle-btn');
+    if (btn && btn.textContent.indexOf('cerrar') === -1) {
+      btn.textContent = '// ' + count + ' comentarios';
+    }
+  }
+
+  // Re-patch scheduleNewsComments to sync counter properly
+  var NEWS_BANK_FIX = [
+    'bien que la fuente quede visible, así la discusión parte desde algo verificable',
+    'antes de pelear por el titular conviene leer la bajada y mirar de dónde viene la noticia',
+    'me gusta que esto quede como hilo, porque se puede comentar sin perder el contexto',
+    'si es tema nacional, faltan datos y contexto antes de sacar conclusiones fuertes',
+    'esto puede funcionar si se separa noticia real de opinión de usuarios',
+    'hay que leer el artículo completo antes de opinar, el titular no cuenta todo',
+    'importante verificar la fuente antes de compartir, hay mucha desinformación circulando',
+    'interesante, aunque faltaría más contexto para entender bien el tema',
+    'esto confirma lo que se venía viendo hace rato en el país',
+    'qué piensan de esto? parece relevante para lo que está pasando en Chile'
+  ];
+
+  function scheduleNewsCommentsFix(p) {
+    if (!p || !p.isNews || p._newsSchedFix) return;
+    p._newsSchedFix = true;
+    // Reset so no other system pre-seeds it
+    p.cd = [];
+    p.coms = 0;
+    updateNewsCounter(p.id, 0);
+
+    var num = 2 + Math.floor(Math.random() * 3);
+    for (var d = 0; d < num; d++) {
+      (function(pid, delay, idx) {
+        setTimeout(function() {
+          var post = (window.POSTS || []).find(function(x) { return x.id === pid; });
+          if (!post) return;
+          var bots = window.BOTS || [];
+          if (!bots.length) return;
+          var usedB = {}, usedT = {};
+          (post.cd || []).forEach(function(c) {
+            if (c.bot) usedB[c.bot.name] = 1;
+            if (c.txt) usedT[c.txt] = 1;
+          });
+          var avB = bots.filter(function(b) { return !usedB[b.name]; });
+          var bot = avB.length ? avB[Math.floor(Math.random() * avB.length)] : bots[Math.floor(Math.random() * bots.length)];
+          var avT = NEWS_BANK_FIX.filter(function(t) { return !usedT[t]; });
+          if (!avT.length) avT = NEWS_BANK_FIX;
+          var txt = avT[Math.floor(Math.random() * avT.length)];
+          post.cd = post.cd || [];
+          post.cd.push({ bot: bot, txt: txt, v: 1 + Math.floor(Math.random() * 5), t: idx === 0 ? '1min' : (idx * 2) + 'min' });
+          post.coms = post.cd.length;
+          // Update counter
+          updateNewsCounter(pid, post.coms);
+          // If inline section is open, show comment with fade
+          var clist = document.getElementById('clist-' + pid);
+          if (clist) {
+            var el = document.createElement('div');
+            var html = typeof renderCommentHTML === 'function'
+              ? renderCommentHTML('nf-' + Date.now(), bot.name, bot.ciudad || 'Chile', 'ahora', txt, post.cd[post.cd.length-1].v, false, null)
+              : '';
+            el.innerHTML = html;
+            var node = el.firstChild;
+            if (node) {
+              node.style.opacity = '0';
+              node.style.transition = 'opacity .7s';
+              clist.insertBefore(node, clist.firstChild);
+              setTimeout(function() { node.style.opacity = '1'; }, 60);
+            }
+          }
+        }, delay);
+      })(p.id, (d + 1) * 40000 + Math.random() * 20000, d + 1);
+    }
+  }
+
+  // Schedule on all current news posts
+  setTimeout(function() {
+    (window.POSTS || []).forEach(function(p) {
+      if (p && p.isNews && !p._newsSchedFix) scheduleNewsCommentsFix(p);
+    });
+  }, 800);
+
+  // Also wrap loadNews to schedule on new news posts
+  var _oLN = window.loadNews;
+  if (_oLN && !_oLN.__rpNewsFixWrapped) {
+    window.loadNews = async function() {
+      var r = await _oLN.apply(this, arguments);
+      setTimeout(function() {
+        (window.POSTS || []).forEach(function(p) {
+          if (p && p.isNews && !p._newsSchedFix) scheduleNewsCommentsFix(p);
+        });
+      }, 800);
+      return r;
+    };
+    window.loadNews.__rpNewsFixWrapped = true;
+    window.loadNews.__rpStickyWrapped = true;
+    window.loadNews.__rpV7Wrapped = true;
+  }
+
+  // Fix 3: Make sure window.linkify stays synced with global linkify
+  setTimeout(function() {
+    if (typeof linkify === 'function') window.linkify = linkify;
+  }, 100);
+
+  console.log('[RandomPlan] counter+gif fix activo');
+})();
+</script>
 </body>
 </html>
