@@ -8120,35 +8120,5 @@ console.log('[RandomPlan CLEAN] loaded');
 })();
 </script>
 <!-- RP_COMMENTS_ONLY_SAFE_V17_END -->
-
-<script>
-// RANDOMPLAN COMMENT FIX — getPost fallback + debug
-(function(){
-  var _orig = window.toggleComs;
-  window.toggleComs = function(id) {
-    // Ensure post exists in POSTS before toggling
-    var p = (window.POSTS||[]).find(function(x){ return String(x&&x.id)===String(id); });
-    if(!p) {
-      // Try by realId
-      var realId = window.realPostIdMap && window.realPostIdMap[id];
-      if(realId) p = (window.POSTS||[]).find(function(x){ return String(x&&x.realId)===String(realId); });
-    }
-    if(!p) {
-      console.warn('[RP] toggleComs: post not found for id='+id+'. POSTS count='+((window.POSTS||[]).length));
-      return;
-    }
-    return _orig.call(this, id);
-  };
-
-  var _origLoad = window.loadComments;
-  window.loadComments = async function(postId, sort, offset) {
-    var p = (window.POSTS||[]).find(function(x){ return String(x&&x.id)===String(postId); });
-    if(!p) console.warn('[RP] loadComments: post not found for id='+postId);
-    var list = document.getElementById('clist-'+postId);
-    if(!list) console.warn('[RP] loadComments: clist not found for id='+postId);
-    return _origLoad.call(this, postId, sort, offset);
-  };
-})();
-</script>
 </body>
 </html>
