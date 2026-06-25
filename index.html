@@ -8204,5 +8204,156 @@ console.log('[RandomPlan CLEAN] loaded');
 </script>
 <!-- RP_FINAL_FIX_V15_COMMUNITIES_NEWS_MEDIA_END -->
 
+<!-- RP_SURGICAL_COMMENTS_V16_SAFE_START -->
+<script>
+(function(){
+  'use strict';
+  var V='[RandomPlan V16 safe comments]';
+
+  function byId(id){return document.getElementById(id);}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function attr(s){return esc(s).replace(/`/g,'&#96;');}
+  function deaccent(s){try{return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'');}catch(e){return String(s||'');}}
+  function clean(s){return deaccent(String(s||'').toLowerCase()).replace(/https?:\/\/\S+/g,' ').replace(/^p\//,'').replace(/^r\//,'').replace(/^#/,'').replace(/[^a-z0-9ñ\s_\-]/g,' ').replace(/[_\-]+/g,' ').replace(/\s+/g,' ').trim();}
+  function hash(s){s=String(s||'');var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h+=(h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24);}return Math.abs(h>>>0);}
+  function userName(p){return String((p&&p.user&&p.user.name)||p&&p.username||p&&p.author||'').replace(/^u\//,'').trim();}
+  function normSub(s){s=clean(s).replace(/\s+/g,'');var m={inicio:null,home:null,todos:null,all:null,chile:'chile',cl:'chile',memes:'memescl',memescl:'memescl',finanza:'finanzas',finanzas:'finanzas',futbol:'futbol',football:'futbol',feria:'marketplace',market:'marketplace',marketplace:'marketplace',compraventa:'marketplace',debate:'debate',debates:'debate',noticias:'noticias_cl',noticiascl:'noticias_cl',noticias_cl:'noticias_cl',noticia_cl:'noticias_cl',contingencia:'noticias_cl',news:'noticias_cl',tecnologia:'tecnologia',tech:'tecnologia',desahogo:'desahogo',datos:'datos'};return Object.prototype.hasOwnProperty.call(m,s)?m[s]:(s||null);}
+  function subOf(p){var u=clean(userName(p)).replace(/\s+/g,'_');if(p&&(p.isNews||p.__rpV14News||p.__rpV15News||u==='noticias_cl'||u==='noticia_cl'||u==='noticiascl'))return 'noticias_cl';return normSub((p&&p.sub)||(p&&p.comunidad)||(p&&p.community)||(p&&p.flair))||'chile';}
+  function postKey(p){return p?(p.realId?'real:'+p.realId:'id:'+p.id):'id:unknown';}
+  function getPost(id){
+    var pools=[window.POSTS,window.__RPV15_REAL_POSTS,window.__RPV13_REAL_POSTS,window.__RPV15_NEWS_POSTS,window.__RPV14_NEWS_POSTS,window.__RPV13_BASE_POSTS,window.__RPV13_BASE_POSTS_BACKUP];
+    for(var a=0;a<pools.length;a++){var arr=pools[a]||[];for(var i=0;i<arr.length;i++){if(arr[i]&&String(arr[i].id)===String(id))return arr[i];}}
+    return null;
+  }
+  function isUserRow(c){return !!(c&&(c._rpUser||c.isUser||c.realComId||c.userId||c.user_id));}
+  function rowFrom(c,p,i,asUser){
+    c=c||{}; var bot=c.bot||null;
+    var name=String(c.username||c.name||(bot&&bot.name)||(asUser?'usuario':'usuario_cl')).trim();
+    var city=String(c.ciudad||c.city||(bot&&bot.ciudad)||'Chile');
+    var txt=String(c.txt||c.texto||c.body||'').trim();
+    var v=parseInt(c.v!=null?c.v:(c.votos!=null?c.votos:c.votes),10); if(isNaN(v))v=Math.max(1,hash((p&&p.id)+'|v16v|'+i)%14);
+    if(!bot)bot={name:name,ciudad:city,av:c.av||'👤'};
+    return {bot:bot,username:name,ciudad:city,txt:txt,texto:txt,v:v,votos:v,t:c.t||c.tiempo||c.time||(['1min','5min','11min','23min','38min','1h','2h'][i%7]),tiempo:c.t||c.tiempo||c.time||(['1min','5min','11min','23min','38min','1h','2h'][i%7]),_rpUser:!!asUser||isUserRow(c),isUser:!!asUser||isUserRow(c),realComId:c.realComId||c.id,userId:c.userId||c.user_id};
+  }
+  function localUserRows(p){
+    var all=[], keys=[postKey(p),String(p&&p.id||''),String(p&&p.realId||'')];
+    window.__RPV13_USER_COMMENTS=window.__RPV13_USER_COMMENTS||{};
+    keys.forEach(function(k){if(k&&Array.isArray(window.__RPV13_USER_COMMENTS[k]))all=all.concat(window.__RPV13_USER_COMMENTS[k]);});
+    ['_rpV16UserComments','_rpV15UserComments','_rpV13UserComments','_rpV12UserComments','_rpV11UserComments','_rpV10UserComments'].forEach(function(k){if(Array.isArray(p&&p[k]))all=all.concat(p[k]);});
+    (Array.isArray(p&&p.cd)?p.cd:[]).forEach(function(c){if(isUserRow(c))all.push(c);});
+    var seen={},out=[];
+    all.forEach(function(c,i){var r=rowFrom(c,p,i,true), key=clean((r.username||'')+' '+(r.txt||''));if(!clean(r.txt)||seen[key])return;seen[key]=1;out.push(r);});
+    if(p){p._rpV16UserComments=out.slice();p._rpV13UserComments=out.slice();p._rpV12UserComments=out.slice();}
+    return out;
+  }
+  function botPool(p){
+    var sub=subOf(p), wants={chile:['chile','debate'],noticias_cl:['chile','debate','finanzas'],finanzas:['finanzas','chile'],futbol:['futbol','chile'],memescl:['memescl','chile'],marketplace:['marketplace','finanzas','chile'],debate:['debate','chile'],tecnologia:['tecnologia','chile']}[sub]||[sub,'chile'];
+    var arr=(window.BOTS||[]).filter(function(b){var a=b&&b.arq&&window.BOT_ARQUETIPOS?window.BOT_ARQUETIPOS[b.arq]:null;return a&&a.intereses&&wants.some(function(w){return a.intereses.indexOf(w)!==-1;});});
+    return arr.length?arr:(window.BOTS||[]).slice();
+  }
+  function pickBot(p,i,used){var arr=botPool(p);if(!arr.length)return {name:'usuario_cl',ciudad:'Chile',av:'👤'};for(var k=0;k<arr.length;k++){var b=arr[(hash((p&&p.id)+'|v16bot|'+i+'|'+k)%arr.length)], key=clean(b&&b.name);if(!used[key]){used[key]=1;return b;}}return arr[hash((p&&p.id)+'|fallback|'+i)%arr.length];}
+  function titleHint(p){var t=String((p&&p.title)||'este tema').replace(/\s+/g,' ').trim();return t.length>64?t.slice(0,61).trim()+'...':t;}
+  function bank(p){
+    var h=titleHint(p), sub=subOf(p);
+    var banks={
+      noticias_cl:['Antes de cerrar opinión sobre “'+h+'”, miraría fuente y fecha exacta.','La noticia abre buen hilo si separamos dato confirmado de interpretación.','Me gusta que quede ordenado acá, porque la referencia no se pierde entre reacciones.','El titular prende la conversación, pero el contexto completo cambia harto la lectura.','Faltan antecedentes para sentenciar, aunque el tema sí da para discusión país.','La conversación mejora si alguien trae información y no solo la primera reacción.'],
+      chile:['Desde regiones esto se lee distinto; no todo pasa por la mirada de Santiago.','La pregunta funciona porque obliga a contar experiencia real, no solo opinión rápida.','Acá hay hilo largo si cada uno baja el tema a ejemplos cotidianos.','Lo chileno aparece en los detalles chicos: trámite, plata, transporte y tiempo perdido.','Buen punto para ordenar la conversación sin repetir cinco veces la misma frase.','Me interesa más leer casos concretos que otra pelea automática de consignas.'],
+      futbol:['Más que un nombre puntual, el fondo sigue siendo formación, canteras y continuidad.','El fútbol chileno se arregla con proceso, no con humo antes de cada fecha.','La hinchada prende rápido, pero el diagnóstico pide mirar dirigentes y juveniles.','Si el campeonato local no sube ritmo, cualquier recambio llega tarde.','El debate mejora cuando salimos del club contra club y miramos estructura.','Hay talento, pero sin minutos serios terminamos reciclando la misma discusión.'],
+      finanzas:['Para ordenar esto partiría por flujo mensual, deuda y ahorro antes de invertir.','La UF y el dólar pegan incluso cuando uno cree que no está metido en mercado.','En Chile el súper y el arriendo te cambian más el mes que cualquier gusto chico.','Primero colchón de emergencia; después recién viene riesgo y rentabilidad.','Me gustaría ver números concretos, porque la sensación de bolsillo muchas veces engaña.','Buen tema si lo aterrizamos a casos reales y no a frases de gurú financiero.'],
+      memescl:['Este meme funciona porque parece chiste, pero trae una verdad país escondida.','La risa pega más cuando uno se reconoce y se quiere hacer el desentendido.','Lo mandas al grupo familiar y alguien lo transforma en debate nacional en cinco minutos.','Hay humor chileno de supervivencia acá: reír para no revisar otra vez la cuenta.','Simple, local y con dolorcito; por eso tiene potencial de circular harto.','La gracia está en que no explica demasiado y aun así todos entienden el golpe.'],
+      marketplace:['Para publicar bien faltan tres mínimos: precio claro, comuna y fotos reales.','La reputación del vendedor va a ser clave si esto empieza a moverse más.','Las preguntas públicas ayudan porque el próximo comprador no parte desde cero.','Sin reglas simples, una feria online se llena de spam demasiado rápido.','Me gusta lo local, pero confianza y moderación tienen que ir primero.','Estado del producto, forma de entrega y pago deberían quedar visibles en el hilo.'],
+      debate:['El tema da para más si separamos experiencia personal de dato verificable.','Yo evitaría llevarlo al gallito ideológico de siempre; hay una pregunta concreta debajo.','Buen debate si cada comentario agrega un ángulo y no solo una reacción.','Chile discute mucho en blanco y negro; acá serviría meter matices.','Me interesan propuestas aplicables, no otra vuelta de consignas recicladas.','La conversación mejora si se responde el argumento y no la identidad del que comenta.'],
+      tecnologia:['La función tiene que resolver algo real, no solo verse moderna en la demo.','Si carga rápido en celular, ya parte con ventaja para el usuario chileno promedio.','Producto local no es copiar algo gringo y ponerle modismos encima.','Menos features sueltas y más loop de uso diario: ahí se prueba la comunidad.','La identidad chilena debería sentirse en lenguaje, ritmo y moderación.','La parte difícil no es abrir el post, es que el usuario quiera volver mañana.']
+    };
+    return banks[sub]||banks.chile;
+  }
+  function seedBots(p){
+    if(!p)return [];
+    var count=3+(hash((p.id||'')+'|'+(p.title||'')+'|v16-count')%3);
+    var current=Array.isArray(p._rpV16BotComments)?p._rpV16BotComments:[];
+    if(current.length>=3&&current.length<=5)return current.slice(0,count);
+    var source=bank(p), out=[], usedBot={}, usedText={}, usedStart={}, guard=0;
+    function startKey(s){return clean(s).split(/\s+/).slice(0,4).join(' ');}
+    while(out.length<count&&guard<120){
+      var idx=guard+hash((p.id||'')+'|'+out.length)%23;
+      var txt=source[hash((p.id||'')+'|'+(p.title||'')+'|v16txt|'+idx)%source.length];
+      var bot=pickBot(p,idx,usedBot), tk=clean(txt), sk=startKey(txt);
+      if(tk&&!usedText[tk]&&!usedStart[sk]){usedText[tk]=1;usedStart[sk]=1;out.push(rowFrom({bot:bot,txt:txt,texto:txt,v:Math.max(1,hash((p.id||'')+'|v16vote|'+idx)%14),t:['1min','5min','11min','23min','38min','1h','2h'][out.length%7]},p,idx,false));}
+      guard++;
+    }
+    p._rpV16BotComments=out.slice();p._rpV13BotComments=out.slice();p._rpV12BotComments=out.slice();
+    return out;
+  }
+  function sortRows(rows,sort){
+    rows=(rows||[]).filter(function(c){return clean(c&& (c.txt||c.texto));}); var seen={},out=[];
+    rows.forEach(function(c){var k=clean(((c.bot&&c.bot.name)||c.username||'')+' '+(c.txt||c.texto||'')); if(!k||seen[k])return;seen[k]=1;out.push(c);});
+    if(sort==='old')return out.reverse();
+    if(sort==='new')return out.sort(function(a,b){return (b._rpUser?1:0)-(a._rpUser?1:0);});
+    return out.sort(function(a,b){return (parseInt(b.v||b.votos||0,10)||0)-(parseInt(a.v||a.votos||0,10)||0);});
+  }
+  async function fetchRealRows(p,sort){
+    var realId=p&&(p.realId||(window.realPostIdMap&&window.realPostIdMap[p.id]));
+    var db=window.db||(typeof db!=='undefined'?db:null); if(!realId||!db||!db.from)return [];
+    try{var q=db.from('comentarios').select('*, perfiles(username,ciudad)').eq('post_id',realId).limit(100); if(sort==='new')q=q.order('created_at',{ascending:false}); else if(sort==='old')q=q.order('created_at',{ascending:true}); else q=q.order('votos',{ascending:false}); var r=await q; if(!r||r.error)return []; return (r.data||[]).map(function(c,i){var u=c.perfiles||{};return rowFrom({username:u.username||'anon',ciudad:u.ciudad||'Chile',texto:c.texto||'',votos:c.votos||0,tiempo:'ahora',realComId:c.id,userId:c.user_id,_rpUser:true},p,i,true);});}catch(e){return [];}
+  }
+  async function rowsFor(p,sort){
+    if(!p)return [];
+    var bots=seedBots(p), locals=localUserRows(p), real=await fetchRealRows(p,sort||'top');
+    var rows=sortRows(bots.concat(real).concat(locals),sort||'top');
+    p.cd=bots.concat(locals); p.coms=rows.length;
+    return rows;
+  }
+  function linkMedia(txt){
+    var raw=String(txt||''), pieces=[], last=0, re=/\[(gif|img):(https?:\/\/[^\]\s]+)\]/ig, m;
+    while((m=re.exec(raw))){pieces.push(esc(raw.slice(last,m.index)));pieces.push('<img src="'+attr(m[2])+'" class="inserted-gif" loading="lazy" alt="GIF">');last=m.index+m[0].length;}
+    pieces.push(esc(raw.slice(last)));
+    return pieces.join('').replace(/(https?:\/\/[^\s<]+)/g,function(u){return '<a href="'+attr(u)+'" target="_blank" rel="noopener" class="inline-link">'+esc(u)+'</a>';});
+  }
+  function avatar(name,size){return (typeof window.makeAvatar==='function')?window.makeAvatar(name,size):'<span class="u-avatar '+(size==='sm'?'u-avatar-sm':'')+'">'+esc(String(name||'u').slice(0,1).toUpperCase())+'</span>';}
+  function renderRow(c,i,mode){
+    c=rowFrom(c,null,i,!!c._rpUser); var name=(c.bot&&c.bot.name)||c.username||'anon', city=(c.bot&&c.bot.ciudad)||c.ciudad||'Chile';
+    if(mode==='pv')return '<div class="pv-comment rpv16-pv-comment"><div class="pv-comment-v"><button onclick="pvVote(this,1)">▲</button><strong>'+esc(c.v||c.votos||0)+'</strong><button onclick="pvVote(this,-1)">▼</button></div><div><div class="pv-comment-meta"><span class="u">u/'+esc(name)+'</span> · '+esc(c.t||c.tiempo||'ahora')+'</div><div class="pv-comment-text">'+linkMedia(c.txt||c.texto||'')+'</div></div></div>';
+    return '<div class="comment rpv16-comment"><div class="cava">'+avatar(name)+'</div><div class="ccont"><div class="ccmeta"><span class="u">u/'+esc(name)+'</span> · <span class="ci">'+esc(city)+'</span> · '+esc(c.t||c.tiempo||'ahora')+'</div><div class="cctext">'+linkMedia(c.txt||c.texto||'')+'</div><div class="ccacts"><button class="ccact ccvote-up" data-votes="'+attr(c.v||c.votos||0)+'" onclick="voteComment(this,1)">▲ '+esc(c.v||c.votos||0)+'</button><button class="ccact ccvote-down" onclick="voteComment(this,-1)">▼</button></div></div></div>';
+  }
+  function updateCount(p){
+    if(!p)return; var n=parseInt(p.coms,10)||seedBots(p).length+localUserRows(p).length; p.coms=n;
+    var btn=document.querySelector('#post-'+p.id+' .comments-toggle-btn');
+    if(btn&&!(window.openComs&&window.openComs[p.id]))btn.textContent='// '+n+' comentarios';
+  }
+  function refreshVisibleCounts(){(window.POSTS||[]).forEach(function(p){seedBots(p);p.coms=(p._rpV16BotComments||[]).length+localUserRows(p).length;updateCount(p);});}
+
+  window.renderPostViewComments=async function(postId,sort){
+    var p=getPost(postId), list=byId('pv-comments-list'); if(!p||!list)return;
+    list.innerHTML='<div class="pv-empty">// cargando comentarios...</div>';
+    var rows=await rowsFor(p,sort||'top');
+    list.innerHTML=rows.length?rows.map(function(c,i){return renderRow(c,i,'pv');}).join(''):'<div class="pv-empty">// todavía no hay comentarios</div>';
+    updateCount(p);
+  };
+  window.loadComments=async function(postId,sort,offset){
+    var p=getPost(postId), list=byId('clist-'+postId), more=byId('cmore-'+postId); if(!p||!list)return;
+    var rows=await rowsFor(p,sort||'top');
+    list.innerHTML=rows.length?rows.map(function(c,i){return renderRow(c,i,'inline');}).join(''):'<div class="pv-empty" style="color:var(--text3);font-size:.75rem;padding:.4rem 0">// todavía no hay comentarios</div>';
+    if(more)more.innerHTML=''; updateCount(p);
+  };
+  window.toggleComs=function(id){
+    window.openComs=window.openComs||{}; window.openComs[id]=!window.openComs[id];
+    var el=byId('cs-'+id); if(!el)return; el.classList.toggle('open',window.openComs[id]);
+    var p=getPost(id); if(p){seedBots(p);p.coms=(p._rpV16BotComments||[]).length+localUserRows(p).length;}
+    var btn=document.querySelector('#post-'+id+' .comments-toggle-btn'); if(btn)btn.textContent=window.openComs[id]?'// cerrar comentarios':'// '+((p&&p.coms)||0)+' comentarios';
+    if(window.openComs[id]&&typeof window.renderComSection==='function')window.renderComSection(id,'top');
+  };
+
+  if(typeof window.renderFeed==='function'&&!window.renderFeed.__rpV16CommentSafe){
+    var oldRenderFeed=window.renderFeed;
+    window.renderFeed=function(){var r=oldRenderFeed.apply(this,arguments);setTimeout(refreshVisibleCounts,0);return r;};
+    window.renderFeed.__rpV16CommentSafe=true;
+  }
+  function init(){refreshVisibleCounts();try{console.log(V,'activo: solo comentarios, sin tocar comunidades/media');}catch(e){}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,0);
+  setTimeout(init,600);setTimeout(init,1800);
+})();
+</script>
+<!-- RP_SURGICAL_COMMENTS_V16_SAFE_END -->
+
 </body>
 </html>
