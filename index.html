@@ -6932,5 +6932,209 @@ console.log('[RandomPlan PICKER FINAL] sistema único activo');
 })();
 
 </script>
+
+<script>
+(function(){
+// ═══════════════════════════════════════════════════
+// RANDOMPLAN FINAL FIX — emoji/gif + comunidad panel
+// ═══════════════════════════════════════════════════
+
+// 1. Fix the broken script tag structure by patching
+//    the community panel onclick handlers
+
+// 2. Definitive emoji/gif system
+var EMOJIS = ['😂','🤣','🔥','💀','😭','🤯','👀','😤','🫡','🤔','💯','🎯','🤙','👊','😎','🥲','😬','🤦','🙄','👏','🫠','😅','🤡','💪','🫶','❤️','🖤','💜','💚','⚡','🌊','🏔','🐍','🦅','🦁','🐺','💻','📱','🎮','🏆','💰','📈','📉','🔑','⚠️','❌','✅','🚀','🌙','☀️','🌧','❄️','🍺','🍕','🌮','☕','🤝','🙏','👋','✌️','🤞','🧠','💬','🔊','🎵','🎶','🇨🇱'];
+
+var GIFS_LOCAL = [
+  'https://media.giphy.com/media/3oEjHI8WJv4x6UPDB6/giphy.gif',
+  'https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif',
+  'https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif',
+  'https://media.giphy.com/media/111ebonMs90YLu/giphy.gif',
+  'https://media.giphy.com/media/5VKbvrjxpVJCM/giphy.gif',
+  'https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif',
+  'https://media.giphy.com/media/LCdPNT81vlv3y/giphy.gif',
+  'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif',
+  'https://media.giphy.com/media/3o7TKr3nzbh5WgCFxe/giphy.gif',
+  'https://media.giphy.com/media/ToMjGpKniGqRNLGBrhu/giphy.gif',
+  'https://media.giphy.com/media/GCvktC0KFy9l6/giphy.gif',
+  'https://media.giphy.com/media/artj92V8o75VPL7AeQ/giphy.gif'
+];
+
+var _inp = null; // current active input
+
+function rpGetInput() {
+  if(_inp) {
+    var el = document.getElementById(_inp);
+    if(el) return el;
+  }
+  // fallback
+  var id = window._rpActiveMediaInput || window._v10MediaInput || window._activeInput;
+  return id ? document.getElementById(id) : null;
+}
+
+function rpInsert(text) {
+  var inp = rpGetInput();
+  if(!inp) return;
+  var pos = typeof inp.selectionStart === 'number' ? inp.selectionStart : inp.value.length;
+  inp.value = inp.value.slice(0,pos) + text + inp.value.slice(pos);
+  inp.focus();
+  try { inp.selectionStart = inp.selectionEnd = pos + text.length; } catch(e) {}
+}
+
+function rpBuildEmoji(ep) {
+  ep.innerHTML = '';
+  EMOJIS.forEach(function(e){
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = e;
+    b.style.cssText = 'background:none;border:none;font-size:1.2rem;cursor:pointer;padding:.25rem;border-radius:4px;line-height:1';
+    b.onmouseenter = function(){ b.style.background='#1c2733'; };
+    b.onmouseleave = function(){ b.style.background='none'; };
+    b.onclick = function(ev){
+      ev.preventDefault(); ev.stopPropagation();
+      rpInsert(e);
+      ep.style.display = 'none';
+    };
+    ep.appendChild(b);
+  });
+}
+
+function rpBuildGifGrid(gifs, full) {
+  var grid = document.getElementById('gif-grid-global');
+  if(!grid) return;
+  grid.innerHTML = '';
+  gifs.forEach(function(item){
+    var img = document.createElement('img');
+    img.src = item.thumb || item;
+    img.loading = 'lazy';
+    img.style.cssText = 'width:100%;height:80px;object-fit:cover;border-radius:3px;cursor:pointer;border:2px solid transparent;background:#080b0f';
+    img.onmouseenter = function(){ img.style.borderColor='#00ff88'; };
+    img.onmouseleave = function(){ img.style.borderColor='transparent'; };
+    img.onerror = function(){ img.style.display='none'; };
+    var gifUrl = item.full || item;
+    img.onclick = function(ev){
+      ev.preventDefault(); ev.stopPropagation();
+      rpInsert('[gif:'+gifUrl+']');
+      var gp = document.getElementById('global-gif-picker');
+      if(gp) gp.style.display = 'none';
+    };
+    grid.appendChild(img);
+  });
+}
+
+function rpLoadGifs(q) {
+  // Show local GIFs immediately
+  rpBuildGifGrid(GIFS_LOCAL.map(function(u){ return {thumb:u, full:u}; }));
+  // Try Tenor
+  fetch('https://api.tenor.com/v1/search?q='+encodeURIComponent(q||'meme chile')+'&key=LIVDSRZULELA&limit=15&media_filter=minimal')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var items = (d.results||[]).map(function(it){
+        var m = it.media && it.media[0] || {};
+        return { thumb: (m.tinygif||m.gif||{}).url||'', full: (m.gif||m.tinygif||{}).url||'' };
+      }).filter(function(x){ return x.full; });
+      if(items.length) rpBuildGifGrid(items);
+    })
+    .catch(function(){});
+}
+
+function rpPlace(el, anchor) {
+  var r = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : null;
+  var w = parseFloat(el.style.width) || 300;
+  if(r){
+    el.style.top = Math.min(window.innerHeight - 80, r.bottom + 6) + 'px';
+    el.style.left = Math.max(6, Math.min(r.left, window.innerWidth - w - 10)) + 'px';
+  } else {
+    el.style.top = '100px'; el.style.left = '12px';
+  }
+}
+
+// Ensure pickers exist in DOM
+function rpEnsure() {
+  var ep = document.getElementById('global-emoji-picker');
+  if(!ep) {
+    ep = document.createElement('div');
+    ep.id = 'global-emoji-picker';
+    ep.style.cssText = 'display:none;position:fixed;z-index:999999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;width:300px;flex-wrap:wrap;gap:.15rem;max-height:220px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.9)';
+    document.body.appendChild(ep);
+    rpBuildEmoji(ep);
+  }
+  var gp = document.getElementById('global-gif-picker');
+  if(!gp) {
+    gp = document.createElement('div');
+    gp.id = 'global-gif-picker';
+    gp.style.cssText = 'display:none;position:fixed;z-index:999999;background:#141c25;border:1px solid #2a3f55;border-radius:6px;padding:.5rem;width:320px;max-width:calc(100vw - 12px);box-shadow:0 8px 32px rgba(0,0,0,.9)';
+    var si = document.createElement('input');
+    si.id = 'gif-search-global';
+    si.placeholder = 'buscar GIF + Enter';
+    si.style.cssText = 'width:100%;background:#0d1117;border:1px solid #2a3f55;border-radius:3px;padding:.4rem .6rem;font-family:monospace;font-size:.75rem;color:#e6edf3;outline:none;margin-bottom:.45rem;box-sizing:border-box';
+    si.onkeydown = function(ev){ if(ev.key==='Enter'){ ev.preventDefault(); rpLoadGifs(si.value||'meme chile'); } };
+    var grid = document.createElement('div');
+    grid.id = 'gif-grid-global';
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-height:240px;overflow-y:auto';
+    gp.appendChild(si); gp.appendChild(grid);
+    document.body.appendChild(gp);
+  }
+  return { ep: ep, gp: gp };
+}
+
+// OVERRIDE ALL PICKER FUNCTIONS
+window.showEmojiPicker = function(inputId, anchor) {
+  if(!inputId) return;
+  _inp = inputId;
+  window._rpActiveMediaInput = inputId;
+  window._v10MediaInput = inputId;
+  window._activeInput = inputId;
+  var p = rpEnsure();
+  p.gp.style.display = 'none';
+  if(p.ep.style.display === 'flex') { p.ep.style.display = 'none'; return; }
+  rpPlace(p.ep, anchor);
+  p.ep.style.display = 'flex';
+};
+
+window.showGifPicker = function(inputId, anchor) {
+  if(!inputId) return;
+  _inp = inputId;
+  window._rpActiveMediaInput = inputId;
+  window._v10MediaInput = inputId;
+  window._activeInput = inputId;
+  var p = rpEnsure();
+  p.ep.style.display = 'none';
+  if(p.gp.style.display === 'block') { p.gp.style.display = 'none'; return; }
+  rpPlace(p.gp, anchor);
+  p.gp.style.display = 'block';
+  rpLoadGifs('meme chile');
+};
+
+window.showEmoji = function(btn){ var id=btn&&btn.dataset?btn.dataset.inp:null; if(id) window.showEmojiPicker(id,btn); };
+window.showGif = function(btn){ var id=btn&&btn.dataset?btn.dataset.inp:null; if(id) window.showGifPicker(id,btn); };
+window.loadGlobalGifs = rpLoadGifs;
+window.buscarGif = rpLoadGifs;
+window.insertEmojiGlobal = rpInsert;
+window.rpFinalInsertInto = function(id, text){ if(id) _inp = id; rpInsert(text); };
+window.v10Insert = rpInsert;
+
+window.buildMediaBar = function(inputId){
+  return '<div class="media-bar">'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="event.preventDefault();event.stopPropagation();window.showEmojiPicker(this.dataset.inp,this)">😊</button>'+
+    '<button class="media-btn" type="button" data-inp="'+inputId+'" onclick="event.preventDefault();event.stopPropagation();window.showGifPicker(this.dataset.inp,this)">GIF</button>'+
+  '</div>';
+};
+
+// Close on outside click
+document.addEventListener('click', function(ev){
+  if(ev.target.closest && (ev.target.closest('#global-emoji-picker') || ev.target.closest('#global-gif-picker') || ev.target.closest('.media-btn'))) return;
+  var ep = document.getElementById('global-emoji-picker');
+  var gp = document.getElementById('global-gif-picker');
+  if(ep) ep.style.display = 'none';
+  if(gp) gp.style.display = 'none';
+});
+
+// Init on load
+rpEnsure();
+
+console.log('[RandomPlan] picker system ready');
+})();
+
+</script>
 </body>
 </html>
