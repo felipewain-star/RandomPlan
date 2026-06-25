@@ -6838,7 +6838,15 @@ console.log('[RandomPlan CLEAN] loaded');
     if(Array.isArray(p&&p.cd)&&p.cd.length)return sortRows(p.cd.slice(0,5).map(function(c,i){return rowFrom(c,p,i,true);}),sort);
     return [];
   }
-  function safeLinkify(txt){return (typeof window.linkify==='function')?linkify(txt):esc(txt).replace(/\[gif:(https?:\/\/[^\]]+)\]/g,function(_,u){return '<img src="'+attr(u)+'" class="inserted-gif" loading="lazy">';});}
+  function safeLinkify(txt){
+    // Always try linkify (available as global), fallback handles [gif:url]
+    if(typeof linkify==='function') return linkify(txt);
+    if(typeof window.linkify==='function') return window.linkify(txt);
+    txt=String(txt||'');
+    return txt.replace(/\[gif:(https?:\/\/[^\]]+)\]/g,function(_,u){
+      return '<img src="'+attr(u)+'" class="inserted-gif" loading="lazy" style="max-width:280px;border-radius:4px;display:block;margin-top:.3rem">';
+    }).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
   function avatar(name,size){return (typeof window.makeAvatar==='function')?makeAvatar(name,size):'<span class="u-avatar">'+esc(String(name||'u').slice(0,1).toUpperCase())+'</span>';}
   function renderInlineComment(c,i,p){c=rowFrom(c,p,i,false);var name=(c.bot&&c.bot.name)||c.username||'anon';var city=(c.bot&&c.bot.ciudad)||c.ciudad||'Chile';return '<div class="comment rpv10-comment"><div class="cava">'+avatar(name)+'</div><div class="ccont"><div class="ccmeta"><span class="u">u/'+esc(name)+'</span> · <span class="ci">'+esc(city)+'</span> · '+esc(c.t||c.tiempo||'ahora')+'</div><div class="cctext">'+safeLinkify(c.txt||c.texto||'')+'</div><div class="ccacts"><button class="ccact ccvote-up" data-votes="'+attr(c.v||c.votos||0)+'" onclick="voteComment(this,1)">▲ '+esc(c.v||c.votos||0)+'</button><button class="ccact ccvote-down" onclick="voteComment(this,-1)">▼</button></div></div></div>';}
   function renderPVComment(c,i,p){c=rowFrom(c,p,i,false);var name=(c.bot&&c.bot.name)||c.username||'anon';return '<div class="pv-comment rpv10-pv-comment"><div class="pv-comment-v"><button onclick="pvVote(this,1)">▲</button><strong>'+esc(c.v||c.votos||0)+'</strong><button onclick="pvVote(this,-1)">▼</button></div><div><div class="pv-comment-meta"><span class="u">u/'+esc(name)+'</span> · '+esc(c.t||c.tiempo||'ahora')+'</div><div class="pv-comment-text">'+safeLinkify(c.txt||c.texto||'')+'</div></div></div>';}
@@ -8406,6 +8414,69 @@ console.log('[RandomPlan CLEAN] loaded');
   }, 100);
 
   console.log('[RandomPlan] counter+gif fix activo');
+})();
+</script>
+
+<script>
+// RANDOMPLAN GIF FIX FINAL — exponer linkify + patchear todos los renderers
+(function(){
+  // 1. Exponer linkify global en window inmediatamente
+  if(typeof linkify === 'function') window.linkify = linkify;
+
+  // 2. Función unificada que siempre renderiza [gif:url] como imagen
+  window.rpRenderText = function(txt) {
+    txt = String(txt || '');
+    // Try all known linkify functions in order
+    if(typeof window.linkify === 'function') return window.linkify(txt);
+    if(typeof linkify === 'function') return linkify(txt);
+    if(typeof linkMedia === 'function') return linkMedia(txt);
+    // Fallback: handle [gif:url] and escape rest
+    var out = '', last = 0;
+    var re = /\[gif:(https?:\/\/[^\]\s]+)\]/ig;
+    var m;
+    while((m = re.exec(txt)) !== null) {
+      out += txt.slice(last, m.index).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      out += '<img src="' + m[1] + '" class="inserted-gif" loading="lazy" style="max-width:280px;border-radius:4px;display:block;margin:.3rem 0">';
+      last = m.index + m[0].length;
+    }
+    out += txt.slice(last).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return out;
+  };
+
+  // 3. Patch renderCommentHTML to use rpRenderText for the cctext
+  var _origRCH = window.renderCommentHTML;
+  if(_origRCH && !_origRCH.__rpGifFixed) {
+    window.renderCommentHTML = function(cid, username, ciudad, tiempo, texto, votos, isMe, realComId) {
+      var html = _origRCH.apply(this, arguments);
+      // Replace esc(texto) or linkify(texto) result with rpRenderText
+      // The original uses linkify(texto) which should work, but let's be safe
+      // Check if [gif: still in the output (means linkify didn't process it)
+      if(html.indexOf('[gif:') !== -1) {
+        // linkify failed - apply rpRenderText manually
+        var safe = html.replace(/\[gif:(https?:\/\/[^\]\s"'<>]+)\]/g, function(_, url) {
+          return '<img src="' + url + '" class="inserted-gif" loading="lazy" style="max-width:280px;border-radius:4px;display:block;margin:.3rem 0">';
+        });
+        return safe;
+      }
+      return html;
+    };
+    window.renderCommentHTML.__rpGifFixed = true;
+  }
+
+  // 4. Also patch safeLinkify in case it's called from other contexts
+  if(typeof window.safeLinkify !== 'function') {
+    window.safeLinkify = window.rpRenderText;
+  }
+
+  // 5. CSS for inserted-gif if not already present
+  if(!document.getElementById('rp-gif-css')) {
+    var st = document.createElement('style');
+    st.id = 'rp-gif-css';
+    st.textContent = '.inserted-gif{max-width:280px;max-height:220px;border-radius:4px;display:block;margin:.3rem 0;cursor:pointer}.cctext .inserted-gif{max-width:260px}.pv-comment-text .inserted-gif{max-width:300px}';
+    document.head.appendChild(st);
+  }
+
+  console.log('[RandomPlan] GIF render fix activo');
 })();
 </script>
 </body>
