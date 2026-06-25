@@ -336,7 +336,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
 .msg-meta{display:flex;align-items:baseline;gap:.4rem}
 .msg-user{font-size:.75rem;font-weight:700;color:var(--amber);font-family:var(--mono)}
 .msg-user.me{color:var(--red)}
-.msg-city{font-size:.63rem;color:var(--text3);font-family:var(--mono)}
+.msg-city{display:none;font-size:0;font-size:.63rem;color:var(--text3);font-family:var(--mono)}
 .msg-time{font-size:.6rem;color:var(--text3);margin-left:auto;font-family:var(--mono)}
 .msg-text{
   font-size:.92rem;
@@ -6480,6 +6480,229 @@ window.doRegister=async function(){
 // Init
 setTimeout(function(){ensurePickers();v10InitEmojis();},200);
 console.log('[RandomPlan V10] 6 fixes loaded');
+})();
+
+</script>
+
+<script>
+(function(){
+// ═══════════════════════════════════════════
+// RANDOMPLAN V11 — 3 fixes precisos
+// 1. Max 4 comentarios por hilo, variados
+// 2. Ciudad eliminada donde aparece
+// 3. GIF y emoji funcionando 100%
+// ═══════════════════════════════════════════
+
+// ── 1. REDUCIR COMENTARIOS A MAX 4, VARIADOS ──
+var _origEnsure = window.RP_ensureLocalComments;
+window.RP_ensureLocalComments = function(p){
+  if(!p) return [];
+  // Cap at 4 max
+  var origComs = p.coms;
+  p.coms = Math.min(parseInt(p.coms||0,10)||0, 4);
+  if(p.coms < 2) p.coms = 2 + Math.floor(Math.random()*2);
+  
+  var result = _origEnsure ? _origEnsure.call(this, p) : [];
+  
+  // Restore for display count but cap actual comments
+  if(result.length > 4) result = result.slice(0, 4);
+  
+  // Ensure length variation: mix largo/mediano/corto
+  var LARGO = [
+    'mira yo llevo tiempo diciéndole esto a mis amigos y nadie me pescaba. al final resulta que tenía razón. ojalá la gente leyera más antes de opinar.',
+    'desde el sur y con todo el respeto: los santiaguinos no tienen idea de lo que pasa en el resto del país. hablan de chile como si fuera solo la capital.',
+    'esto confirma lo que veníamos viendo hace rato. el problema es estructural y no se arregla con parches ni con buenas intenciones solamente.',
+    'yo viví esto en carne propia y les juro que es exactamente como lo describen. no es fácil pero se sale adelante con apoyo.',
+  ];
+  var MEDIANO = [
+    'buen punto, esto puede salir como conversación útil si se mantiene el foco',
+    'para mí el problema de fondo es estructural, no se arregla con parches',
+    'importante verificar la fuente antes de compartir, hay mucha desinformación',
+    'el centralismo aparece en casi todos los debates aunque no sea el tema inicial',
+    'hay que separar experiencia personal de datos, las dos cosas importan',
+    'sin fuente verificable esto se vuelve pelea de opiniones nomás',
+  ];
+  var CORTO = [
+    'exacto, alguien tenía que decirlo',
+    '100% de acuerdo',
+    'demasiado real, me pegó fuerte',
+    'esto necesita más upvotes',
+    'jajaja no pero sí',
+    'guardado esto',
+  ];
+
+  // If we have < 2 comments, fill with varied
+  var usedTxt = {};
+  result.forEach(function(c){ usedTxt[String(c.txt||'').trim()] = true; });
+  
+  var bots = window.BOTS || [];
+  var usedBot = {};
+  result.forEach(function(c){ if(c.bot) usedBot[c.bot.name] = true; });
+  
+  var tiempos = ['1min','8min','23min','1h','2h'];
+  
+  while(result.length < 2) {
+    var bot = bots.filter(function(b){ return !usedBot[b.name]; })[0] || bots[result.length % bots.length];
+    var pool = result.length === 0 ? LARGO : result.length === 1 ? CORTO : MEDIANO;
+    var txt = pool.find(function(t){ return !usedTxt[t]; }) || pool[0];
+    usedTxt[txt] = true;
+    if(bot) usedBot[bot.name] = true;
+    result.push({bot: bot||{name:'usuario_cl',ciudad:'Chile'}, txt: txt, v: 1+Math.floor(Math.random()*6), t: tiempos[result.length % tiempos.length]});
+  }
+  
+  p.cd = result.slice(0, 4);
+  p.coms = p.cd.length;
+  return p.cd;
+};
+
+// Override generateBotComments to use max 4
+var _origGBC = window.generateBotComments;
+window.generateBotComments = function(count, existingCd){
+  var p = window.__rpCommentContextPost || {id:'tmp', sub:'chile', title:'tema', coms: Math.min(count||4, 4), cd: existingCd||[]};
+  p.coms = Math.min(p.coms, 4);
+  window.RP_ensureLocalComments(p);
+  return p.cd.slice(0, 4);
+};
+
+// ── 2. ELIMINAR CIUDAD DE LA UI ──
+// Ciudad en comentarios inline ya no se muestra (no está en el HTML)
+// Pero puede aparecer en addMsg del chat y en perfiles
+// Patch addMsg to hide ciudad
+var _origAddMsg = window.addMsg;
+if(_origAddMsg && !_origAddMsg.__v11) {
+  window.addMsg = function(user, txt, isMe, isSystem){
+    // Remove ciudad from display by clearing it
+    if(user && user.ciudad) user = Object.assign({}, user, {ciudad: ''});
+    return _origAddMsg.call(this, user, txt, isMe, isSystem);
+  };
+  window.addMsg.__v11 = true;
+}
+
+// ── 3. GIF Y EMOJI — fix definitivo ──
+// El problema: los emoji buttons llaman rpFinalInsertInto(window._rpActiveMediaInput, e)
+// y los gif buttons en v10 llaman v10Insert que usa window._v10MediaInput
+// Ambas variables se setean en showEmojiPicker/showGifPicker de v10
+// Pero si FINAL V6 sobreescribe showEmojiPicker DESPUÉS de v10, falla
+// Solución: sobreescribir rpFinalInsertInto para que funcione con cualquier input activo
+
+window.rpFinalInsertInto = function(inputId, text){
+  // Try the provided inputId first, then fall back to any active input var
+  var id = inputId || window._rpActiveMediaInput || window._v10MediaInput;
+  var inp = id ? document.getElementById(id) : null;
+  if(!inp) return;
+  var add = String(text||'');
+  var pos = typeof inp.selectionStart === 'number' ? inp.selectionStart : inp.value.length;
+  inp.value = inp.value.slice(0, pos) + add + inp.value.slice(pos);
+  inp.focus();
+  try{ inp.selectionStart = inp.selectionEnd = pos + add.length; }catch(e){}
+  try{ inp.dispatchEvent(new Event('input', {bubbles:true})); }catch(e){}
+};
+
+// Also fix v10Insert to sync both vars
+window.v10Insert = function(text){
+  var id = window._v10MediaInput || window._rpActiveMediaInput;
+  var inp = id ? document.getElementById(id) : null;
+  if(!inp) return;
+  var pos = typeof inp.selectionStart === 'number' ? inp.selectionStart : inp.value.length;
+  inp.value = inp.value.slice(0, pos) + text + inp.value.slice(pos);
+  inp.focus();
+  try{ inp.selectionStart = inp.selectionEnd = pos + text.length; }catch(e){}
+};
+
+// Override showEmojiPicker/showGifPicker to sync BOTH input vars
+var _origSEP = window.showEmojiPicker;
+window.showEmojiPicker = function(inputId, anchor){
+  window._rpActiveMediaInput = inputId;
+  window._v10MediaInput = inputId;
+  if(_origSEP) _origSEP.call(this, inputId, anchor);
+};
+
+var _origSGP = window.showGifPicker;
+window.showGifPicker = function(inputId, anchor){
+  window._rpActiveMediaInput = inputId;
+  window._v10MediaInput = inputId;
+  if(_origSGP) _origSGP.call(this, inputId, anchor);
+};
+
+// Rebuild emoji picker buttons to use our fixed insert
+function rebuildEmojiPicker(){
+  var ep = document.getElementById('global-emoji-picker');
+  if(!ep) return;
+  ep.innerHTML = '';
+  ep.dataset.v11 = '1';
+  var EMOJIS = ['😂','🤣','🔥','💀','😭','🤯','👀','😤','🫡','🤔','💯','🎯','🤙','👊','😎','🥲','😬','🤦','🙄','👏','🫠','😅','🤡','💪','🫶','❤️','🖤','💜','💚','⚡','🌊','🏔','🐍','🦅','🦁','🐺','💻','📱','🎮','🏆','💰','📈','📉','🔑','⚠️','❌','✅','🚀','🌙','☀️','🌧','❄️','🍺','🍕','🌮','☕','🤝','🙏','👋','✌️','🤞','🧠','💬','🔊','🎵','🎶','🇨🇱'];
+  EMOJIS.forEach(function(e){
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = e;
+    b.style.cssText = 'background:none;border:none;font-size:1.18rem;cursor:pointer;padding:.2rem .25rem;border-radius:3px;line-height:1.1';
+    b.addEventListener('mouseover', function(){ b.style.background='#1c2733'; });
+    b.addEventListener('mouseout', function(){ b.style.background='none'; });
+    b.addEventListener('click', function(ev){
+      ev.preventDefault(); ev.stopPropagation();
+      window.rpFinalInsertInto(window._rpActiveMediaInput || window._v10MediaInput, e);
+      ep.style.display = 'none';
+    });
+    ep.appendChild(b);
+  });
+}
+
+// Rebuild gif grid onclick handlers
+function rebuildGifGrid(){
+  var grid = document.getElementById('gif-grid-global');
+  if(!grid) return;
+  var imgs = grid.querySelectorAll('img');
+  imgs.forEach(function(img){
+    // Clone to remove old listeners
+    var newImg = img.cloneNode(true);
+    var gifUrl = img._gifUrl || img.src;
+    newImg._gifUrl = gifUrl;
+    newImg.addEventListener('click', function(ev){
+      ev.preventDefault(); ev.stopPropagation();
+      var id = window._rpActiveMediaInput || window._v10MediaInput;
+      var inp = id ? document.getElementById(id) : null;
+      if(inp){ inp.value += (inp.value ? ' ' : '') + '[gif:' + gifUrl + ']'; inp.focus(); }
+      var gp = document.getElementById('global-gif-picker');
+      if(gp) gp.style.display = 'none';
+    });
+    img.parentNode.replaceChild(newImg, img);
+  });
+}
+
+// Patch v10LoadGifs to store gifUrl on img element
+var _origLoadGifs = window.v10LoadGifs || window.loadGlobalGifs;
+window.v10LoadGifs = window.loadGlobalGifs = function(q){
+  if(_origLoadGifs) _origLoadGifs.call(this, q);
+  // After gifs load, patch onclick handlers
+  setTimeout(rebuildGifGrid, 800);
+};
+
+// Run rebuilds
+setTimeout(function(){
+  rebuildEmojiPicker();
+  rebuildGifGrid();
+}, 300);
+
+// Rebuild whenever pickers open
+var _origSEP2 = window.showEmojiPicker;
+window.showEmojiPicker = function(inputId, anchor){
+  window._rpActiveMediaInput = inputId;
+  window._v10MediaInput = inputId;
+  if(_origSEP2) _origSEP2.call(this, inputId, anchor);
+  setTimeout(rebuildEmojiPicker, 50);
+};
+
+var _origSGP2 = window.showGifPicker;
+window.showGifPicker = function(inputId, anchor){
+  window._rpActiveMediaInput = inputId;
+  window._v10MediaInput = inputId;
+  if(_origSGP2) _origSGP2.call(this, inputId, anchor);
+  setTimeout(rebuildGifGrid, 900);
+};
+
+window.showEmoji = function(btn){ var id=btn&&btn.dataset?btn.dataset.inp:null; if(id) window.showEmojiPicker(id,btn); };
+window.showGif = function(btn){ var id=btn&&btn.dataset?btn.dataset.inp:null; if(id) window.showGifPicker(id,btn); };
+
+console.log('[RandomPlan V11] fixes: max 4 comments, no ciudad, emoji/gif fixed');
 })();
 
 </script>
