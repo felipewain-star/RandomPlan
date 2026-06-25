@@ -6297,7 +6297,7 @@ function scheduleNewsComments(p){
           }
         }
       },delay);
-    })(p.id,(d+1)*75000+Math.random()*45000,d+1);
+    })(p.id,(d+1)*40000+Math.random()*20000,d+1);
   }
 }
 
@@ -6639,7 +6639,15 @@ function rebuildEmojiPicker(){
     b.addEventListener('mouseout', function(){ b.style.background='none'; });
     b.addEventListener('click', function(ev){
       ev.preventDefault(); ev.stopPropagation();
-      window.rpFinalInsertInto(window._rpActiveMediaInput || window._v10MediaInput, e);
+      var ep2 = document.getElementById('global-emoji-picker');
+      var targetId = (ep2&&ep2.dataset.inp) || window._rpActiveMediaInput || window._v10MediaInput;
+      var inp2 = targetId ? document.getElementById(targetId) : null;
+      if(inp2){
+        var pos2 = typeof inp2.selectionStart==='number' ? inp2.selectionStart : inp2.value.length;
+        inp2.value = inp2.value.slice(0,pos2) + e + inp2.value.slice(pos2);
+        inp2.focus();
+        try{inp2.selectionStart=inp2.selectionEnd=pos2+e.length;}catch(x){}
+      }
       ep.style.display = 'none';
     });
     ep.appendChild(b);
@@ -6658,11 +6666,11 @@ function rebuildGifGrid(){
     newImg._gifUrl = gifUrl;
     newImg.addEventListener('click', function(ev){
       ev.preventDefault(); ev.stopPropagation();
-      var id = window._rpActiveMediaInput || window._v10MediaInput;
-      var inp = id ? document.getElementById(id) : null;
+      var gp2 = document.getElementById('global-gif-picker');
+      var targetId = (gp2&&gp2.dataset.inp) || window._rpActiveMediaInput || window._v10MediaInput;
+      var inp = targetId ? document.getElementById(targetId) : null;
       if(inp){ inp.value += (inp.value ? ' ' : '') + '[gif:' + gifUrl + ']'; inp.focus(); }
-      var gp = document.getElementById('global-gif-picker');
-      if(gp) gp.style.display = 'none';
+      if(gp2) gp2.style.display = 'none';
     });
     img.parentNode.replaceChild(newImg, img);
   });
@@ -6687,6 +6695,8 @@ var _origSEP2 = window.showEmojiPicker;
 window.showEmojiPicker = function(inputId, anchor){
   window._rpActiveMediaInput = inputId;
   window._v10MediaInput = inputId;
+  var ep = document.getElementById('global-emoji-picker');
+  if(ep) ep.dataset.inp = inputId;
   if(_origSEP2) _origSEP2.call(this, inputId, anchor);
   setTimeout(rebuildEmojiPicker, 50);
 };
@@ -6695,6 +6705,8 @@ var _origSGP2 = window.showGifPicker;
 window.showGifPicker = function(inputId, anchor){
   window._rpActiveMediaInput = inputId;
   window._v10MediaInput = inputId;
+  var gp = document.getElementById('global-gif-picker');
+  if(gp) gp.dataset.inp = inputId;
   if(_origSGP2) _origSGP2.call(this, inputId, anchor);
   setTimeout(rebuildGifGrid, 900);
 };
